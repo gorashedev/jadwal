@@ -4,9 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.jadwal.data.preferences.UserPreferencesDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -21,19 +25,41 @@ data class ChatMessage(
     val isLoading: Boolean = false,
 )
 
-data class AIChatUiState(
-    val messages: List<ChatMessage> = listOf(
-        ChatMessage(
-            role = MessageRole.ASSISTANT,
-            content = "مرحباً! أنا مساعدك الدراسي المدعوم بـ Gemini. " +
-                    "يمكنني مساعدتك في:\n" +
-                    "• تنظيم وقت المذاكرة\n" +
-                    "• شرح المواد الصعبة\n" +
-                    "• نصائح لتحسين التركيز\n" +
-                    "• خطط المراجعة قبل الامتحانات\n\n" +
-                    "اسألني أي شيء يتعلق بدراستك! 📚",
+// DTO لحفظ الرسائل بدون isLoading
+private data class ChatMessageDto(
+    val id: String,
+    val role: String,
+    val content: String,
+) {
+    fun toChatMessage() = ChatMessage(
+        id = id,
+        role = MessageRole.valueOf(role),
+        content = content,
+        isLoading = false,
+    )
+
+    companion object {
+        fun from(msg: ChatMessage) = ChatMessageDto(
+            id = msg.id,
+            role = msg.role.name,
+            content = msg.content,
         )
-    ),
+    }
+}
+
+private val WELCOME_MESSAGE = ChatMessage(
+    role = MessageRole.ASSISTANT,
+    content = "مرحباً! أنا مساعدك الدراسي المدعوم بـ Gemini. " +
+            "يمكنني مساعدتك في:\n" +
+            "• تنظيم وقت المذاكرة\n" +
+            "• شرح المواد الصعبة\n" +
+            "• نصائح لتحسين التركيز\n" +
+            "• خطط المراجعة قبل الامتحانات\n\n" +
+            "اسألني أي شيء يتعلق بدراستك! 📚",
+)
+
+data class AIChatUiState(
+    val messages: List<ChatMessage> = listOf(WELCOME_MESSAGE),
     val inputText: String = "",
     val isTyping: Boolean = false,
 )
@@ -41,15 +67,68 @@ data class AIChatUiState(
 @HiltViewModel
 class AIChatViewModel @Inject constructor(
     private val generativeModel: GenerativeModel,
+    private val prefs: UserPreferencesDataStore,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AIChatUiState())
     val uiState = _uiState.asStateFlow()
 
     private val conversationHistory = mutableListOf<Pair<String, String>>()
+    private val gson = Gson()
+
+    init {
+        loadSavedMessages()
+    }
+
+    // ===== تحميل المحادثة المحفوظة =====
+    private fun loadSavedMessages() {
+        viewModelScope.launch {
+            try {
+                val json = prefs.chatMessagesJson.first()
+                if (json.isNotBlank()) {
+                    val type = object : TypeToken<List<ChatMessageDto>>() {}.type
+                    val dtos: List<ChatMessageDto> = gson.fromJson(json, type)
+                    if (dtos.isNotEmpty()) {
+                        val messages = dtos.map { it.toChatMessage() }
+                        _uiState.update { it.copy(messages = messages) }
+                        // إعادة بناء سياق المحادثة للـ AI
+                        val pairs = mutableListOf<Pair<String, String>>()
+                        var lastUser: ChatMessage? = null
+                        for (msg in messages) {
+                            if (msg.role == MessageRole.USER) {
+                                lastUser = msg
+                            } else if (msg.role == MessageRole.ASSISTANT && lastUser != null) {
+                                pairs.add(lastUser.content to msg.content)
+                                lastUser = null
+                            }
+                        }
+                        conversationHistory.addAll(pairs.takeLast(4))
+                    }
+                }
+            } catch (_: Exception) {
+                // إبقاء رسالة الترحيب الافتراضية
+            }
+        }
+    }
+
+    // ===== حفظ المحادثة =====
+    private fun persistMessages(messages: List<ChatMessage>) {
+        viewModelScope.launch {
+            try {
+                val dtos = messages.filter { !it.isLoading }.map { ChatMessageDto.from(it) }
+                prefs.saveChatMessagesJson(gson.toJson(dtos))
+            } catch (_: Exception) { }
+        }
+    }
 
     fun onInputChange(text: String) {
         _uiState.update { it.copy(inputText = text) }
+    }
+
+    fun clearHistory() {
+        _uiState.update { AIChatUiState() }
+        conversationHistory.clear()
+        persistMessages(listOf(WELCOME_MESSAGE))
     }
 
     fun sendMessage() {
@@ -72,11 +151,13 @@ class AIChatViewModel @Inject constructor(
                 val reply = callGemini(text)
                 conversationHistory.add(text to reply)
 
+                val newMessages = _uiState.value.messages.dropLast(1) +
+                        ChatMessage(role = MessageRole.ASSISTANT, content = reply)
+
                 _uiState.update { state ->
-                    val updatedMessages = state.messages.dropLast(1) +
-                            ChatMessage(role = MessageRole.ASSISTANT, content = reply)
-                    state.copy(messages = updatedMessages, isTyping = false)
+                    state.copy(messages = newMessages, isTyping = false)
                 }
+                persistMessages(newMessages)
             } catch (e: Exception) {
                 val errorMsg = when {
                     e.message?.contains("API_KEY", ignoreCase = true) == true ||

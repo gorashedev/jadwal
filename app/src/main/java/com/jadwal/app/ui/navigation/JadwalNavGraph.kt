@@ -115,11 +115,16 @@ fun JadwalNavGraph(
 
         composable(Screen.Schedule.route) {
             ScheduleScreen(
-                onScanExams = { navController.navigate(Screen.ExamScan.route) }
+                onScanExams = { navController.navigate(Screen.ExamScan.route) },
+                onManageSubjects = { navController.navigate(Screen.Subjects.route) },
             )
         }
 
-        composable(Screen.Analytics.route) { AnalyticsScreen() }
+        composable(Screen.Analytics.route) {
+            AnalyticsScreen(
+                onViewProfile = { navController.navigate(Screen.Profile.route) },
+            )
+        }
 
         composable(Screen.Settings.route) {
             SettingsScreen(

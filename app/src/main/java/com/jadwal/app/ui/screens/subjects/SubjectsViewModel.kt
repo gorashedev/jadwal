@@ -2,9 +2,11 @@ package com.jadwal.ui.screens.subjects
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jadwal.domain.model.Difficulty
-import com.jadwal.domain.model.Subject
+import com.jadwal.data.repository.ExamRepository
 import com.jadwal.data.repository.SubjectRepository
+import com.jadwal.domain.model.Difficulty
+import com.jadwal.domain.model.Exam
+import com.jadwal.domain.model.Subject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -20,6 +22,7 @@ data class SubjectFormState(
     val icon: String = "📚",
     val totalChapters: String = "10",
     val isEditing: Boolean = false,
+    val examDate: Long? = null,
 )
 
 data class SubjectsUiState(
@@ -31,16 +34,16 @@ data class SubjectsUiState(
 )
 
 val SUBJECT_COLOR_PALETTE = listOf(
-    "#5C6BC0",  // indigo
-    "#7E57C2",  // violet
-    "#26A69A",  // teal
-    "#EF5350",  // red
-    "#FF7043",  // deep orange
-    "#66BB6A",  // green
-    "#FFA726",  // orange
-    "#42A5F5",  // blue
-    "#AB47BC",  // purple
-    "#EC407A",  // pink
+    "#5C6BC0",
+    "#7E57C2",
+    "#26A69A",
+    "#EF5350",
+    "#FF7043",
+    "#66BB6A",
+    "#FFA726",
+    "#42A5F5",
+    "#AB47BC",
+    "#EC407A",
 )
 
 val SUBJECT_ICONS = listOf(
@@ -51,6 +54,7 @@ val SUBJECT_ICONS = listOf(
 @HiltViewModel
 class SubjectsViewModel @Inject constructor(
     private val subjectRepository: SubjectRepository,
+    private val examRepository: ExamRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SubjectsUiState())
@@ -96,8 +100,20 @@ class SubjectsViewModel @Inject constructor(
                     icon = subject.icon,
                     totalChapters = subject.totalChapters.toString(),
                     isEditing = true,
+                    examDate = null,
                 ),
             )
+        }
+        // تحميل تاريخ الامتحان للمادة المُعدَّلة
+        viewModelScope.launch {
+            try {
+                val exam = examRepository.getExamBySubject(subject.id)
+                if (exam != null) {
+                    _uiState.update { state ->
+                        state.copy(formState = state.formState.copy(examDate = exam.examDate))
+                    }
+                }
+            } catch (_: Exception) { }
         }
     }
 
@@ -133,6 +149,10 @@ class SubjectsViewModel @Inject constructor(
         }
     }
 
+    fun updateExamDate(dateMs: Long?) {
+        _uiState.update { it.copy(formState = it.formState.copy(examDate = dateMs)) }
+    }
+
     // ===== حفظ وحذف المادة =====
 
     fun saveSubject() {
@@ -146,29 +166,51 @@ class SubjectsViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                val subjectId: String
                 if (form.isEditing) {
-                    val updated = Subject(
-                        id = form.id,
-                        name = form.name.trim(),
-                        nameEn = form.nameEn.trim(),
-                        difficulty = form.difficulty,
-                        colorHex = form.colorHex,
-                        icon = form.icon,
-                        totalChapters = chapters,
+                    subjectId = form.id
+                    subjectRepository.updateSubject(
+                        Subject(
+                            id = subjectId,
+                            name = form.name.trim(),
+                            nameEn = form.nameEn.trim(),
+                            difficulty = form.difficulty,
+                            colorHex = form.colorHex,
+                            icon = form.icon,
+                            totalChapters = chapters,
+                        )
                     )
-                    subjectRepository.updateSubject(updated)
                 } else {
-                    val newSubject = Subject(
-                        id = UUID.randomUUID().toString(),
-                        name = form.name.trim(),
-                        nameEn = form.nameEn.trim(),
-                        difficulty = form.difficulty,
-                        colorHex = form.colorHex,
-                        icon = form.icon,
-                        totalChapters = chapters,
+                    subjectId = UUID.randomUUID().toString()
+                    subjectRepository.insertSubject(
+                        Subject(
+                            id = subjectId,
+                            name = form.name.trim(),
+                            nameEn = form.nameEn.trim(),
+                            difficulty = form.difficulty,
+                            colorHex = form.colorHex,
+                            icon = form.icon,
+                            totalChapters = chapters,
+                        )
                     )
-                    subjectRepository.insertSubject(newSubject)
                 }
+
+                // حفظ / تحديث موعد الامتحان
+                if (form.examDate != null) {
+                    val existing = if (form.isEditing) examRepository.getExamBySubject(subjectId) else null
+                    if (existing != null) {
+                        examRepository.updateExam(existing.copy(examDate = form.examDate))
+                    } else {
+                        examRepository.insertExam(
+                            Exam(
+                                id = UUID.randomUUID().toString(),
+                                subjectId = subjectId,
+                                examDate = form.examDate,
+                            )
+                        )
+                    }
+                }
+
                 _uiState.update { it.copy(showAddDialog = false, errorMessage = null) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = "فشل الحفظ: ${e.message}") }

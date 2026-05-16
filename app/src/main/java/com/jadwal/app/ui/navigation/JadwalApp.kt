@@ -17,6 +17,8 @@ import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.DateRange
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.ui.res.stringResource
+import com.jadwal.R
 
 @Composable
 fun JadwalApp() {
@@ -34,11 +36,11 @@ fun JadwalApp() {
                     tonalElevation = 0.dp,
                 ) {
                     val items = listOf(
-                        BottomNavItem("الرئيسية",    Screen.Home.route,      Icons.Rounded.Home),
-                        BottomNavItem("الجدول",      Screen.Schedule.route,  Icons.Rounded.DateRange),
-                        BottomNavItem("المساعد",     Screen.AiChat.route,    Icons.Rounded.AutoAwesome),
-                        BottomNavItem("الإحصائيات", Screen.Analytics.route, Icons.Rounded.BarChart),
-                        BottomNavItem("الإعدادات",  Screen.Settings.route,  Icons.Rounded.Settings),
+                        BottomNavItem(stringResource(R.string.nav_home),      Screen.Home.route,      Icons.Rounded.Home),
+                        BottomNavItem(stringResource(R.string.nav_schedule),  Screen.Schedule.route,  Icons.Rounded.DateRange),
+                        BottomNavItem(stringResource(R.string.nav_assistant), Screen.AiChat.route,    Icons.Rounded.AutoAwesome),
+                        BottomNavItem(stringResource(R.string.nav_analytics), Screen.Analytics.route, Icons.Rounded.BarChart),
+                        BottomNavItem(stringResource(R.string.nav_settings),  Screen.Settings.route,  Icons.Rounded.Settings),
                     )
 
                     items.forEach { item ->

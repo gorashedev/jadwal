@@ -388,8 +388,11 @@ fun TaskCard(
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
+                val timePrefix = if (task.startHour >= 0) {
+                    "${String.format("%02d:%02d", task.startHour, task.startMinute)} • "
+                } else ""
                 Text(
-                    text = "${task.allocatedMinutes} دقيقة",
+                    text = "$timePrefix${task.allocatedMinutes} دقيقة",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

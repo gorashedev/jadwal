@@ -38,6 +38,7 @@ class UserPreferencesDataStore @Inject constructor(
         val KEY_NOTIFICATION_PERMISSION_ASKED = booleanPreferencesKey("notification_permission_asked")
         // حفظ مسار صورة الملف الشخصي
         val KEY_PROFILE_PHOTO_PATH = stringPreferencesKey("profile_photo_path")
+        val KEY_CHAT_MESSAGES_JSON = stringPreferencesKey("chat_messages_json")
     }
 
     // ===== إذن الإشعارات =====
@@ -58,6 +59,16 @@ class UserPreferencesDataStore @Inject constructor(
 
     suspend fun setProfilePhotoPath(path: String) {
         dataStore.edit { it[KEY_PROFILE_PHOTO_PATH] = path }
+    }
+
+    // ===== رسائل الدردشة مع الذكاء الاصطناعي =====
+
+    val chatMessagesJson: Flow<String> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_CHAT_MESSAGES_JSON] ?: "" }
+
+    suspend fun saveChatMessagesJson(json: String) {
+        dataStore.edit { it[KEY_CHAT_MESSAGES_JSON] = json }
     }
 
     // ===== اللغة =====

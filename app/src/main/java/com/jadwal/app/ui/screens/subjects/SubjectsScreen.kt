@@ -58,6 +58,7 @@ fun SubjectsScreen(
             onColorChange = viewModel::updateColor,
             onIconChange = viewModel::updateIcon,
             onChaptersChange = viewModel::updateTotalChapters,
+            onExamDateChange = viewModel::updateExamDate,
             errorMessage = uiState.errorMessage,
         )
     }
@@ -310,8 +311,30 @@ private fun SubjectDialog(
     onColorChange: (String) -> Unit,
     onIconChange: (String) -> Unit,
     onChaptersChange: (String) -> Unit,
+    onExamDateChange: (Long?) -> Unit,
     errorMessage: String?,
 ) {
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = formState.examDate
+    )
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    onExamDateChange(datePickerState.selectedDateMillis)
+                    showDatePicker = false
+                }) { Text("تأكيد") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("إلغاء") }
+            },
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -430,6 +453,37 @@ private fun SubjectDialog(
                                     shape = CircleShape,
                                 )
                                 .clickable { onColorChange(hex) },
+                        )
+                    }
+                }
+
+                // موعد الامتحان
+                Text("موعد الامتحان (اختياري)",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                OutlinedButton(
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(Icons.Rounded.CalendarMonth, null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (formState.examDate != null) {
+                            val cal = java.util.Calendar.getInstance()
+                            cal.timeInMillis = formState.examDate
+                            "${cal.get(java.util.Calendar.YEAR)}/${cal.get(java.util.Calendar.MONTH) + 1}/${cal.get(java.util.Calendar.DAY_OF_MONTH)}"
+                        } else "اختر تاريخ الامتحان"
+                    )
+                    if (formState.examDate != null) {
+                        Spacer(Modifier.weight(1f))
+                        Icon(
+                            Icons.Rounded.Close,
+                            contentDescription = "إزالة التاريخ",
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clickable { onExamDateChange(null) },
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

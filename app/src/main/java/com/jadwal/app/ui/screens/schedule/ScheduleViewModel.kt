@@ -122,4 +122,18 @@ class ScheduleViewModel @Inject constructor(
     }
 
     fun refresh() = loadSchedule()
+
+    fun resetSchedule() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isGenerating = true) }
+            try {
+                scheduleRepository.deleteAllItems()
+            } catch (e: Exception) {
+                // تجاهل الخطأ
+            } finally {
+                _uiState.update { it.copy(isGenerating = false) }
+                loadSchedule()
+            }
+        }
+    }
 }

@@ -23,6 +23,8 @@ data class TodayTask(
     val isCompleted: Boolean,
     val isInProgress: Boolean = false,
     val progress: Float = 0f,
+    val startHour: Int = -1,
+    val startMinute: Int = -1,
 )
 
 // ===== نموذج الامتحان القادم =====
@@ -96,7 +98,9 @@ class HomeViewModel @Inject constructor(
                             Color.Gray
                         },
                         allocatedMinutes = item.allocatedMinutes,
-                        isCompleted = item.isCompleted
+                        isCompleted = item.isCompleted,
+                        startHour = item.startHour,
+                        startMinute = item.startMinute,
                     )
                 }
                 val completedMins = todayItems.filter { it.isCompleted }

@@ -36,6 +36,7 @@ val arabicDaysShort = listOf("أحد", "اثنين", "ثلاثاء", "أربعا
 @Composable
 fun ScheduleScreen(
     onScanExams: () -> Unit = {},
+    onManageSubjects: () -> Unit = {},
     viewModel: ScheduleViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -49,6 +50,26 @@ fun ScheduleScreen(
                 .navigationBarsPadding(),
         ) {
             // ===== العنوان =====
+            var showResetDialog by remember { mutableStateOf(false) }
+
+            if (showResetDialog) {
+                AlertDialog(
+                    onDismissRequest = { showResetDialog = false },
+                    icon = { Icon(Icons.Rounded.RestartAlt, null, tint = MaterialTheme.colorScheme.error) },
+                    title = { Text("إعادة تعيين الجدول", fontWeight = FontWeight.Bold) },
+                    text = { Text("سيتم حذف الجدول الحالي بالكامل. هل أنت متأكد؟") },
+                    confirmButton = {
+                        Button(
+                            onClick = { viewModel.resetSchedule(); showResetDialog = false },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        ) { Text("إعادة تعيين", color = MaterialTheme.colorScheme.onError) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showResetDialog = false }) { Text("إلغاء") }
+                    },
+                )
+            }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -63,10 +84,21 @@ fun ScheduleScreen(
                     color = MaterialTheme.colorScheme.onBackground,
                 )
                 Row {
+                    // زر إدارة المواد
+                    IconButton(onClick = onManageSubjects) {
+                        Icon(Icons.Rounded.MenuBook,
+                            contentDescription = "إدارة المواد",
+                            tint = MaterialTheme.colorScheme.primary)
+                    }
                     // زر مسح جدول الامتحانات بالكاميرا
                     IconButton(onClick = onScanExams) {
                         Icon(Icons.Rounded.PhotoCamera,
                             contentDescription = "مسح جدول الامتحانات",
+                            tint = MaterialTheme.colorScheme.primary)
+                    }
+                    // زر إعادة التعيين
+                    IconButton(onClick = { showResetDialog = true }) {
+                        Icon(Icons.Rounded.RestartAlt, contentDescription = "إعادة تعيين",
                             tint = MaterialTheme.colorScheme.primary)
                     }
                     IconButton(onClick = viewModel::refresh) {

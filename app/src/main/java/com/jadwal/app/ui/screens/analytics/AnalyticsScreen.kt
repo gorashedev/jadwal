@@ -34,6 +34,7 @@ import com.jadwal.ui.theme.*
 @Composable
 fun AnalyticsScreen(
     viewModel: AnalyticsViewModel = hiltViewModel(),
+    onViewProfile: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
@@ -60,6 +61,13 @@ fun AnalyticsScreen(
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
+                IconButton(onClick = onViewProfile) {
+                    Icon(
+                        Icons.Rounded.Person,
+                        contentDescription = "الملف الشخصي",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
                 IconButton(onClick = viewModel::refresh) {
                     Icon(
                         Icons.Rounded.Refresh,

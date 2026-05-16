@@ -124,6 +124,7 @@
     <string name="home">Home</string>
     <string name="nav_home">Home</string>
     <string name="nav_schedule">Schedule</string>
+    <string name="nav_assistant">AI</string>
     <string name="nav_analytics">Analytics</string>
     <string name="nav_settings">Settings</string>
 

@@ -99,9 +99,8 @@ fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 24.dp, end = 8.dp, top = 16.dp, bottom = 20.dp),
+                    .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 20.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
                     text = "الإعدادات",
@@ -109,14 +108,6 @@ fun SettingsScreen(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    FilledTonalIconButton(onClick = { navController.navigate(Screen.Subjects.route) }) {
-                        Icon(Icons.Rounded.MenuBook, contentDescription = "إدارة المواد")
-                    }
-                    FilledTonalIconButton(onClick = { navController.navigate(Screen.Profile.route) }) {
-                        Icon(Icons.Rounded.Person, contentDescription = "الملف الشخصي")
-                    }
-                }
             }
 
             // ===== قسم المظهر =====
