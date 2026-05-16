@@ -12,6 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Jadwal">
         android:localeConfig="@xml/locales_config"
+        android:name=".JadwalApplication"
 
         <activity
             android:name=".MainActivity"
