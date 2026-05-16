@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.kotlin.kapt)
-    //alias(libs.plugins.google.services)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -12,7 +12,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.jadwal"
+        applicationId = "com.jadwal.app"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -84,6 +84,8 @@ dependencies {
     // ===== Core Desugaring (لدعم Java 8+ على Android 8) =====
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.2")
 
+    implementation("androidx.appcompat:appcompat:1.7.0")
+
     // ===== Core =====
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
@@ -133,9 +135,10 @@ dependencies {
     kapt("androidx.hilt:hilt-compiler:1.2.0")
 
     // ===== Firebase =====
-    //implementation(platform("com.google.firebase:firebase-bom:33.3.0"))
-    //implementation("com.google.firebase:firebase-messaging-ktx")
-    //implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation(platform("com.google.firebase:firebase-bom:33.3.0"))
+    implementation("com.google.firebase:firebase-messaging-ktx")
+    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-messaging")
 
     // ===== Charts (Vico) =====
     implementation("com.patrykandpatrick.vico:compose:2.0.0-alpha.27")
@@ -170,6 +173,11 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // ===== Supabase =====
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:2.5.0")
+    implementation("io.github.jan-tennert.supabase:gotrue-kt:2.5.0")
+    implementation("io.ktor:ktor-client-android:2.3.12")
 }
 
 // Kapt لـ Hilt

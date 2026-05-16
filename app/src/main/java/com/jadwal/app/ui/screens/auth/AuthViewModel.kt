@@ -5,12 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.jadwal.data.preferences.UserPreferencesDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.gotrue.providers.builtin.Email
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.put
 import javax.inject.Inject
 
 data class AuthUiState(
@@ -83,7 +85,7 @@ class AuthViewModel @Inject constructor(
                     this.email = email.trim()
                     this.password = password
                     data = buildJsonObject {
-                        put("full_name", name.trim())
+                        put("full_name", JsonPrimitive(name.trim()))
                     }
                 }
                 // حفظ اسم المستخدم محلياً

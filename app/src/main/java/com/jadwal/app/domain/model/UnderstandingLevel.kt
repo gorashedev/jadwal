@@ -12,7 +12,8 @@ enum class UnderstandingLevel(val value: Int) {
     NOT_RATED(0),
     POOR(1),
     PARTIAL(2),
-    GREAT(3);
+    GREAT(3),
+    EXCELLENT(4);
 
     companion object {
         fun fromValue(value: Int): UnderstandingLevel =

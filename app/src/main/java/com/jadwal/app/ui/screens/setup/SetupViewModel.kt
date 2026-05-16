@@ -150,7 +150,7 @@ class SetupViewModel @Inject constructor(
                         totalChapters = draft.totalChapters,
                     )
                 }
-                subjectDao.insertAll(subjectEntities)
+                subjectDao.insertSubjects(subjectEntities)
 
                 // حفظ مواعيد الامتحانات
                 val examEntities = validSubjects
@@ -163,7 +163,7 @@ class SetupViewModel @Inject constructor(
                         )
                     }
                 if (examEntities.isNotEmpty()) {
-                    examDao.insertAll(examEntities)
+                    examDao.insertExams(examEntities)
                 }
 
                 // حفظ تفضيلات المستخدم

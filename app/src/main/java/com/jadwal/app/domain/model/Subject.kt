@@ -15,16 +15,3 @@ data class Subject(
     val completedChapters: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
 )
-
-enum class Difficulty {
-    EASY, MEDIUM, HARD;
-
-    companion object {
-        fun fromString(value: String): Difficulty =
-            entries.find { it.name == value } ?: MEDIUM
-    }
-}
-
-enum class StudyTime {
-    MORNING, EVENING, NIGHT
-}

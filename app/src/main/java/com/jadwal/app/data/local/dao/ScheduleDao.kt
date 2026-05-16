@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.jadwal.data.local.entity.ScheduleItemEntity
+import com.jadwal.data.local.entity.ScheduleWithSubjectEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -50,6 +51,40 @@ interface ScheduleDao {
         ORDER BY priority DESC
     """)
     suspend fun getScheduleForDaySync(startOfDay: Long, endOfDay: Long): List<ScheduleItemEntity>
+
+    // ─── Queries مع بيانات المواد ─────────────────────────────
+
+    @Query("""
+        SELECT 
+            s.id, s.subjectId, sub.name as subjectName, sub.icon as subjectIcon, sub.colorHex as subjectColor,
+            s.scheduledDate, s.allocatedMinutes, s.actualMinutes, s.isCompleted, s.priority, s.studyPhase
+        FROM schedule_items s
+        JOIN subjects sub ON s.subjectId = sub.id
+        WHERE s.scheduledDate BETWEEN :start AND :end
+        ORDER BY s.scheduledDate ASC, s.priority DESC
+    """)
+    suspend fun getScheduleWithSubjectsSync(start: Long, end: Long): List<ScheduleWithSubjectEntity>
+
+    @Query("""
+        SELECT 
+            s.id, s.subjectId, sub.name as subjectName, sub.icon as subjectIcon, sub.colorHex as subjectColor,
+            s.scheduledDate, s.allocatedMinutes, s.actualMinutes, s.isCompleted, s.priority, s.studyPhase
+        FROM schedule_items s
+        JOIN subjects sub ON s.subjectId = sub.id
+        WHERE s.scheduledDate BETWEEN :start AND :end
+        ORDER BY s.scheduledDate ASC, s.priority DESC
+    """)
+    fun getScheduleWithSubjects(start: Long, end: Long): Flow<List<ScheduleWithSubjectEntity>>
+
+    @Query("""
+        SELECT 
+            s.id, s.subjectId, sub.name as subjectName, sub.icon as subjectIcon, sub.colorHex as subjectColor,
+            s.scheduledDate, s.allocatedMinutes, s.actualMinutes, s.isCompleted, s.priority, s.studyPhase
+        FROM schedule_items s
+        JOIN subjects sub ON s.subjectId = sub.id
+        WHERE s.id = :id
+    """)
+    suspend fun getScheduleWithSubjectById(id: String): ScheduleWithSubjectEntity?
 
     // ─── Queries الأسبوعية ────────────────────────────────────
 

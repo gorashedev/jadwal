@@ -16,13 +16,14 @@ import com.jadwal.ui.navigation.JadwalApp
 import com.jadwal.ui.screens.settings.SettingsViewModel
 import com.jadwal.ui.theme.JadwalTheme
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.activity.ComponentActivity
 
 /**
  * MainActivity — مهم: يجب أن يرث من AppCompatActivity وليس ComponentActivity
  * هذا ضروري لكي يعمل AppCompatDelegate.setApplicationLocales() بشكل صحيح
  */
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Splash Screen — يجب أن يكون أول شيء

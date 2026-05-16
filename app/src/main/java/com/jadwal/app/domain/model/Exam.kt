@@ -6,6 +6,7 @@ package com.jadwal.domain.model
 data class Exam(
     val id: String,
     val subjectId: String,
+    val subjectName: String = "",
     val examDate: Long,         // Unix timestamp بالمللي ثانية
     val location: String = "",
     val notes: String = "",

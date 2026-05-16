@@ -85,7 +85,20 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             // تحميل مهام اليوم
             try {
-                val todayItems = scheduleRepository.getTodayScheduleWithSubjects()
+                val todayItems = scheduleRepository.getTodayScheduleWithSubjects().map { item ->
+                    TodayTask(
+                        scheduleItemId = item.id,
+                        subjectName = item.subjectName,
+                        subjectIcon = item.subjectIcon,
+                        subjectColor = try {
+                            Color(android.graphics.Color.parseColor(item.subjectColor))
+                        } catch (e: Exception) {
+                            Color.Gray
+                        },
+                        allocatedMinutes = item.allocatedMinutes,
+                        isCompleted = item.isCompleted
+                    )
+                }
                 val completedMins = todayItems.filter { it.isCompleted }
                     .sumOf { it.allocatedMinutes }
                 val totalMins = todayItems.sumOf { it.allocatedMinutes }

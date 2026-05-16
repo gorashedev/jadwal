@@ -2,128 +2,159 @@ package com.jadwal.data.preferences
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// Extension للـ DataStore على Context
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
-    name = "jadwal_prefs"
-)
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "jadwal_prefs")
 
 @Singleton
 class UserPreferencesDataStore @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    // ─── Keys ────────────────────────────────────────────────
+    private val dataStore = context.dataStore
 
     companion object {
+        // مفاتيح التفضيلات
         val KEY_USER_NAME = stringPreferencesKey("user_name")
-        val KEY_LANGUAGE = stringPreferencesKey("language")         // "ar" | "en"
-        val KEY_IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
-        val KEY_IS_ONBOARDING_DONE = booleanPreferencesKey("is_onboarding_done")
-        val KEY_IS_SETUP_DONE = booleanPreferencesKey("is_setup_done")
+        val KEY_ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
+        val KEY_SETUP_DONE = booleanPreferencesKey("setup_done")
         val KEY_DAILY_HOURS = intPreferencesKey("daily_hours")
-        val KEY_PREFERRED_TIME = stringPreferencesKey("preferred_time") // "MORNING" | "EVENING" | "NIGHT"
-        val KEY_NOTIFICATION_ENABLED = booleanPreferencesKey("notification_enabled")
+        val KEY_PREFERRED_TIME = stringPreferencesKey("preferred_time")
+        val KEY_STREAK_DAYS = intPreferencesKey("streak_days")
+        val KEY_LAST_STUDY_DATE = longPreferencesKey("last_study_date")
         val KEY_NOTIFICATION_HOUR = intPreferencesKey("notification_hour")
         val KEY_NOTIFICATION_MINUTE = intPreferencesKey("notification_minute")
-        val KEY_STREAK_DAYS = intPreferencesKey("streak_days")
-        val KEY_LAST_ACTIVE_DATE = stringPreferencesKey("last_active_date") // "2025-01-15"
+        val KEY_NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+
+        // ===== مفاتيح الثيم واللغة (جديدة) =====
+        val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
+        // قيم ThemeMode: "LIGHT", "DARK", "SYSTEM"
+        val KEY_LANGUAGE_CODE = stringPreferencesKey("language_code")
+        // قيم اللغة: "ar", "en", "" (= تبع الجهاز)
     }
 
-    // ─── Flows (للقراءة التفاعلية) ───────────────────────────
+    // ===== اللغة =====
 
-    val userName: Flow<String> = context.dataStore.data
+    val languageCode: Flow<String> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_LANGUAGE_CODE] ?: "" } // "" = تبع الجهاز افتراضياً
+
+    suspend fun setLanguageCode(code: String) {
+        dataStore.edit { it[KEY_LANGUAGE_CODE] = code }
+    }
+
+    // ===== الثيم =====
+
+    val themeMode: Flow<String> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_THEME_MODE] ?: "SYSTEM" } // SYSTEM = تبع الجهاز افتراضياً
+
+    suspend fun setThemeMode(mode: String) {
+        dataStore.edit { it[KEY_THEME_MODE] = mode }
+    }
+
+    // ===== Onboarding =====
+
+    val onboardingDone: Flow<Boolean> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_ONBOARDING_DONE] ?: false }
+
+    suspend fun setOnboardingDone(done: Boolean) {
+        dataStore.edit { it[KEY_ONBOARDING_DONE] = done }
+    }
+
+    // ===== Setup =====
+
+    val setupDone: Flow<Boolean> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_SETUP_DONE] ?: false }
+
+    suspend fun setSetupDone(done: Boolean) {
+        dataStore.edit { it[KEY_SETUP_DONE] = done }
+    }
+
+    // ===== اسم المستخدم =====
+
+    val userName: Flow<String> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_USER_NAME] ?: "" }
 
-    val language: Flow<String> = context.dataStore.data
-        .map { it[KEY_LANGUAGE] ?: "ar" }
+    suspend fun setUserName(name: String) {
+        dataStore.edit { it[KEY_USER_NAME] = name }
+    }
 
-    val isDarkMode: Flow<Boolean> = context.dataStore.data
-        .map { it[KEY_IS_DARK_MODE] ?: false }
+    suspend fun getUserName(): String = userName.first()
 
-    val isOnboardingDone: Flow<Boolean> = context.dataStore.data
-        .map { it[KEY_IS_ONBOARDING_DONE] ?: false }
+    // ===== ساعات الدراسة =====
 
-    val isSetupDone: Flow<Boolean> = context.dataStore.data
-        .map { it[KEY_IS_SETUP_DONE] ?: false }
-
-    val dailyHours: Flow<Int> = context.dataStore.data
+    val dailyHours: Flow<Int> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_DAILY_HOURS] ?: 2 }
 
-    val preferredTime: Flow<String> = context.dataStore.data
+    suspend fun setDailyHours(hours: Int) {
+        dataStore.edit { it[KEY_DAILY_HOURS] = hours }
+    }
+
+    // ===== وقت الدراسة المفضل =====
+
+    val preferredTime: Flow<String> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_PREFERRED_TIME] ?: "MORNING" }
 
-    val notificationEnabled: Flow<Boolean> = context.dataStore.data
-        .map { it[KEY_NOTIFICATION_ENABLED] ?: true }
+    suspend fun setPreferredTime(time: String) {
+        dataStore.edit { it[KEY_PREFERRED_TIME] = time }
+    }
 
-    val notificationHour: Flow<Int> = context.dataStore.data
+    // ===== الإشعارات =====
+
+    val notificationsEnabled: Flow<Boolean> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_NOTIFICATIONS_ENABLED] ?: true }
+
+    val notificationHour: Flow<Int> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_NOTIFICATION_HOUR] ?: 8 }
 
-    val notificationMinute: Flow<Int> = context.dataStore.data
+    val notificationMinute: Flow<Int> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_NOTIFICATION_MINUTE] ?: 0 }
 
-    // ─── Suspend Getters (للقراءة لمرة واحدة) ───────────────
-
-    suspend fun getUserName(): String =
-        context.dataStore.data.map { it[KEY_USER_NAME] ?: "" }
-            .let { flow -> var result = ""; flow.collect { result = it; }; result }
-
-    // ─── Setters ─────────────────────────────────────────────
-
-    suspend fun setUserName(name: String) {
-        context.dataStore.edit { it[KEY_USER_NAME] = name }
-    }
-
-    suspend fun setLanguage(lang: String) {
-        context.dataStore.edit { it[KEY_LANGUAGE] = lang }
-    }
-
-    suspend fun setDarkMode(enabled: Boolean) {
-        context.dataStore.edit { it[KEY_IS_DARK_MODE] = enabled }
-    }
-
-    suspend fun setOnboardingDone() {
-        context.dataStore.edit { it[KEY_IS_ONBOARDING_DONE] = true }
-    }
-
-    suspend fun setSetupDone() {
-        context.dataStore.edit { it[KEY_IS_SETUP_DONE] = true }
-    }
-
-    suspend fun setDailyHours(hours: Int) {
-        context.dataStore.edit { it[KEY_DAILY_HOURS] = hours }
-    }
-
-    suspend fun setPreferredTime(time: String) {
-        context.dataStore.edit { it[KEY_PREFERRED_TIME] = time }
-    }
-
-    suspend fun setNotificationEnabled(enabled: Boolean) {
-        context.dataStore.edit { it[KEY_NOTIFICATION_ENABLED] = enabled }
-    }
-
-    suspend fun setNotificationTime(hour: Int, minute: Int) {
-        context.dataStore.edit {
+    suspend fun setNotificationSettings(enabled: Boolean, hour: Int, minute: Int) {
+        dataStore.edit {
+            it[KEY_NOTIFICATIONS_ENABLED] = enabled
             it[KEY_NOTIFICATION_HOUR] = hour
             it[KEY_NOTIFICATION_MINUTE] = minute
         }
     }
 
-    suspend fun setLastActiveDate(date: String) {
-        context.dataStore.edit { it[KEY_LAST_ACTIVE_DATE] = date }
-    }
+    // ===== Streak =====
 
-    suspend fun clearAll() {
-        context.dataStore.edit { it.clear() }
+    val streakDays: Flow<Int> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_STREAK_DAYS] ?: 0 }
+
+    suspend fun updateStreak() {
+        val now = System.currentTimeMillis()
+        val lastDate = dataStore.data.first()[KEY_LAST_STUDY_DATE] ?: 0L
+        val dayMillis = 24 * 60 * 60 * 1000L
+
+        val currentStreak = dataStore.data.first()[KEY_STREAK_DAYS] ?: 0
+
+        dataStore.edit { prefs ->
+            prefs[KEY_LAST_STUDY_DATE] = now
+            prefs[KEY_STREAK_DAYS] = when {
+                lastDate == 0L -> 1
+                now - lastDate < dayMillis * 2 -> currentStreak + 1
+                else -> 1 // انقطع السلسلة
+            }
+        }
     }
 }

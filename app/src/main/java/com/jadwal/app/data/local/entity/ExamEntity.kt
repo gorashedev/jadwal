@@ -31,6 +31,7 @@ data class ExamEntity(
 fun ExamEntity.toDomain(): Exam = Exam(
     id = id,
     subjectId = subjectId,
+    subjectName = "", // يتم ملؤها في الـ Repository عند الحاجة
     examDate = examDate,
     location = location,
     notes = notes,

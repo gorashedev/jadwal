@@ -3,6 +3,7 @@ package com.jadwal.ui.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jadwal.data.preferences.UserPreferencesDataStore
+import com.jadwal.notifications.NotificationScheduler
 import com.jadwal.util.LanguageManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -21,12 +22,13 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val prefs: UserPreferencesDataStore,
+    private val notificationScheduler: NotificationScheduler,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState = _uiState.asStateFlow()
 
-    // ===== يُستخدم في MainActivity لتحديد الثيم =====
+    // ===== يُستخدم في MainActivity لتحديد الثيم مباشرةً =====
     val themeMode: StateFlow<String> = prefs.themeMode
         .stateIn(viewModelScope, SharingStarted.Eagerly, "SYSTEM")
 
@@ -38,56 +40,61 @@ class SettingsViewModel @Inject constructor(
                 prefs.languageCode,
                 prefs.notificationsEnabled,
                 prefs.notificationHour,
-            ) { values ->
+            ) { arr ->
                 SettingsUiState(
-                    userName = values[0] as String,
-                    themeMode = values[1] as String,
-                    languageCode = values[2] as String,
-                    notificationsEnabled = values[3] as Boolean,
-                    notificationHour = values[4] as Int,
+                    userName = arr[0] as String,
+                    themeMode = arr[1] as String,
+                    languageCode = arr[2] as String,
+                    notificationsEnabled = arr[3] as Boolean,
+                    notificationHour = arr[4] as Int,
                 )
-            }.collect { state ->
-                _uiState.value = state
-            }
+            }.collect { _uiState.value = it }
         }
     }
 
     // ===== تغيير الثيم =====
     fun setThemeMode(mode: String) {
-        // mode: "LIGHT", "DARK", "SYSTEM"
-        viewModelScope.launch {
-            prefs.setThemeMode(mode)
-        }
+        viewModelScope.launch { prefs.setThemeMode(mode) }
     }
 
     // ===== تغيير اللغة — يُعيد بناء الـ Activity تلقائياً =====
     fun setLanguage(code: String) {
-        // code: "ar", "en", "" = تبع الجهاز
         viewModelScope.launch {
             prefs.setLanguageCode(code)
-            // هذا يُعيد تشغيل الـ Activity ويُطبّق اللغة فوراً
             LanguageManager.setAppLocale(code)
         }
     }
 
-    // ===== تغيير الإشعارات =====
+    // ===== تفعيل/إيقاف الإشعارات =====
     fun setNotificationsEnabled(enabled: Boolean) {
         viewModelScope.launch {
-            prefs.setNotificationSettings(
-                enabled = enabled,
-                hour = _uiState.value.notificationHour,
-                minute = _uiState.value.notificationMinute,
-            )
+            val state = _uiState.value
+            prefs.setNotificationSettings(enabled, state.notificationHour, state.notificationMinute)
+
+            if (enabled) {
+                // إعادة جدولة الإشعارات
+                notificationScheduler.scheduleDailyReminder(
+                    state.notificationHour,
+                    state.notificationMinute,
+                )
+                notificationScheduler.scheduleExamAlerts()
+            } else {
+                // إلغاء جميع الإشعارات
+                notificationScheduler.cancelAll()
+            }
         }
     }
 
+    // ===== تغيير وقت التذكير =====
     fun setNotificationTime(hour: Int, minute: Int) {
         viewModelScope.launch {
-            prefs.setNotificationSettings(
-                enabled = _uiState.value.notificationsEnabled,
-                hour = hour,
-                minute = minute,
-            )
+            val enabled = _uiState.value.notificationsEnabled
+            prefs.setNotificationSettings(enabled, hour, minute)
+
+            if (enabled) {
+                // تحديث الجدول بالوقت الجديد
+                notificationScheduler.updateReminderTime(hour, minute)
+            }
         }
     }
 }

@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jadwal.ui.components.GlassCard
-import com.jadwal.ui.theme.JadwalBackground
+import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.JadwalRadius
 import com.jadwal.ui.theme.JadwalSuccess
 

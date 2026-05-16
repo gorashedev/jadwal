@@ -122,6 +122,10 @@
     <string name="close">إغلاق</string>
 
     <string name="home">الرئيسية</string>
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_schedule">الجدول</string>
+    <string name="nav_analytics">الإحصائيات</string>
+    <string name="nav_settings">الإعدادات</string>
 
     <string name="notification_daily_title">جدول يومك 📚</string>
     <string name="notification_exam_title">تذكير امتحان ⚠️</string>

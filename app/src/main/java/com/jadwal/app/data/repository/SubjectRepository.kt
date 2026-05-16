@@ -4,6 +4,7 @@ import com.jadwal.data.local.dao.SubjectDao
 import com.jadwal.data.local.entity.toDomain
 import com.jadwal.data.local.entity.toEntity
 import com.jadwal.domain.model.Subject
+import com.jadwal.ui.screens.analytics.SubjectStat
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -36,4 +37,6 @@ class SubjectRepository @Inject constructor(
 
     suspend fun getSubjectCount(): Int =
         subjectDao.getSubjectCount()
+
+    suspend fun getSubjectStats(): List<SubjectStat> = emptyList()
 }

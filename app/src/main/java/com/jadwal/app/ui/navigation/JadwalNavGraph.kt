@@ -18,15 +18,15 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import com.jadwal.R
+import com.jadwal.ui.screens.ai.AISuggestionScreen
 import com.jadwal.ui.screens.analytics.AnalyticsScreen
 import com.jadwal.ui.screens.auth.ForgotPasswordScreen
 import com.jadwal.ui.screens.auth.LoginScreen
@@ -52,13 +52,6 @@ data class BottomNavItem(
     val labelRes: Int,
 )
 
-val bottomNavItems = listOf(
-    BottomNavItem(Screen.Home, Icons.Rounded.Home, Icons.Rounded.Home, R.string.nav_home),
-    BottomNavItem(Screen.Schedule, Icons.Rounded.CalendarMonth, Icons.Rounded.CalendarMonth, R.string.nav_schedule),
-    BottomNavItem(Screen.Analytics, Icons.Rounded.BarChart, Icons.Rounded.BarChart, R.string.nav_analytics),
-    BottomNavItem(Screen.Settings, Icons.Rounded.Settings, Icons.Rounded.Settings, R.string.nav_settings),
-)
-
 @Composable
 fun JadwalApp() {
     val navController = rememberNavController()
@@ -66,34 +59,29 @@ fun JadwalApp() {
     val currentRoute = navBackStackEntry?.destination?.route
 
     val hazeState = remember { HazeState() }
-
     val showBottomBar = currentRoute in Screen.bottomBarScreens
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // NavHost يمتد لكل الشاشة مع تأثير الـ haze
         NavHost(
-            navController = navController,
+            navController    = navController,
             startDestination = Screen.Onboarding.route,
-            modifier = Modifier
+            modifier         = Modifier
                 .fillMaxSize()
                 .haze(state = hazeState),
             enterTransition = {
-                fadeIn(animationSpec = tween(300)) +
-                        slideInHorizontally(animationSpec = tween(300)) { it / 4 }
+                fadeIn(tween(300)) + slideInHorizontally(tween(300)) { it / 4 }
             },
             exitTransition = {
-                fadeOut(animationSpec = tween(200)) +
-                        slideOutHorizontally(animationSpec = tween(200)) { -it / 4 }
+                fadeOut(tween(200)) + slideOutHorizontally(tween(200)) { -it / 4 }
             },
             popEnterTransition = {
-                fadeIn(animationSpec = tween(300)) +
-                        slideInHorizontally(animationSpec = tween(300)) { -it / 4 }
+                fadeIn(tween(300)) + slideInHorizontally(tween(300)) { -it / 4 }
             },
             popExitTransition = {
-                fadeOut(animationSpec = tween(200)) +
-                        slideOutHorizontally(animationSpec = tween(200)) { it / 4 }
-            }
+                fadeOut(tween(200)) + slideOutHorizontally(tween(200)) { it / 4 }
+            },
         ) {
+            // ── Onboarding ────────────────────────────────────────────
             composable(Screen.Onboarding.route) {
                 OnboardingScreen(
                     onFinish = {
@@ -104,6 +92,7 @@ fun JadwalApp() {
                 )
             }
 
+            // ── Auth ───────────────────────────────────────────────────
             composable(Screen.Login.route) {
                 LoginScreen(
                     onLoginSuccess = {
@@ -111,12 +100,8 @@ fun JadwalApp() {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     },
-                    onNavigateToRegister = {
-                        navController.navigate(Screen.Register.route)
-                    },
-                    onNavigateToForgotPassword = {
-                        navController.navigate(Screen.ForgotPassword.route)
-                    }
+                    onNavigateToRegister = { navController.navigate(Screen.Register.route) },
+                    onNavigateToForgotPassword = { navController.navigate(Screen.ForgotPassword.route) },
                 )
             }
 
@@ -127,17 +112,18 @@ fun JadwalApp() {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     },
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
                 )
             }
 
             composable(Screen.ForgotPassword.route) {
                 ForgotPasswordScreen(
-                    onEmailSent = { navController.popBackStack() },
-                    onNavigateBack = { navController.popBackStack() }
+                    onEmailSent    = { navController.popBackStack() },
+                    onNavigateBack = { navController.popBackStack() },
                 )
             }
 
+            // ── Setup ──────────────────────────────────────────────────
             composable(Screen.Setup.route) {
                 SetupScreen(
                     onSetupComplete = {
@@ -148,52 +134,66 @@ fun JadwalApp() {
                 )
             }
 
+            // ── Home ───────────────────────────────────────────────────
             composable(Screen.Home.route) {
                 HomeScreen(
                     onStartSession = { id ->
-                        navController.navigate(Screen.Session.route + "/$id")
+                        navController.navigate("${Screen.Session.route}/$id")
                     },
-                    onViewSchedule = { navController.navigate(Screen.Schedule.route) },
-                    onViewReport = { navController.navigate(Screen.Analytics.route) }
+                    onViewSchedule     = { navController.navigate(Screen.Schedule.route) },
+                    onViewReport       = { navController.navigate(Screen.Analytics.route) },
+                    onViewAISuggestion = { navController.navigate(Screen.AISuggestion.route) },
                 )
             }
 
-            composable(
-                route = Screen.Session.route + "/{scheduleItemId}",
-            ) {
-                val id = it.arguments?.getString("scheduleItemId") ?: return@composable
+            // ── Session ────────────────────────────────────────────────
+            composable(route = "${Screen.Session.route}/{scheduleItemId}") { entry ->
+                val id = entry.arguments?.getString("scheduleItemId") ?: return@composable
                 SessionScreen(
                     scheduleItemId = id,
-                    onSessionEnd = { navController.popBackStack() }
+                    onSessionEnd   = { navController.popBackStack() },
                 )
             }
 
+            // ── AI Suggestion ──────────────────────────────────────────
+            composable(Screen.AISuggestion.route) {
+                AISuggestionScreen(
+                    onBack = { navController.popBackStack() },
+                    onScheduleSaved = {
+                        navController.navigate(Screen.Schedule.route) {
+                            popUpTo(Screen.AISuggestion.route) { inclusive = true }
+                        }
+                    },
+                )
+            }
+
+            // ── Schedule ───────────────────────────────────────────────
             composable(Screen.Schedule.route) {
                 ScheduleScreen()
             }
 
+            // ── Analytics ──────────────────────────────────────────────
             composable(Screen.Analytics.route) {
                 AnalyticsScreen()
             }
 
+            // ── Settings ───────────────────────────────────────────────
             composable(Screen.Settings.route) {
                 SettingsScreen(navController = navController)
             }
         }
 
-        // ===== الـ BottomBar بتأثير الزجاج iOS 26 =====
+        // ===== BottomBar بتأثير الزجاج iOS 26 =====
         AnimatedVisibility(
-            visible = showBottomBar,
+            visible  = showBottomBar,
             modifier = Modifier.align(Alignment.BottomCenter),
-            enter = slideInVertically(animationSpec = spring(stiffness = Spring.StiffnessMedium)) { it } +
-                    fadeIn(tween(250)),
-            exit = slideOutVertically(animationSpec = spring(stiffness = Spring.StiffnessMedium)) { it } +
-                    fadeOut(tween(200)),
+            enter = slideInVertically(spring(stiffness = Spring.StiffnessMedium)) { it } + fadeIn(tween(250)),
+            exit  = slideOutVertically(spring(stiffness = Spring.StiffnessMedium)) { it } + fadeOut(tween(200)),
         ) {
             JadwalBottomBar(
                 navController = navController,
-                currentRoute = currentRoute,
-                hazeState = hazeState,
+                currentRoute  = currentRoute,
+                hazeState     = hazeState,
             )
         }
     }
@@ -206,51 +206,55 @@ fun JadwalBottomBar(
     currentRoute: String?,
     hazeState: HazeState,
 ) {
+    // Moved from top-level to avoid ExceptionInInitializerError
+    val bottomNavItems = remember {
+        listOf(
+            BottomNavItem(Screen.Home,      Icons.Rounded.Home,          Icons.Rounded.Home,          R.string.nav_home),
+            BottomNavItem(Screen.Schedule,  Icons.Rounded.CalendarMonth, Icons.Rounded.CalendarMonth, R.string.nav_schedule),
+            BottomNavItem(Screen.Analytics, Icons.Rounded.BarChart,      Icons.Rounded.BarChart,      R.string.nav_analytics),
+            BottomNavItem(Screen.Settings,  Icons.Rounded.Settings,      Icons.Rounded.Settings,      R.string.nav_settings),
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .padding(horizontal = 20.dp, vertical = 12.dp),
     ) {
-        // بطاقة الزجاج الرئيسية
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(40.dp))
                 .hazeChild(
                     state = hazeState,
-                    style = HazeMaterials.ultraThin(
-                        tintColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
-                    )
+                    style = HazeMaterials.ultraThin()
                 )
                 .background(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
-                    shape = RoundedCornerShape(40.dp)
-                )
+                    color  = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+                    shape  = RoundedCornerShape(40.dp),
+                ),
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 6.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment     = Alignment.CenterVertically,
             ) {
                 bottomNavItems.forEach { item ->
-                    val isSelected = currentRoute == item.screen.route
-
-                    // زر التنقل بتأثير iOS 26
                     Ios26NavButton(
-                        item = item,
-                        isSelected = isSelected,
-                        onClick = {
+                        item       = item,
+                        isSelected = currentRoute == item.screen.route,
+                        onClick    = {
                             navController.navigate(item.screen.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
                                 launchSingleTop = true
-                                restoreState = true
+                                restoreState    = true
                             }
-                        }
+                        },
                     )
                 }
             }
@@ -259,8 +263,7 @@ fun JadwalBottomBar(
 }
 
 /**
- * زر التنقل بتأثير الفقاعة المتحركة المستوحى من iOS 26
- * عند التحديد: يظهر خلف الأيقونة "فقاعة زجاجية" ملونة بشكل متحرك
+ * زر التنقل بتأثير الفقاعة المتحرك — مستوحى من iOS 26 Liquid Glass
  */
 @Composable
 fun Ios26NavButton(
@@ -268,42 +271,28 @@ fun Ios26NavButton(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val onPrimaryColor = MaterialTheme.colorScheme.onPrimary
+    val primaryColor    = MaterialTheme.colorScheme.primary
+    val onPrimaryColor  = MaterialTheme.colorScheme.onPrimary
 
-    // تحريك حجم الفقاعة
     val bubbleSize by animateDpAsState(
-        targetValue = if (isSelected) 52.dp else 44.dp,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "bubble_size"
+        targetValue    = if (isSelected) 52.dp else 44.dp,
+        animationSpec  = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label          = "bubble_size",
     )
-
-    // تحريك لون الخلفية
     val backgroundColor by animateColorAsState(
-        targetValue = if (isSelected) primaryColor else Color.Transparent,
+        targetValue   = if (isSelected) primaryColor else Color.Transparent,
         animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        label = "bg_color"
+        label         = "bg_color",
     )
-
-    // تحريك لون الأيقونة
     val iconColor by animateColorAsState(
-        targetValue = if (isSelected) onPrimaryColor
-        else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue   = if (isSelected) onPrimaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
         animationSpec = tween(250),
-        label = "icon_color"
+        label         = "icon_color",
     )
-
-    // تحريك حجم الأيقونة
     val iconScale by animateFloatAsState(
-        targetValue = if (isSelected) 1.15f else 1.0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "icon_scale"
+        targetValue   = if (isSelected) 1.15f else 1.0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label         = "icon_scale",
     )
 
     Column(
@@ -311,68 +300,54 @@ fun Ios26NavButton(
         modifier = Modifier
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null // بدون تأثير Ripple عشان يبدو iOS
-            ) { onClick() }
-            .padding(horizontal = 4.dp)
+                indication        = null,
+                onClick           = onClick,
+            )
+            .padding(horizontal = 4.dp),
     ) {
-        // الفقاعة الزجاجية + الأيقونة
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(bubbleSize)
+            modifier         = Modifier.size(bubbleSize),
         ) {
-            // خلفية الفقاعة
             if (isSelected) {
-                // توهج خلفي للتأثير الزجاجي
                 Box(
                     modifier = Modifier
                         .size(bubbleSize)
                         .background(
                             brush = Brush.radialGradient(
-                                colors = listOf(
-                                    primaryColor.copy(alpha = 0.4f),
-                                    primaryColor.copy(alpha = 0.0f)
-                                )
+                                colors = listOf(primaryColor.copy(alpha = 0.4f), primaryColor.copy(alpha = 0f))
                             ),
-                            shape = CircleShape
+                            shape = CircleShape,
                         )
                         .blur(8.dp)
                 )
             }
-
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(if (isSelected) 48.dp else 0.dp)
-                    .background(
-                        color = backgroundColor,
-                        shape = CircleShape
-                    )
+                    .background(color = backgroundColor, shape = CircleShape),
             ) {}
-
             Icon(
-                imageVector = if (isSelected) item.iconSelected else item.icon,
+                imageVector    = if (isSelected) item.iconSelected else item.icon,
                 contentDescription = stringResource(item.labelRes),
-                tint = iconColor,
-                modifier = Modifier
+                tint           = iconColor,
+                modifier       = Modifier
                     .size(24.dp)
-                    .graphicsLayer {
-                        scaleX = iconScale
-                        scaleY = iconScale
-                    }
+                    .graphicsLayer { scaleX = iconScale; scaleY = iconScale },
             )
         }
 
-        // التسمية — تظهر فقط للعنصر المحدد
         AnimatedVisibility(
             visible = isSelected,
-            enter = fadeIn(tween(200)) + expandVertically(tween(200)),
-            exit = fadeOut(tween(150)) + shrinkVertically(tween(150))
+            enter   = fadeIn(tween(200)) + expandVertically(tween(200)),
+            exit    = fadeOut(tween(150)) + shrinkVertically(tween(150)),
         ) {
             Text(
-                text = stringResource(item.labelRes),
+                text  = stringResource(item.labelRes),
                 style = MaterialTheme.typography.labelSmall,
                 color = primaryColor,
-                modifier = Modifier.padding(top = 2.dp)
+                modifier = Modifier.padding(top = 2.dp),
             )
         }
     }

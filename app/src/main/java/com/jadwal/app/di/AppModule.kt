@@ -4,11 +4,19 @@ import android.content.Context
 import com.google.ai.client.generativeai.GenerativeModel
 import com.jadwal.BuildConfig
 import com.jadwal.data.preferences.UserPreferencesDataStore
+import com.jadwal.data.repository.AIRepository
+import com.jadwal.data.repository.AIRepositoryImpl
+import com.jadwal.domain.algorithm.DefaultScheduleAlgorithm
+import com.jadwal.domain.algorithm.ScheduleAlgorithm
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.gotrue.Auth
+import io.github.jan.supabase.postgrest.Postgrest
 import javax.inject.Singleton
 
 @Module
@@ -28,4 +36,28 @@ object AppModule {
             modelName = "gemini-1.5-flash",  // مجاني وسريع
             apiKey = BuildConfig.GEMINI_API_KEY,
         )
+
+    @Provides
+    @Singleton
+    fun provideAIRepository(generativeModel: GenerativeModel): AIRepository =
+        AIRepositoryImpl(generativeModel)
+
+    @Provides
+    @Singleton
+    fun provideScheduleAlgorithm(impl: DefaultScheduleAlgorithm): ScheduleAlgorithm = impl
+
+    // ==========================================
+    // إعدادات قاعدة بيانات Supabase السحابية
+    // ==========================================
+    @Provides
+    @Singleton
+    fun provideSupabaseClient(): SupabaseClient {
+        return createSupabaseClient(
+            supabaseUrl = BuildConfig.SUPABASE_URL,
+            supabaseKey = BuildConfig.SUPABASE_KEY
+        ) {
+            install(Postgrest) // إضافة مكتبة إدارة الجداول وقاعدة البيانات
+            install(Auth)    // إضافة مكتبة إدارة حسابات المستخدمين وتسجيل الدخول
+        }
+    }
 }

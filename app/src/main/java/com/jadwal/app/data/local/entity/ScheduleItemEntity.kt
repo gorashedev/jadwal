@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.jadwal.domain.model.ScheduleItem
+import com.jadwal.domain.model.ScheduleWithSubject
 import com.jadwal.domain.model.StudyPhase
 import com.jadwal.domain.model.UnderstandingLevel
 
@@ -65,4 +66,33 @@ fun ScheduleItem.toEntity(): ScheduleItemEntity = ScheduleItemEntity(
     priority = priority,
     studyPhase = studyPhase.name,
     createdAt = createdAt,
+)
+
+/** POJO for JOIN query results */
+data class ScheduleWithSubjectEntity(
+    val id: String,
+    val subjectId: String,
+    val subjectName: String,
+    val subjectIcon: String,
+    val subjectColor: String,
+    val scheduledDate: Long,
+    val allocatedMinutes: Int,
+    val actualMinutes: Int,
+    val isCompleted: Boolean,
+    val priority: Int,
+    val studyPhase: String
+)
+
+fun ScheduleWithSubjectEntity.toDomain(): ScheduleWithSubject = ScheduleWithSubject(
+    id = id,
+    subjectId = subjectId,
+    subjectName = subjectName,
+    subjectIcon = subjectIcon,
+    subjectColor = subjectColor,
+    scheduledDate = scheduledDate,
+    allocatedMinutes = allocatedMinutes,
+    actualMinutes = actualMinutes,
+    isCompleted = isCompleted,
+    priority = priority,
+    studyPhase = StudyPhase.fromString(studyPhase)
 )

@@ -24,10 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.jadwal.ui.components.GlassBackground
 import com.jadwal.ui.components.GlassCard
+import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.JadwalRadius
-import com.jadwal.ui.theme.JadwalBackground
 
 @Composable
 fun RegisterScreen(
@@ -159,7 +158,7 @@ fun RegisterScreen(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
                         label = { Text("تأكيد كلمة المرور") },
-                        leadingIcon = { Icon(Icons.Rounded.LockOutlined, null) },
+                        leadingIcon = { Icon(Icons.Rounded.Lock, null) },
                         isError = confirmPassword.isNotEmpty() && password != confirmPassword,
                         supportingText = {
                             if (confirmPassword.isNotEmpty() && password != confirmPassword) {

@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jadwal.domain.model.Difficulty
 import com.jadwal.domain.model.StudyTime
 import com.jadwal.ui.components.GlassCard
+import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.*
 
 @Composable

@@ -20,28 +20,40 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.jadwal.domain.model.UnderstandingLevel
 import com.jadwal.ui.components.GlassCard
+import com.jadwal.ui.components.JadwalBackground
+import com.jadwal.ui.components.NotificationPermissionHandler
+import com.jadwal.ui.components.NotificationPermissionViewModel
 import com.jadwal.ui.theme.*
 
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
+    permissionViewModel: NotificationPermissionViewModel = hiltViewModel(),
     onStartSession: (String) -> Unit,
     onViewSchedule: () -> Unit,
     onViewReport: () -> Unit,
+    onViewAISuggestion: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val aiSuggestion by viewModel.aiSuggestion.collectAsStateWithLifecycle()
-    val scrollState = rememberScrollState()
+    val permissionHandled by permissionViewModel.permissionHandled.collectAsStateWithLifecycle()
+
+    // ===== طلب إذن الإشعارات — يظهر مرة واحدة فقط =====
+    if (!permissionHandled) {
+        NotificationPermissionHandler(
+            onGranted = permissionViewModel::onPermissionGranted,
+            onDenied = permissionViewModel::onPermissionDenied,
+        )
+    }
 
     JadwalBackground {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
+                .verticalScroll(rememberScrollState())
                 .statusBarsPadding()
-                .padding(bottom = 100.dp) // مسافة للـ BottomBar
+                .padding(bottom = 100.dp)
         ) {
             // ===== الرأس =====
             HomeHeader(
@@ -140,7 +152,6 @@ fun AISuggestionCard(
     isLoading: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    // أنيميشن نبض للأيقونة
     val infiniteTransition = rememberInfiniteTransition(label = "ai_pulse")
     val glowAlpha by infiniteTransition.animateFloat(
         initialValue = 0.4f,
@@ -164,7 +175,6 @@ fun AISuggestionCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // أيقونة الذكاء الاصطناعي
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -191,7 +201,6 @@ fun AISuggestionCard(
                 )
                 Spacer(Modifier.height(4.dp))
                 if (isLoading) {
-                    // مؤشر تحميل
                     repeat(2) {
                         Box(
                             modifier = Modifier
@@ -264,7 +273,6 @@ fun DailyProgressCard(
                 )
             }
 
-            // النسبة المئوية
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -319,7 +327,6 @@ fun HomeHeader(
             )
         }
 
-        // Streak
         if (streakDays > 0) {
             GlassCard(
                 cornerRadius = JadwalRadius.md,
@@ -362,7 +369,6 @@ fun TaskCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // أيقونة المادة
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -389,7 +395,6 @@ fun TaskCard(
                 )
             }
 
-            // حالة المهمة
             when {
                 task.isCompleted -> Icon(
                     Icons.Rounded.CheckCircle,
@@ -409,7 +414,7 @@ fun TaskCard(
     }
 }
 
-// ===== حالة فارغة لمهام اليوم =====
+// ===== حالة فارغة =====
 @Composable
 fun EmptyTasksCard(modifier: Modifier = Modifier) {
     GlassCard(modifier = modifier, cornerRadius = JadwalRadius.lg) {
@@ -444,11 +449,7 @@ fun ExamAlertCard(
     daysUntil: Int,
     modifier: Modifier = Modifier,
 ) {
-    GlassCard(
-        modifier = modifier,
-        cornerRadius = JadwalRadius.md,
-        glassAlpha = 0.3f,
-    ) {
+    GlassCard(modifier = modifier, cornerRadius = JadwalRadius.md, glassAlpha = 0.3f) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -504,16 +505,8 @@ fun WeeklySnapshotCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                WeeklyStatItem(
-                    value = "$completedSessions",
-                    label = "جلسة",
-                    icon = "✅",
-                )
-                WeeklyStatItem(
-                    value = String.format("%.1f", totalHours),
-                    label = "ساعة",
-                    icon = "⏱️",
-                )
+                WeeklyStatItem(value = "$completedSessions", label = "جلسة", icon = "✅")
+                WeeklyStatItem(value = String.format("%.1f", totalHours), label = "ساعة", icon = "⏱️")
             }
         }
     }
