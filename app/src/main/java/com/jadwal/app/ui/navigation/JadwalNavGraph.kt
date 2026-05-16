@@ -9,16 +9,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.jadwal.ui.screens.ai.AISuggestionScreen
 import com.jadwal.ui.screens.analytics.AnalyticsScreen
-import com.jadwal.ui.screens.home.HomeScreen
 import com.jadwal.ui.screens.auth.ForgotPasswordScreen
 import com.jadwal.ui.screens.auth.LoginScreen
 import com.jadwal.ui.screens.auth.RegisterScreen
+import com.jadwal.ui.screens.chat.AIChatScreen
+import com.jadwal.ui.screens.home.HomeScreen
+import com.jadwal.ui.screens.scan.ExamScanScreen
 import com.jadwal.ui.screens.onboarding.OnboardingScreen
 import com.jadwal.ui.screens.profile.ProfileScreen
 import com.jadwal.ui.screens.schedule.ScheduleScreen
 import com.jadwal.ui.screens.session.SessionScreen
 import com.jadwal.ui.screens.settings.SettingsScreen
 import com.jadwal.ui.screens.setup.SetupScreen
+import com.jadwal.ui.screens.subjects.SubjectsScreen
 
 @Composable
 fun JadwalNavGraph(
@@ -31,28 +34,20 @@ fun JadwalNavGraph(
         startDestination = startDestination,
         modifier = modifier,
         enterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { it },
-                animationSpec = tween(300)
-            ) + fadeIn(tween(300))
+            slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(300)) +
+                    fadeIn(tween(300))
         },
         exitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { -it / 3 },
-                animationSpec = tween(300)
-            ) + fadeOut(tween(200))
+            slideOutHorizontally(targetOffsetX = { -it / 3 }, animationSpec = tween(300)) +
+                    fadeOut(tween(200))
         },
         popEnterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { -it / 3 },
-                animationSpec = tween(300)
-            ) + fadeIn(tween(300))
+            slideInHorizontally(initialOffsetX = { -it / 3 }, animationSpec = tween(300)) +
+                    fadeIn(tween(300))
         },
         popExitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { it },
-                animationSpec = tween(300)
-            ) + fadeOut(tween(200))
+            slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(300)) +
+                    fadeOut(tween(200))
         },
     ) {
         // ===== Onboarding =====
@@ -62,7 +57,7 @@ fun JadwalNavGraph(
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Onboarding.route) { inclusive = true }
                     }
-                }
+                },
             )
         }
 
@@ -93,7 +88,7 @@ fun JadwalNavGraph(
         composable(Screen.ForgotPassword.route) {
             ForgotPasswordScreen(
                 onEmailSent = { navController.popBackStack() },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
             )
         }
 
@@ -104,38 +99,47 @@ fun JadwalNavGraph(
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Setup.route) { inclusive = true }
                     }
-                }
+                },
             )
         }
 
         // ===== الشاشات الرئيسية =====
         composable(Screen.Home.route) {
             HomeScreen(
-                onStartSession = { scheduleItemId ->
-                    navController.navigate("${Screen.Session.route}/$scheduleItemId")
-                },
-                onViewSchedule = {
-                    navController.navigate(Screen.Schedule.route)
-                },
-                onViewReport = {
-                    navController.navigate(Screen.Analytics.route)
-                },
-                onViewAISuggestion = {
-                    navController.navigate(Screen.AISuggestion.route)
-                },
+                onStartSession   = { id -> navController.navigate("${Screen.Session.route}/$id") },
+                onViewSchedule   = { navController.navigate(Screen.Schedule.route) },
+                onViewReport     = { navController.navigate(Screen.Analytics.route) },
+                onViewAISuggestion = { navController.navigate(Screen.AISuggestion.route) },
             )
         }
 
         composable(Screen.Schedule.route) {
-            ScheduleScreen()
+            ScheduleScreen(
+                onScanExams = { navController.navigate(Screen.ExamScan.route) }
+            )
         }
 
-        composable(Screen.Analytics.route) {
-            AnalyticsScreen()
-        }
+        composable(Screen.Analytics.route) { AnalyticsScreen() }
 
         composable(Screen.Settings.route) {
-            SettingsScreen(navController = navController)
+            SettingsScreen(
+                navController = navController,
+                onLogout = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        // ===== شاشة المساعد الذكي (دردشة) =====
+        composable(Screen.AiChat.route) {
+            AIChatScreen()
+        }
+
+        // ===== شاشة إدارة المواد =====
+        composable(Screen.Subjects.route) {
+            SubjectsScreen(onBack = { navController.popBackStack() })
         }
 
         // ===== شاشة الجلسة =====
@@ -147,7 +151,7 @@ fun JadwalNavGraph(
             )
         }
 
-        // ===== شاشة الذكاء الاصطناعي =====
+        // ===== شاشة الذكاء الاصطناعي للجدول =====
         composable(Screen.AISuggestion.route) {
             AISuggestionScreen(
                 onBack = { navController.popBackStack() },
@@ -155,14 +159,24 @@ fun JadwalNavGraph(
                     navController.navigate(Screen.Schedule.route) {
                         popUpTo(Screen.AISuggestion.route) { inclusive = true }
                     }
-                }
+                },
             )
         }
 
-        // ===== شاشة الملف الشخصي (جديدة) =====
+        // ===== شاشة الملف الشخصي =====
         composable(Screen.Profile.route) {
-            ProfileScreen(
-                onBack = { navController.popBackStack() }
+            ProfileScreen(onBack = { navController.popBackStack() })
+        }
+
+        // ===== مسح جدول الامتحانات بالذكاء الاصطناعي =====
+        composable(Screen.ExamScan.route) {
+            ExamScanScreen(
+                onBack = { navController.popBackStack() },
+                onDone = {
+                    navController.navigate(Screen.Schedule.route) {
+                        popUpTo(Screen.ExamScan.route) { inclusive = true }
+                    }
+                },
             )
         }
     }

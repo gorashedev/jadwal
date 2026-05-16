@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jadwal.data.repository.ScheduleRepository
 import com.jadwal.data.repository.SubjectRepository
+import com.jadwal.domain.algorithm.ScheduleAlgorithm
+import com.jadwal.domain.model.StudyTime
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -25,8 +27,9 @@ data class ScheduleItem(
 data class ScheduleUiState(
     val isLoading: Boolean = true,
     val selectedDayIndex: Int = 0,
-    val weekItems: Map<Int, List<ScheduleItem>> = emptyMap(), // dayIndex -> items
+    val weekItems: Map<Int, List<ScheduleItem>> = emptyMap(),
     val upcomingExams: List<ExamBadge> = emptyList(),
+    val isGenerating: Boolean = false,
 )
 
 data class ExamBadge(
@@ -39,6 +42,7 @@ data class ExamBadge(
 class ScheduleViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
     private val subjectRepository: SubjectRepository,
+    private val scheduleAlgorithm: ScheduleAlgorithm,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -84,6 +88,35 @@ class ScheduleViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    /**
+     * توليد جدول أسبوعي بناءً على المواد المحفوظة في قاعدة البيانات.
+     * يُستدعى عند الضغط على زر "توليد الجدول" في الشاشة الفارغة.
+     */
+    fun generateSchedule() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isGenerating = true) }
+            try {
+                val subjects = subjectRepository.getAllSubjects().first()
+                if (subjects.isNotEmpty()) {
+                    // حذف الجدول القديم أولاً لتجنب التكرار
+                    scheduleRepository.deleteAllItems()
+
+                    val slots = scheduleAlgorithm.generateSchedule(
+                        subjects = subjects,
+                        dailyHours = 2,
+                        preferredTime = StudyTime.MORNING,
+                    )
+                    scheduleRepository.saveScheduleSlots(slots)
+                }
+                _uiState.update { it.copy(isGenerating = false) }
+                loadSchedule()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isGenerating = false) }
+                loadSchedule()
             }
         }
     }

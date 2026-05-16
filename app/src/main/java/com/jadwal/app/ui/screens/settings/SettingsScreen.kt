@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
@@ -31,11 +32,16 @@ import com.jadwal.ui.theme.*
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     navController: NavController,
+    onLogout: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // حالة مربع اختيار الوقت
+    // مراقبة حدث تسجيل الخروج
+    LaunchedEffect(Unit) {
+        viewModel.logoutEvent.collect { onLogout() }
+    }
+
     var showTimePicker by remember { mutableStateOf(false) }
     val timePickerState = rememberTimePickerState(
         initialHour = uiState.notificationHour,
@@ -48,21 +54,34 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
             title = { Text("وقت التذكير") },
-            text = {
-                TimePicker(state = timePickerState)
-            },
+            text = { TimePicker(state = timePickerState) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.setNotificationTime(timePickerState.hour, timePickerState.minute)
                     showTimePicker = false
-                }) {
-                    Text("حفظ")
-                }
+                }) { Text("حفظ") }
             },
             dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) {
-                    Text("إلغاء")
-                }
+                TextButton(onClick = { showTimePicker = false }) { Text("إلغاء") }
+            },
+        )
+    }
+
+    // مربع تأكيد تسجيل الخروج
+    if (uiState.showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissLogoutDialog,
+            icon = { Icon(Icons.Rounded.Logout, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text("تسجيل الخروج", fontWeight = FontWeight.Bold) },
+            text = { Text("هل أنت متأكد أنك تريد تسجيل الخروج؟") },
+            confirmButton = {
+                Button(
+                    onClick = viewModel::logout,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                ) { Text("خروج", color = MaterialTheme.colorScheme.onError) }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissLogoutDialog) { Text("إلغاء") }
             },
         )
     }
@@ -90,12 +109,13 @@ fun SettingsScreen(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
-                // زر الملف الشخصي
-                FilledTonalIconButton(
-                    onClick = { navController.navigate(Screen.Profile.route) },
-                    modifier = Modifier.padding(end = 8.dp),
-                ) {
-                    Icon(Icons.Rounded.Person, contentDescription = "الملف الشخصي")
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    FilledTonalIconButton(onClick = { navController.navigate(Screen.Subjects.route) }) {
+                        Icon(Icons.Rounded.MenuBook, contentDescription = "إدارة المواد")
+                    }
+                    FilledTonalIconButton(onClick = { navController.navigate(Screen.Profile.route) }) {
+                        Icon(Icons.Rounded.Person, contentDescription = "الملف الشخصي")
+                    }
                 }
             }
 
@@ -114,7 +134,7 @@ fun SettingsScreen(
                     Column(modifier = Modifier.selectableGroup()) {
                         listOf(
                             "LIGHT" to "فاتح ☀️",
-                            "DARK" to "داكن 🌙",
+                            "DARK"  to "داكن 🌙",
                             "SYSTEM" to "تلقائي (حسب الجهاز) 🔄",
                         ).forEach { (mode, label) ->
                             Row(
@@ -150,7 +170,7 @@ fun SettingsScreen(
                         listOf(
                             "ar" to "العربية 🇸🇦",
                             "en" to "English 🇬🇧",
-                            "" to "تلقائي (حسب الجهاز) 🔄",
+                            ""   to "تلقائي (حسب الجهاز) 🔄",
                         ).forEach { (code, label) ->
                             Row(
                                 modifier = Modifier
@@ -186,11 +206,9 @@ fun SettingsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            Icon(
-                                Icons.Rounded.Info, null,
+                            Icon(Icons.Rounded.Info, null,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(16.dp),
-                            )
+                                modifier = Modifier.size(16.dp))
                             Text(
                                 "سيُعاد تشغيل التطبيق تلقائياً عند تغيير اللغة",
                                 style = MaterialTheme.typography.bodySmall,
@@ -211,26 +229,20 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 cornerRadius = JadwalRadius.lg,
             ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column {
-                            Text(
-                                "تفعيل الإشعارات",
+                            Text("تفعيل الإشعارات",
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                            Text(
-                                "تذكير يومي بجدول المذاكرة",
+                                color = MaterialTheme.colorScheme.onSurface)
+                            Text("تذكير يومي بجدول المذاكرة",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Switch(
                             checked = uiState.notificationsEnabled,
@@ -240,39 +252,26 @@ fun SettingsScreen(
 
                     if (uiState.notificationsEnabled) {
                         HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
-
-                        // ===== وقت التذكير مع زر التعديل =====
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column {
-                                Text(
-                                    "وقت التذكير",
+                                Text("وقت التذكير",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
+                                    color = MaterialTheme.colorScheme.onSurface)
                                 Text(
-                                    text = String.format(
-                                        "%02d:%02d",
-                                        uiState.notificationHour,
-                                        uiState.notificationMinute,
-                                    ),
+                                    text = String.format("%02d:%02d",
+                                        uiState.notificationHour, uiState.notificationMinute),
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary,
                                 )
                             }
-                            FilledTonalButton(
-                                onClick = { showTimePicker = true },
-                            ) {
-                                Icon(
-                                    Icons.Rounded.Edit,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                )
+                            FilledTonalButton(onClick = { showTimePicker = true }) {
+                                Icon(Icons.Rounded.Edit, null, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
                                 Text("تعديل")
                             }
@@ -302,7 +301,7 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // ===== قسم المطور (قابل للتفاعل) =====
+            // ===== قسم المطور =====
             SettingsSectionTitle("عن المطور", Icons.Rounded.Code)
 
             GlassCard(
@@ -313,36 +312,27 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    // الاسم
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Icon(
-                            Icons.Rounded.Person,
-                            contentDescription = null,
+                        Icon(Icons.Rounded.Person, null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp),
-                        )
+                            modifier = Modifier.size(20.dp))
                         Column {
-                            Text(
-                                "المطور",
+                            Text("المطور",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Text(
-                                "Gorashe Mohamed | قرشي محمد",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Gorashe Mohamed | قرشي محمد",
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
+                                color = MaterialTheme.colorScheme.onSurface)
                         }
                     }
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                    // البريد الإلكتروني (قابل للنقر)
                     Surface(
                         onClick = {
                             val intent = Intent(Intent.ACTION_SENDTO).apply {
@@ -356,87 +346,102 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
+                            modifier = Modifier.fillMaxWidth().padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Icon(
-                                Icons.Rounded.Email,
-                                contentDescription = null,
+                            Icon(Icons.Rounded.Email, null,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp),
-                            )
+                                modifier = Modifier.size(20.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    "البريد الإلكتروني",
+                                Text("البريد الإلكتروني",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Text(
-                                    "gorashe.suliman@outlook.com",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("gorashe.suliman@outlook.com",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Medium,
-                                )
+                                    fontWeight = FontWeight.Medium)
                             }
-                            Icon(
-                                Icons.Rounded.ArrowForwardIos,
-                                contentDescription = null,
+                            Icon(Icons.Rounded.ArrowForwardIos, null,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(14.dp),
-                            )
+                                modifier = Modifier.size(14.dp))
                         }
                     }
 
                     Spacer(Modifier.height(4.dp))
 
-                    // رقم الهاتف (قابل للنقر)
                     Surface(
                         onClick = {
-                            val intent = Intent(Intent.ACTION_DIAL).apply {
-                                data = Uri.parse("tel:+201010736525")
-                            }
-                            context.startActivity(intent)
+                            context.startActivity(
+                                Intent(Intent.ACTION_DIAL).apply { data = Uri.parse("tel:+201010736525") }
+                            )
                         },
                         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f),
                         shape = MaterialTheme.shapes.small,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
+                            modifier = Modifier.fillMaxWidth().padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Icon(
-                                Icons.Rounded.Phone,
-                                contentDescription = null,
+                            Icon(Icons.Rounded.Phone, null,
                                 tint = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.size(20.dp),
-                            )
+                                modifier = Modifier.size(20.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    "رقم الهاتف",
+                                Text("رقم الهاتف",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Text(
-                                    "+20 1010736525",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("+20 1010736525",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.secondary,
-                                    fontWeight = FontWeight.Medium,
-                                )
+                                    fontWeight = FontWeight.Medium)
                             }
-                            Icon(
-                                Icons.Rounded.ArrowForwardIos,
-                                contentDescription = null,
+                            Icon(Icons.Rounded.ArrowForwardIos, null,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(14.dp),
-                            )
+                                modifier = Modifier.size(14.dp))
                         }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            // ===== زر تسجيل الخروج =====
+            GlassCard(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                cornerRadius = JadwalRadius.lg,
+            ) {
+                Surface(
+                    onClick = viewModel::showLogoutDialog,
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f),
+                    shape = RoundedCornerShape(JadwalRadius.lg),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        if (uiState.isLoggingOut) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(22.dp),
+                                color = MaterialTheme.colorScheme.error,
+                                strokeWidth = 2.dp,
+                            )
+                        } else {
+                            Icon(Icons.Rounded.Logout, null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(22.dp))
+                        }
+                        Text(
+                            text = if (uiState.isLoggingOut) "جارٍ تسجيل الخروج..." else "تسجيل الخروج",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.error,
+                        )
                     }
                 }
             }
@@ -453,12 +458,7 @@ fun SettingsSectionTitle(title: String, icon: ImageVector) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(18.dp),
-        )
+        Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall,
@@ -481,20 +481,10 @@ fun SettingsSubtitle(text: String, modifier: Modifier = Modifier) {
 
 @Composable
 fun SettingsInfoRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
     }
 }

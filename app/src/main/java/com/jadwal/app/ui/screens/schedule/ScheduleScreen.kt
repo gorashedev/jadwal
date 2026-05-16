@@ -35,6 +35,7 @@ val arabicDaysShort = listOf("أحد", "اثنين", "ثلاثاء", "أربعا
 
 @Composable
 fun ScheduleScreen(
+    onScanExams: () -> Unit = {},
     viewModel: ScheduleViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -61,9 +62,17 @@ fun ScheduleScreen(
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
-                IconButton(onClick = viewModel::refresh) {
-                    Icon(Icons.Rounded.Refresh, contentDescription = "تحديث",
-                        tint = MaterialTheme.colorScheme.primary)
+                Row {
+                    // زر مسح جدول الامتحانات بالكاميرا
+                    IconButton(onClick = onScanExams) {
+                        Icon(Icons.Rounded.PhotoCamera,
+                            contentDescription = "مسح جدول الامتحانات",
+                            tint = MaterialTheme.colorScheme.primary)
+                    }
+                    IconButton(onClick = viewModel::refresh) {
+                        Icon(Icons.Rounded.Refresh, contentDescription = "تحديث",
+                            tint = MaterialTheme.colorScheme.primary)
+                    }
                 }
             }
 
@@ -98,6 +107,14 @@ fun ScheduleScreen(
 
             Spacer(Modifier.height(8.dp))
 
+            // ===== زر توليد الجدول (يظهر فقط عندما لا توجد أي مهام) =====
+            if (!uiState.isLoading && uiState.weekItems.isEmpty()) {
+                GenerateScheduleCard(
+                    isGenerating = uiState.isGenerating,
+                    onGenerate = viewModel::generateSchedule,
+                )
+            }
+
             // ===== محتوى اليوم المختار =====
             AnimatedContent(
                 targetState = uiState.selectedDayIndex,
@@ -113,7 +130,7 @@ fun ScheduleScreen(
                 label = "day_content",
             ) { dayIndex ->
                 val items = uiState.weekItems[dayIndex] ?: emptyList()
-                if (uiState.isLoading) {
+                if (uiState.isLoading || uiState.isGenerating) {
                     ScheduleLoadingSkeleton()
                 } else if (items.isEmpty()) {
                     EmptyDayContent(dayName = arabicDays[dayIndex])
@@ -333,6 +350,69 @@ fun ExamBadgeChip(exam: ExamBadge) {
                         else -> MaterialTheme.colorScheme.onSurfaceVariant
                     },
                 )
+            }
+        }
+    }
+}
+
+// ===== بطاقة توليد الجدول =====
+@Composable
+fun GenerateScheduleCard(
+    isGenerating: Boolean,
+    onGenerate: () -> Unit,
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+    ) {
+        GlassCard(modifier = Modifier.fillMaxWidth(), cornerRadius = JadwalRadius.xl) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text("🗓️", fontSize = 36.sp)
+                Text(
+                    text = "الجدول فارغ",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = "اضغط على الزر أدناه لتوليد جدول أسبوعي تلقائي بناءً على مواردك",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(Modifier.height(4.dp))
+                Button(
+                    onClick = onGenerate,
+                    enabled = !isGenerating,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    if (isGenerating) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("جارٍ التوليد...")
+                    } else {
+                        Icon(
+                            Icons.Rounded.AutoAwesome,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("توليد الجدول تلقائياً", fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
     }

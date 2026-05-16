@@ -11,19 +11,23 @@ sealed class Screen(val route: String) {
     // ===== شاشات الـ BottomBar الرئيسية =====
     data object Home      : Screen("home")
     data object Schedule  : Screen("schedule")
+    data object AiChat    : Screen("ai_chat")
     data object Analytics : Screen("analytics")
     data object Settings  : Screen("settings")
 
     // ===== شاشات فرعية =====
     data object Session      : Screen("session")
     data object AISuggestion : Screen("ai_suggestion")
-    data object Profile      : Screen("profile")   // ← جديد
+    data object Profile      : Screen("profile")
+    data object Subjects     : Screen("subjects")
+    data object ExamScan     : Screen("exam_scan")
 
     companion object {
         val bottomBarScreens by lazy {
             listOf(
                 Home.route,
                 Schedule.route,
+                AiChat.route,
                 Analytics.route,
                 Settings.route,
             )
@@ -39,6 +43,8 @@ sealed class Screen(val route: String) {
                 Session.route,
                 AISuggestion.route,
                 Profile.route,
+                Subjects.route,
+                ExamScan.route,
             )
         }
     }

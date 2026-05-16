@@ -6,24 +6,24 @@ import androidx.work.Configuration
 import com.jadwal.notifications.JadwalNotificationManager
 import com.jadwal.notifications.NotificationScheduler
 import com.jadwal.data.preferences.UserPreferencesDataStore
+import com.jadwal.util.LanguageManager
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 /**
  * JadwalApplication — نقطة بدء التطبيق.
  *
  * مهام التهيئة:
- * 1. إنشاء قنوات الإشعارات (مطلوب لـ Android 8+)
- * 2. تمرير HiltWorkerFactory إلى WorkManager (مطلوب لـ @HiltWorker)
- * 3. جدولة الإشعارات الدورية إذا كانت مُفعَّلة
- *
- * تأكد في build.gradle.kts أن اسم هذا الكلاس مُعيَّن في AndroidManifest.xml:
- * <application android:name=".JadwalApplication" ...>
+ * 1. استعادة اللغة المحفوظة وتطبيقها فوراً قبل أي Activity
+ * 2. إنشاء قنوات الإشعارات (مطلوب لـ Android 8+)
+ * 3. تمرير HiltWorkerFactory إلى WorkManager (مطلوب لـ @HiltWorker)
+ * 4. جدولة الإشعارات الدورية إذا كانت مُفعَّلة
  */
 @HiltAndroidApp
 class JadwalApplication : Application(), Configuration.Provider {
@@ -42,7 +42,6 @@ class JadwalApplication : Application(), Configuration.Provider {
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    // ===== تمرير HiltWorkerFactory — مطلوب لكي يعمل @HiltWorker =====
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
@@ -51,10 +50,28 @@ class JadwalApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        // إنشاء قنوات الإشعارات مرة واحدة عند بدء التطبيق
+
+        // ===== استعادة اللغة قبل كل شيء =====
+        // runBlocking مقبول هنا لأنه في onCreate() ويجب تطبيق اللغة قبل أي نشاط
+        restoreLanguage()
+
         notificationManager.createNotificationChannels()
-        // جدولة الإشعارات بناءً على تفضيلات المستخدم
         initNotifications()
+    }
+
+    /**
+     * يقرأ اللغة المحفوظة من DataStore ويطبّقها عبر AppCompatDelegate.
+     * هذا يضمن أن اللغة المختارة تُستعاد في كل مرة يُفتح فيها التطبيق.
+     */
+    private fun restoreLanguage() {
+        try {
+            val savedCode = runBlocking(Dispatchers.IO) { prefs.languageCode.first() }
+            if (savedCode.isNotEmpty()) {
+                LanguageManager.setAppLocale(savedCode)
+            }
+        } catch (_: Exception) {
+            // تجاهل الخطأ — يبقى التطبيق على اللغة الافتراضية
+        }
     }
 
     private fun initNotifications() {

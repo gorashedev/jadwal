@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
@@ -20,11 +21,10 @@ import androidx.compose.ui.unit.dp
 import com.jadwal.ui.theme.*
 
 /**
- * GlassCard — بطاقة بتأثير الزجاج (Glass Morphism)
+ * GlassCard — بطاقة بتأثير الزجاج
  *
- * إصلاح: استبدال isSystemInDarkTheme() بـ LocalAppDarkTheme
- * حتى تستجيب البطاقات لتغيير الثيم من داخل الإعدادات فوراً
- * إصلاح: زيادة شفافية الوضع الفاتح لتظهر البطاقات بوضوح
+ * إصلاح الوضع الفاتح: زيادة معتمية البطاقة البيضاء لتظهر بوضوح
+ * على خلفية الألوان الفاتحة، مع تحسين الحدود وإضافة ظل خفيف.
  */
 @Composable
 fun GlassCard(
@@ -37,33 +37,43 @@ fun GlassCard(
     val isDark = LocalAppDarkTheme.current
     val shape = RoundedCornerShape(cornerRadius)
 
-    // في الوضع الفاتح: نستخدم خلفية بيضاء شبه معتمة لإظهار البطاقات بوضوح
-    // في الوضع الداكن: نستخدم الزجاج الداكن الشفاف كما كان
+    // الوضع الفاتح: بطاقة بيضاء معتمة بما يكفي لتتميز عن الخلفية
+    // الوضع الداكن: الزجاج الداكن الشفاف
     val effectiveColor = if (isDark) {
-        GlassSurfaceDark.copy(alpha = glassAlpha.coerceIn(0.05f, 0.95f))
+        GlassSurfaceDark.copy(alpha = glassAlpha.coerceIn(0.05f, 0.90f))
     } else {
-        Color.White.copy(alpha = glassAlpha.coerceIn(0.55f, 0.95f))
+        Color.White.copy(alpha = 0.90f)
     }
 
-    val borderColor = if (isDark) {
-        Color.White.copy(alpha = 0.12f)
+    val borderGradient = if (isDark) {
+        Brush.linearGradient(
+            colors = listOf(
+                Color.White.copy(alpha = 0.18f),
+                Color.White.copy(alpha = 0.06f),
+            )
+        )
     } else {
-        JadwalIndigo.copy(alpha = 0.08f)
+        Brush.linearGradient(
+            colors = listOf(
+                JadwalIndigo.copy(alpha = 0.18f),
+                JadwalViolet.copy(alpha = 0.08f),
+            )
+        )
     }
 
-    val baseModifier = modifier
+    val shadowModifier = if (!isDark) {
+        modifier.shadow(
+            elevation = 2.dp,
+            shape = shape,
+            ambientColor = JadwalIndigo.copy(alpha = 0.08f),
+            spotColor = JadwalIndigo.copy(alpha = 0.10f),
+        )
+    } else modifier
+
+    val baseModifier = shadowModifier
         .clip(shape)
         .background(color = effectiveColor, shape = shape)
-        .border(
-            width = 1.dp,
-            brush = Brush.linearGradient(
-                colors = listOf(
-                    if (isDark) Color.White.copy(alpha = 0.15f) else JadwalIndigo.copy(alpha = 0.10f),
-                    borderColor,
-                )
-            ),
-            shape = shape,
-        )
+        .border(width = 1.dp, brush = borderGradient, shape = shape)
 
     val finalModifier = if (onClick != null) {
         baseModifier.clickable(
@@ -73,15 +83,14 @@ fun GlassCard(
         )
     } else baseModifier
 
-    Box(
-        modifier = finalModifier,
-        content = content
-    )
+    Box(modifier = finalModifier, content = content)
 }
 
 /**
  * JadwalBackground — الخلفية التدرجية الموحّدة للتطبيق
- * إصلاح: استبدال isSystemInDarkTheme() بـ LocalAppDarkTheme
+ *
+ * إصلاح الوضع الفاتح: ألوان أكثر وضوحاً وتباعداً لتُشعر المستخدم
+ * بالعمق بدلاً من خلفية بيضاء مسطّحة.
  */
 @Composable
 fun JadwalBackground(
@@ -92,17 +101,20 @@ fun JadwalBackground(
     val gradientColors = if (isDark) {
         listOf(GradientDarkStart, GradientDarkMid, GradientDarkEnd)
     } else {
-        listOf(GradientLightStart, GradientLightMid, GradientLightEnd)
+        // ألوان فاتحة ذات تدرج محسوس لتمنح عمقاً في الوضع الفاتح
+        listOf(
+            Color(0xFFECEEFD),  // بنفسجي فاتح مزرق
+            Color(0xFFF0F3FF),  // أفتح قليلاً في المنتصف
+            Color(0xFFF5EEFF),  // دفء خفيف في الأسفل
+        )
     }
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(colors = gradientColors)
-            )
+            .background(brush = Brush.verticalGradient(colors = gradientColors))
     ) {
-        // دائرة ضبابية — أعلى اليسار
+        // دائرة ضبابية أعلى اليسار
         Box(
             modifier = Modifier
                 .size(300.dp)
@@ -110,16 +122,17 @@ fun JadwalBackground(
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            if (isDark) JadwalViolet.copy(alpha = 0.22f) else JadwalIndigo.copy(alpha = 0.09f),
+                            if (isDark) JadwalViolet.copy(alpha = 0.22f)
+                            else JadwalIndigo.copy(alpha = 0.13f),
                             Color.Transparent,
                         )
                     ),
-                    shape = CircleShape
+                    shape = CircleShape,
                 )
                 .blur(radius = 80.dp)
         )
 
-        // دائرة ضبابية — أسفل اليمين
+        // دائرة ضبابية أسفل اليمين
         Box(
             modifier = Modifier
                 .size(240.dp)
@@ -128,11 +141,12 @@ fun JadwalBackground(
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            if (isDark) JadwalIndigo.copy(alpha = 0.18f) else JadwalViolet.copy(alpha = 0.07f),
+                            if (isDark) JadwalIndigo.copy(alpha = 0.18f)
+                            else JadwalViolet.copy(alpha = 0.11f),
                             Color.Transparent,
                         )
                     ),
-                    shape = CircleShape
+                    shape = CircleShape,
                 )
                 .blur(radius = 70.dp)
         )

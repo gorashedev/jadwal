@@ -12,9 +12,10 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.DateRange
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.BarChart
+import androidx.compose.material.icons.rounded.DateRange
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Settings
 
 @Composable
@@ -23,7 +24,6 @@ fun JadwalApp() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    // تحديد ما إذا كانت الشاشة الحالية تتطلب BottomBar
     val showBottomBar = Screen.bottomBarScreens.any { it == currentDestination?.route }
 
     Scaffold(
@@ -31,20 +31,21 @@ fun JadwalApp() {
             if (showBottomBar) {
                 NavigationBar(
                     containerColor = Color.Transparent,
-                    tonalElevation = 0.dp
+                    tonalElevation = 0.dp,
                 ) {
                     val items = listOf(
-                        BottomNavItem("الرئيسية", Screen.Home.route, Icons.Rounded.Home),
-                        BottomNavItem("الجدول", Screen.Schedule.route, Icons.Rounded.DateRange),
+                        BottomNavItem("الرئيسية",    Screen.Home.route,      Icons.Rounded.Home),
+                        BottomNavItem("الجدول",      Screen.Schedule.route,  Icons.Rounded.DateRange),
+                        BottomNavItem("المساعد",     Screen.AiChat.route,    Icons.Rounded.AutoAwesome),
                         BottomNavItem("الإحصائيات", Screen.Analytics.route, Icons.Rounded.BarChart),
-                        BottomNavItem("الإعدادات", Screen.Settings.route, Icons.Rounded.Settings)
+                        BottomNavItem("الإعدادات",  Screen.Settings.route,  Icons.Rounded.Settings),
                     )
 
                     items.forEach { item ->
                         val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
                         NavigationBarItem(
-                            icon = { Icon(item.icon, contentDescription = item.title) },
-                            label = { Text(item.title) },
+                            icon  = { Icon(item.icon, contentDescription = item.title) },
+                            label = { Text(item.title, style = MaterialTheme.typography.labelSmall) },
                             selected = selected,
                             onClick = {
                                 navController.navigate(item.route) {
@@ -54,17 +55,17 @@ fun JadwalApp() {
                                     launchSingleTop = true
                                     restoreState = true
                                 }
-                            }
+                            },
                         )
                     }
                 }
             }
-        }
+        },
     ) { innerPadding ->
         JadwalNavGraph(
             navController = navController,
             startDestination = Screen.Onboarding.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
         )
     }
 }
@@ -72,5 +73,5 @@ fun JadwalApp() {
 private data class BottomNavItem(
     val title: String,
     val route: String,
-    val icon: ImageVector
+    val icon: ImageVector,
 )

@@ -1,7 +1,6 @@
 package com.jadwal.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,43 +16,46 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.jadwal.ui.theme.JadwalIndigo
 import com.jadwal.ui.theme.JadwalViolet
+import com.jadwal.ui.theme.LocalAppDarkTheme
 
 /**
  * JadwalBackground — الخلفية الرئيسية لكل شاشة
  *
- * تتضمن:
- * - Gradient خلفية (Radial)
- * - دوائر ضبابية ملونة للعمق (Ambient Blobs)
+ * إصلاح: استخدام LocalAppDarkTheme.current بدلاً من isSystemInDarkTheme()
+ * حتى تعكس الخلفية اختيار المستخدم من الإعدادات (فاتح/داكن) وليس إعداد الجهاز فقط.
  *
- * الاستخدام:
- * ```
- * JadwalBackground {
- *     // محتوى الشاشة
- * }
- * ```
+ * الوضع الفاتح: خلفية بيضاء نقية مع تدرج خفيف — نص داكن واضح تماماً
+ * الوضع الداكن: الخلفية الداكنة المألوفة ذات البنفسجي العميق
  */
 @Composable
 fun JadwalBackground(
     content: @Composable BoxScope.() -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalAppDarkTheme.current
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                brush = Brush.radialGradient(
-                    colors = if (isDark) listOf(
-                        Color(0xFF1A1040),
-                        Color(0xFF0D0D1A),
-                        Color(0xFF0A1628),
-                    ) else listOf(
-                        Color(0xFFE8EAF6),
-                        Color(0xFFEDE7F6),
-                        Color(0xFFE3F2FD),
-                    ),
-                    radius = 1800f,
-                )
+                brush = if (isDark) {
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF1A1040),
+                            Color(0xFF0D0D1A),
+                            Color(0xFF0A1628),
+                        ),
+                        radius = 1800f,
+                    )
+                } else {
+                    // وضع فاتح: أبيض ناصع مع انتقال ناعم نحو الأسفل
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFFFFFFF),   // أبيض ناصع في الأعلى
+                            Color(0xFFF5F7FF),   // أبيض مع لمسة بنفسجية في المنتصف
+                            Color(0xFFF0F4FF),   // أفتح قليلاً في الأسفل
+                        )
+                    )
+                }
             )
     ) {
         // دائرة ضبابية — أعلى اليسار
@@ -64,7 +66,7 @@ fun JadwalBackground(
             color = if (isDark)
                 JadwalViolet.copy(alpha = 0.28f)
             else
-                JadwalIndigo.copy(alpha = 0.13f)
+                JadwalIndigo.copy(alpha = 0.07f)
         )
 
         // دائرة ضبابية — أسفل اليمين
@@ -76,7 +78,7 @@ fun JadwalBackground(
             color = if (isDark)
                 JadwalIndigo.copy(alpha = 0.22f)
             else
-                JadwalViolet.copy(alpha = 0.09f)
+                JadwalViolet.copy(alpha = 0.05f)
         )
 
         // دائرة ضبابية — المنتصف (خفية جداً)
@@ -88,10 +90,9 @@ fun JadwalBackground(
             color = if (isDark)
                 JadwalIndigo.copy(alpha = 0.10f)
             else
-                JadwalViolet.copy(alpha = 0.05f)
+                JadwalViolet.copy(alpha = 0.03f)
         )
 
-        // المحتوى الفعلي فوق الخلفية
         content()
     }
 }
