@@ -31,10 +31,10 @@ private val LightColorScheme = lightColorScheme(
     onErrorContainer = Color(0xFF410002),
 
     background = GlassBackgroundLight,
-    onBackground = Neutral900,  // نص داكن جداً على خلفية فاتحة
+    onBackground = Neutral900,
 
-    surface = GlassSurfaceLight,
-    onSurface = Neutral900,     // نص داكن جداً على السطح الفاتح
+    surface = Color(0xFFFAFAFF),
+    onSurface = Neutral900,
     surfaceVariant = Color(0xFFE3E5F5),
     onSurfaceVariant = Color(0xFF44474F),
 
@@ -56,9 +56,9 @@ private val LightColorScheme = lightColorScheme(
     surfaceDim = Color(0xFFD9DBF0),
 )
 
-// ===== Dark Color Scheme — مُصحَّح لوضوح النصوص =====
+// ===== Dark Color Scheme =====
 private val DarkColorScheme = darkColorScheme(
-    primary = JadwalIndigoLight,        // أوضح في الوضع الداكن
+    primary = JadwalIndigoLight,
     onPrimary = Color(0xFF0E2278),
     primaryContainer = JadwalIndigoDark,
     onPrimaryContainer = Color(0xFFDDE1FF),
@@ -78,22 +78,20 @@ private val DarkColorScheme = darkColorScheme(
     errorContainer = Color(0xFF93000A),
     onErrorContainer = Color(0xFFFFDAD6),
 
-    // ===== الإصلاح الرئيسي: النص في الوضع الداكن =====
-    // Neutral100 = #F5F5F5 — أبيض تقريباً وواضح جداً على الخلفية الداكنة
-    background = GlassBackgroundDark,  // #0D0D1A
-    onBackground = Color(0xFFF0F0FF),  // أبيض مزرق قليلاً — مريح للعين في الداكن
+    background = GlassBackgroundDark,
+    onBackground = Color(0xFFF0F0FF),
 
-    surface = GlassSurfaceDark,        // CC1A1A2E — شبه شفاف داكن
-    onSurface = Color(0xFFEEEEFF),     // أبيض خفيف مزرق — واضح جداً ✅
-    surfaceVariant = Color(0xFF2A2D3A), // أغمق قليلاً من السطح
-    onSurfaceVariant = Color(0xFFCACDD8), // رمادي فاتح — للنصوص الثانوية ✅
+    surface = GlassSurfaceDark,
+    onSurface = Color(0xFFEEEEFF),
+    surfaceVariant = Color(0xFF2A2D3A),
+    onSurfaceVariant = Color(0xFFCACDD8),
 
     surfaceTint = JadwalIndigoLight,
     inverseSurface = Color(0xFFE5E5F0),
     inverseOnSurface = Neutral800,
     inversePrimary = JadwalIndigo,
 
-    outline = Color(0xFF9194A0),        // أفتح للظهور على الخلفيات الداكنة
+    outline = Color(0xFF9194A0),
     outlineVariant = Color(0xFF44474F),
 
     scrim = Color(0xFF000000),
@@ -133,6 +131,12 @@ val LocalJadwalColors = staticCompositionLocalOf {
     )
 }
 
+/**
+ * LocalAppDarkTheme — يعكس وضع الثيم الفعلي (مستخدَم في Glass components بدلاً من isSystemInDarkTheme)
+ * حتى يتم تطبيق الألوان الصحيحة عند اختيار وضع فاتح/داكن من داخل الإعدادات
+ */
+val LocalAppDarkTheme = compositionLocalOf { false }
+
 @Composable
 fun JadwalTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -166,14 +170,11 @@ fun JadwalTheme(
         )
     }
 
-    // ===== ضبط شريط الحالة والتنقل =====
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             WindowCompat.getInsetsController(window, view).apply {
-                // في الوضع الفاتح: أيقونات شريط الحالة داكنة (مرئية على الخلفية الفاتحة)
-                // في الوضع الداكن: أيقونات شريط الحالة فاتحة (مرئية على الخلفية الداكنة)
                 isAppearanceLightStatusBars = !darkTheme
                 isAppearanceLightNavigationBars = !darkTheme
             }
@@ -181,7 +182,8 @@ fun JadwalTheme(
     }
 
     CompositionLocalProvider(
-        LocalJadwalColors provides extendedColors
+        LocalJadwalColors provides extendedColors,
+        LocalAppDarkTheme provides darkTheme,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
@@ -192,6 +194,5 @@ fun JadwalTheme(
     }
 }
 
-// امتداد مساعد للوصول للألوان الموسّعة
 val MaterialTheme.jadwalColors: JadwalExtendedColors
     @Composable get() = LocalJadwalColors.current

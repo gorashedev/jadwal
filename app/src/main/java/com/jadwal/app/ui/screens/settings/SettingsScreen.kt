@@ -1,5 +1,7 @@
 package com.jadwal.ui.screens.settings
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -12,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -20,14 +23,49 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.jadwal.ui.components.GlassCard
 import com.jadwal.ui.components.JadwalBackground
+import com.jadwal.ui.navigation.Screen
 import com.jadwal.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     navController: NavController,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // حالة مربع اختيار الوقت
+    var showTimePicker by remember { mutableStateOf(false) }
+    val timePickerState = rememberTimePickerState(
+        initialHour = uiState.notificationHour,
+        initialMinute = uiState.notificationMinute,
+        is24Hour = true,
+    )
+
+    // مربع تعديل الوقت
+    if (showTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            title = { Text("وقت التذكير") },
+            text = {
+                TimePicker(state = timePickerState)
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.setNotificationTime(timePickerState.hour, timePickerState.minute)
+                    showTimePicker = false
+                }) {
+                    Text("حفظ")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("إلغاء")
+                }
+            },
+        )
+    }
 
     JadwalBackground {
         Column(
@@ -39,27 +77,40 @@ fun SettingsScreen(
                 .padding(bottom = 100.dp),
         ) {
             // ===== العنوان =====
-            Text(
-                text = "الإعدادات",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 20.dp),
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 24.dp, end = 8.dp, top = 16.dp, bottom = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = "الإعدادات",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                // زر الملف الشخصي
+                FilledTonalIconButton(
+                    onClick = { navController.navigate(Screen.Profile.route) },
+                    modifier = Modifier.padding(end = 8.dp),
+                ) {
+                    Icon(Icons.Rounded.Person, contentDescription = "الملف الشخصي")
+                }
+            }
 
             // ===== قسم المظهر =====
             SettingsSectionTitle("المظهر", Icons.Rounded.Palette)
 
             GlassCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 cornerRadius = JadwalRadius.lg,
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    // المظهر الفاتح / الداكن / التلقائي
-                    SettingsSubtitle("وضع المظهر", modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp))
-
+                    SettingsSubtitle(
+                        "وضع المظهر",
+                        modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp),
+                    )
                     Column(modifier = Modifier.selectableGroup()) {
                         listOf(
                             "LIGHT" to "فاتح ☀️",
@@ -78,10 +129,7 @@ fun SettingsScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
-                                RadioButton(
-                                    selected = uiState.themeMode == mode,
-                                    onClick = null,
-                                )
+                                RadioButton(selected = uiState.themeMode == mode, onClick = null)
                                 Text(
                                     text = label,
                                     style = MaterialTheme.typography.bodyLarge,
@@ -94,8 +142,10 @@ fun SettingsScreen(
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 
                     // ===== قسم اللغة =====
-                    SettingsSubtitle("لغة التطبيق", modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp))
-
+                    SettingsSubtitle(
+                        "لغة التطبيق",
+                        modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp),
+                    )
                     Column(modifier = Modifier.selectableGroup()) {
                         listOf(
                             "ar" to "العربية 🇸🇦",
@@ -114,10 +164,7 @@ fun SettingsScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
-                                RadioButton(
-                                    selected = uiState.languageCode == code,
-                                    onClick = null,
-                                )
+                                RadioButton(selected = uiState.languageCode == code, onClick = null)
                                 Text(
                                     text = label,
                                     style = MaterialTheme.typography.bodyLarge,
@@ -127,9 +174,6 @@ fun SettingsScreen(
                         }
                     }
 
-                    Spacer(Modifier.height(8.dp))
-
-                    // تنبيه مهم
                     Surface(
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                         shape = MaterialTheme.shapes.small,
@@ -143,8 +187,7 @@ fun SettingsScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Icon(
-                                Icons.Rounded.Info,
-                                null,
+                                Icons.Rounded.Info, null,
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(16.dp),
                             )
@@ -155,7 +198,6 @@ fun SettingsScreen(
                             )
                         }
                     }
-
                     Spacer(Modifier.height(12.dp))
                 }
             }
@@ -166,15 +208,11 @@ fun SettingsScreen(
             SettingsSectionTitle("الإشعارات", Icons.Rounded.Notifications)
 
             GlassCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 cornerRadius = JadwalRadius.lg,
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -202,22 +240,43 @@ fun SettingsScreen(
 
                     if (uiState.notificationsEnabled) {
                         HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
-                        Text(
-                            "وقت التذكير: ${
-                                String.format(
-                                    "%02d:%02d",
-                                    uiState.notificationHour,
-                                    uiState.notificationMinute
+
+                        // ===== وقت التذكير مع زر التعديل =====
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column {
+                                Text(
+                                    "وقت التذكير",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                 )
-                            }",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Text(
-                            "يمكنك تغيير الوقت من إعدادات الجهاز",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        )
+                                Text(
+                                    text = String.format(
+                                        "%02d:%02d",
+                                        uiState.notificationHour,
+                                        uiState.notificationMinute,
+                                    ),
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                            FilledTonalButton(
+                                onClick = { showTimePicker = true },
+                            ) {
+                                Icon(
+                                    Icons.Rounded.Edit,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text("تعديل")
+                            }
+                        }
                     }
                 }
             }
@@ -228,22 +287,157 @@ fun SettingsScreen(
             SettingsSectionTitle("عن التطبيق", Icons.Rounded.Info)
 
             GlassCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 cornerRadius = JadwalRadius.lg,
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     SettingsInfoRow("الإصدار", "1.0.0 (MVP)")
                     HorizontalDivider()
-                    SettingsInfoRow("المطور", "Jadwal Team")
-                    HorizontalDivider()
                     SettingsInfoRow("الذكاء الاصطناعي", "Google Gemini 1.5 Flash")
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // ===== قسم المطور (قابل للتفاعل) =====
+            SettingsSectionTitle("عن المطور", Icons.Rounded.Code)
+
+            GlassCard(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                cornerRadius = JadwalRadius.lg,
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    // الاسم
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Icon(
+                            Icons.Rounded.Person,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Column {
+                            Text(
+                                "المطور",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                "Gorashe Mohamed | قرشي محمد",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                    // البريد الإلكتروني (قابل للنقر)
+                    Surface(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                data = Uri.parse("mailto:gorashe.suliman@outlook.com")
+                                putExtra(Intent.EXTRA_SUBJECT, "جدول - تواصل")
+                            }
+                            context.startActivity(Intent.createChooser(intent, "إرسال بريد"))
+                        },
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Icon(
+                                Icons.Rounded.Email,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp),
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "البريد الإلكتروني",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    "gorashe.suliman@outlook.com",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                            }
+                            Icon(
+                                Icons.Rounded.ArrowForwardIos,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(14.dp),
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(4.dp))
+
+                    // رقم الهاتف (قابل للنقر)
+                    Surface(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_DIAL).apply {
+                                data = Uri.parse("tel:+201010736525")
+                            }
+                            context.startActivity(intent)
+                        },
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f),
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Icon(
+                                Icons.Rounded.Phone,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(20.dp),
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "رقم الهاتف",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    "+20 1010736525",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                            }
+                            Icon(
+                                Icons.Rounded.ArrowForwardIos,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(14.dp),
+                            )
+                        }
+                    }
                 }
             }
 

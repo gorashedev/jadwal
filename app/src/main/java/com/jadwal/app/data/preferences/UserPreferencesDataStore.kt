@@ -22,7 +22,6 @@ class UserPreferencesDataStore @Inject constructor(
     private val dataStore = context.dataStore
 
     companion object {
-        // مفاتيح التفضيلات
         val KEY_USER_NAME = stringPreferencesKey("user_name")
         val KEY_ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         val KEY_SETUP_DONE = booleanPreferencesKey("setup_done")
@@ -33,19 +32,39 @@ class UserPreferencesDataStore @Inject constructor(
         val KEY_NOTIFICATION_HOUR = intPreferencesKey("notification_hour")
         val KEY_NOTIFICATION_MINUTE = intPreferencesKey("notification_minute")
         val KEY_NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
-
-        // ===== مفاتيح الثيم واللغة (جديدة) =====
         val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
-        // قيم ThemeMode: "LIGHT", "DARK", "SYSTEM"
         val KEY_LANGUAGE_CODE = stringPreferencesKey("language_code")
-        // قيم اللغة: "ar", "en", "" (= تبع الجهاز)
+        // إصلاح: حفظ حالة طلب إذن الإشعارات حتى لا يتكرر الطلب
+        val KEY_NOTIFICATION_PERMISSION_ASKED = booleanPreferencesKey("notification_permission_asked")
+        // حفظ مسار صورة الملف الشخصي
+        val KEY_PROFILE_PHOTO_PATH = stringPreferencesKey("profile_photo_path")
+    }
+
+    // ===== إذن الإشعارات =====
+
+    val notificationPermissionAsked: Flow<Boolean> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_NOTIFICATION_PERMISSION_ASKED] ?: false }
+
+    suspend fun setNotificationPermissionAsked(asked: Boolean) {
+        dataStore.edit { it[KEY_NOTIFICATION_PERMISSION_ASKED] = asked }
+    }
+
+    // ===== صورة الملف الشخصي =====
+
+    val profilePhotoPath: Flow<String> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_PROFILE_PHOTO_PATH] ?: "" }
+
+    suspend fun setProfilePhotoPath(path: String) {
+        dataStore.edit { it[KEY_PROFILE_PHOTO_PATH] = path }
     }
 
     // ===== اللغة =====
 
     val languageCode: Flow<String> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
-        .map { it[KEY_LANGUAGE_CODE] ?: "" } // "" = تبع الجهاز افتراضياً
+        .map { it[KEY_LANGUAGE_CODE] ?: "" }
 
     suspend fun setLanguageCode(code: String) {
         dataStore.edit { it[KEY_LANGUAGE_CODE] = code }
@@ -55,7 +74,7 @@ class UserPreferencesDataStore @Inject constructor(
 
     val themeMode: Flow<String> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
-        .map { it[KEY_THEME_MODE] ?: "SYSTEM" } // SYSTEM = تبع الجهاز افتراضياً
+        .map { it[KEY_THEME_MODE] ?: "SYSTEM" }
 
     suspend fun setThemeMode(mode: String) {
         dataStore.edit { it[KEY_THEME_MODE] = mode }
@@ -145,7 +164,6 @@ class UserPreferencesDataStore @Inject constructor(
         val now = System.currentTimeMillis()
         val lastDate = dataStore.data.first()[KEY_LAST_STUDY_DATE] ?: 0L
         val dayMillis = 24 * 60 * 60 * 1000L
-
         val currentStreak = dataStore.data.first()[KEY_STREAK_DAYS] ?: 0
 
         dataStore.edit { prefs ->
@@ -153,7 +171,7 @@ class UserPreferencesDataStore @Inject constructor(
             prefs[KEY_STREAK_DAYS] = when {
                 lastDate == 0L -> 1
                 now - lastDate < dayMillis * 2 -> currentStreak + 1
-                else -> 1 // انقطع السلسلة
+                else -> 1
             }
         }
     }

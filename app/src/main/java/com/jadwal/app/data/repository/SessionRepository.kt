@@ -16,6 +16,9 @@ class SessionRepository @Inject constructor(
     suspend fun insertSession(session: Session) =
         sessionDao.insertSession(session.toEntity())
 
+    fun getAllSessions(): Flow<List<Session>> =
+        sessionDao.getAllSessions().map { list -> list.map { it.toDomain() } }
+
     suspend fun updateSession(session: Session) =
         sessionDao.updateSession(session.toEntity())
 

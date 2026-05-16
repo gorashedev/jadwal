@@ -15,10 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -26,12 +23,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jadwal.domain.model.UnderstandingLevel
-import com.jadwal.ui.components.*
+import com.jadwal.ui.components.JadwalBackground
+import com.jadwal.ui.components.PomodoroProgress
+import com.jadwal.ui.components.PomodoroTimerCircle
+import com.jadwal.ui.components.UnderstandingDialog
 import com.jadwal.ui.theme.*
-import androidx.compose.foundation.Canvas
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
 
 @Composable
 fun SessionScreen(
@@ -41,12 +37,10 @@ fun SessionScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // الانتقال لخارج الشاشة بعد الحفظ
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) onSessionEnd()
     }
 
-    // ورقة تقييم الفهم
     if (uiState.showRatingSheet) {
         UnderstandingRatingSheet(
             subjectName = uiState.subjectName,
@@ -105,7 +99,7 @@ fun SessionScreen(
                 }
             }
 
-            // ===== نوع الدورة الحالية =====
+            // نوع الدورة
             AnimatedVisibility(visible = uiState.isBreak) {
                 Surface(
                     color = JadwalSuccess.copy(alpha = 0.15f),
@@ -123,13 +117,23 @@ fun SessionScreen(
 
             Spacer(Modifier.weight(1f))
 
-            // ===== المؤقت الدائري =====
-            CircularTimer(
-                remainingSeconds = uiState.remainingSeconds,
-                totalSeconds = if (uiState.isBreak) 5 * 60 else 25 * 60,
-                timerState = uiState.timerState,
-                isBreak = uiState.isBreak,
+            // ===== مؤقت Pomodoro الدائري =====
+            PomodoroTimerCircle(
+                timeLeft = uiState.remainingSeconds,
+                totalTime = if (uiState.isBreak) 5 * 60 else 25 * 60,
+                isWorking = !uiState.isBreak,
+                cycle = uiState.currentPomodoroIndex + 1,
                 modifier = Modifier.size(280.dp),
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // ===== نقاط تقدم Pomodoro =====
+            PomodoroProgress(
+                completedPomodoros = uiState.currentPomodoroIndex,
+                totalPomodoros = 4,
+                modifier = Modifier.padding(horizontal = 24.dp),
+                color = if (uiState.isBreak) JadwalSuccess else JadwalIndigo,
             )
 
             Spacer(Modifier.weight(1f))
@@ -142,7 +146,6 @@ fun SessionScreen(
                 horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // زر الإنهاء المبكر
                 FilledTonalIconButton(
                     onClick = viewModel::endSession,
                     modifier = Modifier.size(56.dp),
@@ -150,7 +153,6 @@ fun SessionScreen(
                     Icon(Icons.Rounded.Stop, contentDescription = "إنهاء", modifier = Modifier.size(24.dp))
                 }
 
-                // زر التشغيل / الإيقاف المؤقت
                 val bgColor = if (uiState.isBreak) JadwalSuccess else JadwalIndigo
                 FloatingActionButton(
                     onClick = viewModel::toggleTimer,
@@ -171,13 +173,8 @@ fun SessionScreen(
                     }
                 }
 
-                // زر التخطي للراحة / الدورة التالية
                 FilledTonalIconButton(
-                    onClick = {
-                        if (uiState.isBreak) {
-                            // تخطي الراحة
-                        }
-                    },
+                    onClick = viewModel::skipBreak,
                     modifier = Modifier.size(56.dp),
                 ) {
                     Icon(Icons.Rounded.SkipNext, contentDescription = "تخطي", modifier = Modifier.size(24.dp))
@@ -196,122 +193,6 @@ fun SessionScreen(
     }
 }
 
-// ===== المؤقت الدائري =====
-@Composable
-fun CircularTimer(
-    remainingSeconds: Int,
-    totalSeconds: Int,
-    timerState: TimerState,
-    isBreak: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    val progress = remainingSeconds.toFloat() / totalSeconds.toFloat()
-    val animatedProgress by animateFloatAsState(
-        targetValue = progress,
-        animationSpec = tween(durationMillis = 800, easing = EaseInOutCubic),
-        label = "timer_progress",
-    )
-
-    // نبض خفيف عند التشغيل
-    val pulseScale by rememberInfiniteTransition(label = "pulse")
-        .animateFloat(
-            initialValue = 1f,
-            targetValue = if (timerState == TimerState.RUNNING) 1.02f else 1f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(1000, easing = EaseInOutSine),
-                repeatMode = RepeatMode.Reverse,
-            ),
-            label = "pulse_scale",
-        )
-
-    val arcColor = if (isBreak) JadwalSuccess else JadwalIndigo
-    val trackColor = MaterialTheme.colorScheme.surfaceVariant
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier,
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val strokeWidth = 14.dp.toPx()
-            val diameter = size.minDimension - strokeWidth
-            val topLeft = androidx.compose.ui.geometry.Offset(
-                (size.width - diameter) / 2f,
-                (size.height - diameter) / 2f,
-            )
-            val arcSize = androidx.compose.ui.geometry.Size(diameter, diameter)
-
-            // المسار الخلفي
-            drawArc(
-                color = trackColor,
-                startAngle = -90f,
-                sweepAngle = 360f,
-                useCenter = false,
-                topLeft = topLeft,
-                size = arcSize,
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-            )
-
-            // المسار المتقدم
-            drawArc(
-                brush = Brush.sweepGradient(
-                    colors = listOf(
-                        arcColor.copy(alpha = 0.5f),
-                        arcColor,
-                        arcColor,
-                    ),
-                ),
-                startAngle = -90f,
-                sweepAngle = 360f * animatedProgress,
-                useCenter = false,
-                topLeft = topLeft,
-                size = arcSize,
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-            )
-
-            // نقطة نهاية المسار
-            if (animatedProgress > 0.01f) {
-                val angle = (-90f + 360f * animatedProgress) * (PI / 180f).toFloat()
-                val radius = diameter / 2f
-                val cx = size.width / 2f + radius * cos(angle)
-                val cy = size.height / 2f + radius * sin(angle)
-                drawCircle(
-                    color = arcColor,
-                    radius = strokeWidth / 2f,
-                    center = androidx.compose.ui.geometry.Offset(cx, cy),
-                )
-            }
-        }
-
-        // النص في وسط الدائرة
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            val minutes = remainingSeconds / 60
-            val seconds = remainingSeconds % 60
-
-            Text(
-                text = String.format("%02d:%02d", minutes, seconds),
-                style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontSize = 52.sp,
-            )
-            Text(
-                text = when (timerState) {
-                    TimerState.IDLE -> "اضغط للبدء"
-                    TimerState.RUNNING -> if (isBreak) "استراحة 🌿" else "تركّز 🎯"
-                    TimerState.PAUSED -> "متوقف مؤقتاً"
-                    TimerState.BREAK -> "استراحة 🌿"
-                    TimerState.FINISHED -> "أحسنت! 🎉"
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-// ===== شريط التقدم الكلي =====
 @Composable
 fun SessionProgressBar(
     elapsedMinutes: Int,
@@ -349,7 +230,6 @@ fun SessionProgressBar(
     }
 }
 
-// ===== ورقة تقييم الفهم =====
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UnderstandingRatingSheet(
@@ -372,7 +252,7 @@ fun UnderstandingRatingSheet(
                     .width(40.dp)
                     .height(4.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(MaterialTheme.colorScheme.outlineVariant)
+                    .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
             )
         },
     ) {
@@ -380,110 +260,144 @@ fun UnderstandingRatingSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 24.dp, vertical = 8.dp),
+                .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                text = "رائع! أنهيت الجلسة 🎉",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.ExtraBold,
+                text = "كيف كانت جلسة $subjectName؟",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
             )
 
-            Spacer(Modifier.height(8.dp))
-
-            // إحصاء الجلسة
+            // إحصائيات الجلسة
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                SessionStatChip("⏱️", "$minutesStudied د", "مذاكرة")
+                SessionStatChip("⏱️", "$minutesStudied", "دقيقة")
                 SessionStatChip("🍅", "$pomodoroCount", "دورات")
-                SessionStatChip("📚", subjectName.take(8), "المادة")
             }
-
-            Spacer(Modifier.height(24.dp))
 
             Text(
-                text = "كيف كان مستوى فهمك؟",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                text = "قيّم مستوى فهمك:",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            Spacer(Modifier.height(16.dp))
-
-            // مستويات الفهم
-            val levels = listOf(
-                UnderstandingLevel.POOR to Triple("😕", "ضعيف", MaterialTheme.colorScheme.error),
-                UnderstandingLevel.PARTIAL to Triple("😐", "متوسط", JadwalWarning),
-                UnderstandingLevel.GREAT to Triple("😊", "جيد", JadwalSuccess),
-                UnderstandingLevel.EXCELLENT to Triple("🤩", "ممتاز!", JadwalIndigo),
-            )
-
-            Row(
+            // أزرار التقييم
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                levels.forEach { (level, info) ->
-                    val (emoji, label, color) = info
-                    FilledTonalButton(
-                        onClick = { if (!isSaving) onRate(level) },
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = color.copy(alpha = 0.12f),
-                            contentColor = color,
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(72.dp),
-                        contentPadding = PaddingValues(4.dp),
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(emoji, fontSize = 24.sp)
-                            Text(
-                                label,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 11.sp,
-                            )
-                        }
-                    }
-                }
+                UnderstandingButton(
+                    emoji = "🤩",
+                    title = "ممتاز",
+                    subtitle = "فهمت كل شيء بوضوح",
+                    color = JadwalSuccess,
+                    onClick = { onRate(UnderstandingLevel.EXCELLENT) },
+                    isLoading = isSaving,
+                )
+                UnderstandingButton(
+                    emoji = "👍",
+                    title = "جيد",
+                    subtitle = "فهمت معظم المحتوى",
+                    color = JadwalIndigo,
+                    onClick = { onRate(UnderstandingLevel.GOOD) },
+                    isLoading = isSaving,
+                )
+                UnderstandingButton(
+                    emoji = "😐",
+                    title = "متوسط",
+                    subtitle = "أحتاج مراجعة بعض النقاط",
+                    color = JadwalWarning,
+                    onClick = { onRate(UnderstandingLevel.AVERAGE) },
+                    isLoading = isSaving,
+                )
+                UnderstandingButton(
+                    emoji = "😟",
+                    title = "ضعيف",
+                    subtitle = "أحتاج إعادة دراسة الموضوع",
+                    color = JadwalError,
+                    onClick = { onRate(UnderstandingLevel.POOR) },
+                    isLoading = isSaving,
+                )
             }
 
-            Spacer(Modifier.height(16.dp))
-
-            if (isSaving) {
-                CircularProgressIndicator(modifier = Modifier.size(32.dp))
-            } else {
-                TextButton(
-                    onClick = onSkip,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("تخطي التقييم", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+            TextButton(onClick = onSkip) {
+                Text("تخطي التقييم", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-
-            Spacer(Modifier.height(8.dp))
         }
     }
 }
 
 @Composable
-fun SessionStatChip(emoji: String, value: String, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(emoji, fontSize = 20.sp)
-        Text(
-            value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+fun SessionStatChip(emoji: String, value: String, unit: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(12.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(emoji, fontSize = 18.sp)
+            Text(
+                text = "$value $unit",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+    }
+}
+
+@Composable
+fun UnderstandingButton(
+    emoji: String,
+    title: String,
+    subtitle: String,
+    color: Color,
+    onClick: () -> Unit,
+    isLoading: Boolean,
+) {
+    Surface(
+        onClick = { if (!isLoading) onClick() },
+        color = color.copy(alpha = 0.08f),
+        shape = RoundedCornerShape(14.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Text(emoji, fontSize = 26.sp)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = color,
+                )
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = color,
+                )
+            }
+        }
     }
 }

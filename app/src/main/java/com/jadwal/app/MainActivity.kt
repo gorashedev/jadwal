@@ -16,34 +16,28 @@ import com.jadwal.ui.navigation.JadwalApp
 import com.jadwal.ui.screens.settings.SettingsViewModel
 import com.jadwal.ui.theme.JadwalTheme
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.activity.ComponentActivity
 
 /**
- * MainActivity — مهم: يجب أن يرث من AppCompatActivity وليس ComponentActivity
+ * MainActivity — يرث من AppCompatActivity وليس ComponentActivity
  * هذا ضروري لكي يعمل AppCompatDelegate.setApplicationLocales() بشكل صحيح
+ * وبالتالي تغيير اللغة يعمل فوراً
  */
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Splash Screen — يجب أن يكون أول شيء
         installSplashScreen()
-
         super.onCreate(savedInstanceState)
-
-        // جعل التطبيق يمتد خلف شريط الحالة وشريط التنقل
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
-            // SettingsViewModel يوفر الثيم المختار من DataStore
             val settingsViewModel: SettingsViewModel = hiltViewModel()
             val themeMode by settingsViewModel.themeMode.collectAsStateWithLifecycle()
 
-            // تحديد هل الوضع داكن أم لا
             val isDarkTheme = when (themeMode) {
                 "DARK" -> true
                 "LIGHT" -> false
-                else -> isSystemInDarkTheme() // SYSTEM = تبع الجهاز
+                else -> isSystemInDarkTheme()
             }
 
             JadwalTheme(darkTheme = isDarkTheme) {

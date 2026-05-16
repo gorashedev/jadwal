@@ -12,10 +12,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * NotificationPermissionViewModel — يُدير حالة إذن الإشعارات ويوفّر
- * وصولاً مريحاً للجدولة بعد المنح.
+ * NotificationPermissionViewModel
  *
- * يُستخدم مع NotificationPermissionHandler في HomeScreen.
+ * إصلاح: حفظ حالة "تم التعامل مع الإذن" في DataStore
+ * حتى لا يتكرر طلب الإذن في كل مرة يرجع المستخدم للشاشة الرئيسية
  */
 @HiltViewModel
 class NotificationPermissionViewModel @Inject constructor(
@@ -23,32 +23,37 @@ class NotificationPermissionViewModel @Inject constructor(
     private val scheduler: NotificationScheduler,
 ) : ViewModel() {
 
-    // هل تم التعامل مع الإذن في هذه الجلسة؟
     private val _permissionHandled = MutableStateFlow(false)
     val permissionHandled = _permissionHandled.asStateFlow()
 
-    // ===== يُستدعى عند منح المستخدم الإذن =====
+    init {
+        // تحميل الحالة المحفوظة من DataStore عند إنشاء الـ ViewModel
+        viewModelScope.launch {
+            val alreadyAsked = prefs.notificationPermissionAsked.first()
+            if (alreadyAsked) {
+                _permissionHandled.value = true
+            }
+        }
+    }
+
     fun onPermissionGranted() {
         _permissionHandled.value = true
         viewModelScope.launch {
-            // حفظ أن الإشعارات مُفعَّلة
+            // حفظ أن الإذن طُلب ومُنح
+            prefs.setNotificationPermissionAsked(true)
             val hour = prefs.notificationHour.first()
             val minute = prefs.notificationMinute.first()
-            prefs.setNotificationSettings(
-                enabled = true,
-                hour = hour,
-                minute = minute,
-            )
-            // جدولة التذكير اليومي وتنبيهات الامتحانات
+            prefs.setNotificationSettings(enabled = true, hour = hour, minute = minute)
             scheduler.scheduleDailyReminder(hour, minute)
             scheduler.scheduleExamAlerts()
         }
     }
 
-    // ===== يُستدعى عند رفض المستخدم =====
     fun onPermissionDenied() {
         _permissionHandled.value = true
         viewModelScope.launch {
+            // حفظ أن الإذن طُلب ورُفض — لا نسأل مرة ثانية
+            prefs.setNotificationPermissionAsked(true)
             prefs.setNotificationSettings(
                 enabled = false,
                 hour = prefs.notificationHour.first(),

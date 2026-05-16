@@ -196,6 +196,19 @@ class SessionViewModel @Inject constructor(
         _uiState.update { it.copy(showRatingSheet = false, isSaved = true) }
     }
 
+    fun skipBreak() {
+        if (_uiState.value.isBreak) {
+            timerJob?.cancel()
+            _uiState.update {
+                it.copy(
+                    isBreak = false,
+                    remainingSeconds = pomodoroDuration,
+                    timerState = TimerState.IDLE,
+                )
+            }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()

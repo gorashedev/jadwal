@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- الأذونات المطلوبة -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
+        android:name=".JadwalApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -11,20 +19,74 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Jadwal"
-        android:localeConfig="@xml/locales_config"
-        android:name="com.jadwal.JadwalApplication">
+        tools:targetApi="31">
 
+        <!--
+            إصلاح: AppCompatActivity تستلزم AppTheme يرث من Theme.AppCompat
+            تأكد أن Theme.Jadwal في styles.xml يرث من:
+              Theme.AppCompat.DayNight.NoActionBar
+            وليس من Theme.Material3 مباشرةً
+            (يمكن استخدام Theme.AppCompat.Light.NoActionBar أيضاً)
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.Jadwal">
+            android:windowSoftInputMode="adjustResize"
+            android:launchMode="singleTask">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!--
+                إصلاح: Deep Link لتأكيد البريد الإلكتروني عبر Supabase
+                الخطوات:
+                1. في Supabase Dashboard → Authentication → URL Configuration
+                2. Site URL: com.jadwal.app://login-callback
+                3. Redirect URLs: أضف: com.jadwal.app://login-callback
+
+                يجب أن يتطابق android:scheme مع ما تم ضبطه في Supabase
+            -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="com.jadwal.app"
+                    android:host="login-callback" />
+            </intent-filter>
+
         </activity>
+
+        <!-- مستقبل إعادة التشغيل لإعادة جدولة الإشعارات -->
+        <receiver
+            android:name=".notifications.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- مستقبل تشغيل الإشعارات المجدولة -->
+        <receiver
+            android:name=".notifications.NotificationReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
+        <!-- Splash Screen Provider -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+                android:value="androidx.startup" />
+        </provider>
+
     </application>
 
 </manifest>

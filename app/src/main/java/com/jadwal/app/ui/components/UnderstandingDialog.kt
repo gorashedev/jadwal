@@ -120,8 +120,8 @@ fun UnderstandingDialog(
                         emoji = "🤔",
                         label = stringResource(R.string.understanding_medium),
                         color = JadwalWarning,
-                        isSelected = selectedLevel == UnderstandingLevel.PARTIAL,
-                        onClick = { selectedLevel = UnderstandingLevel.PARTIAL },
+                        isSelected = selectedLevel == UnderstandingLevel.AVERAGE,
+                        onClick = { selectedLevel = UnderstandingLevel.AVERAGE },
                         modifier = Modifier.weight(1f)
                     )
 
@@ -129,8 +129,8 @@ fun UnderstandingDialog(
                         emoji = "😊",
                         label = stringResource(R.string.understanding_great),
                         color = JadwalSuccess,
-                        isSelected = selectedLevel == UnderstandingLevel.GREAT,
-                        onClick = { selectedLevel = UnderstandingLevel.GREAT },
+                        isSelected = selectedLevel == UnderstandingLevel.GOOD,
+                        onClick = { selectedLevel = UnderstandingLevel.GOOD },
                         modifier = Modifier.weight(1f)
                     )
                 }

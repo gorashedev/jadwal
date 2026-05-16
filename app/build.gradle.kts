@@ -178,6 +178,8 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:postgrest-kt:2.5.0")
     implementation("io.github.jan-tennert.supabase:gotrue-kt:2.5.0")
     implementation("io.ktor:ktor-client-android:2.3.12")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")  // للصورة الشخصية
 }
 
 // Kapt لـ Hilt
