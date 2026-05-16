@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Jadwal</string>
+
+    <string name="onboarding_title_1">Your Smart Study Companion</string>
+    <string name="onboarding_subtitle_1">AI-powered scheduling that adapts to YOU</string>
+    <string name="onboarding_title_2">Track Your Progress</string>
+    <string name="onboarding_subtitle_2">Know exactly where you stand before every exam</string>
+    <string name="onboarding_title_3">Never Miss a Beat</string>
+    <string name="onboarding_subtitle_3">Smart reminders and daily plans keep you on track</string>
+    <string name="get_started">Get Started</string>
+    <string name="next">Next</string>
+    <string name="skip">Skip</string>
+    <string name="welcome_to_jadwal">Welcome to Jadwal</string>
+    <string name="onboarding_description">Your smart study assistant that adapts to your daily routine and ensures optimal organization without distraction.</string>
+    <string name="ai_flexible_feature">Smart Flexible AI</string>
+    <string name="ai_flexible_desc">If you miss a session today, the app automatically redistributes tasks without making you feel discouraged.</string>
+    <string name="start_your_journey">Start Your Journey Now</string>
+
+    <string name="setup_title">Let\'s Set Up Your Schedule</string>
+    <string name="add_subject">Add Subject</string>
+    <string name="subject_name">Subject Name</string>
+    <string name="exam_date">Exam Date</string>
+    <string name="how_many_hours">How many hours can you study daily?</string>
+    <string name="hours_subtitle">Be realistic — consistency beats intensity</string>
+    <string name="hours">Hours</string>
+    <string name="hour_singular">Hour</string>
+    <string name="preferred_study_time">When do you prefer to study?</string>
+    <string name="morning_option">Morning (Best Focus)</string>
+    <string name="evening_option">Evening (After Afternoon)</string>
+    <string name="night_option">Night (Total Silence)</string>
+    <string name="morning">Morning</string>
+    <string name="evening">Evening</string>
+    <string name="night">Night</string>
+    <string name="how_hard_is_it">How hard is this subject for you?</string>
+    <string name="easy">Easy</string>
+    <string name="medium">Medium</string>
+    <string name="hard">Hard</string>
+    <string name="generate_schedule">Generate My Schedule</string>
+    <string name="generate_smart_schedule">Generate My Smart Schedule ✨</string>
+    <string name="how_many_subjects">How many subjects do you have this semester?</string>
+    <string name="subjects_setup_desc">We will add them to your schedule.</string>
+    <string name="when_exams_start">When do your exams start?</string>
+    <string name="exams_setup_desc">Select dates to calculate the remaining time.</string>
+    <string name="toughest_subject_question">What is your toughest subject?</string>
+    <string name="toughest_subject_desc">We will allocate extra time for it in your schedule.</string>
+
+    <string name="good_morning">Good morning</string>
+    <string name="good_afternoon">Good afternoon</string>
+    <string name="good_evening">Good evening</string>
+    <string name="today_tasks">Today\'s Tasks</string>
+    <string name="start">Start</string>
+    <string name="start_session">Start Session</string>
+    <string name="minutes">min</string>
+    <string name="days_until_exam">days until exam</string>
+    <string name="exam_tomorrow">Exam Tomorrow!</string>
+    <string name="streak_days">Day Streak 🔥</string>
+    <string name="all_done_today">All done for today! 🎉</string>
+    <string name="weekly_snapshot">This Week</string>
+    <string name="greeting_user">Good morning, Mohammed!</string>
+    <string name="ready_to_achieve">Ready to achieve your tasks today?</string>
+    <string name="today_progress">Today\'s Progress</string>
+    <string name="from_minutes_format">%1$d of %2$d minutes</string>
+
+    <string name="focus_time">Focus Time</string>
+    <string name="break_time">Break Time</string>
+    <string name="cycle_x">Cycle %d</string>
+    <string name="end_session">End Session</string>
+    <string name="session_complete">Session Complete!</string>
+    <string name="current_focus_session">Current Focus Session</string>
+    <string name="pomodoro">Pomodoro</string>
+
+    <string name="how_was_understanding">How well did you understand this?</string>
+    <string name="understanding_poor">Didn\'t get it</string>
+    <string name="understanding_medium">Got it partially</string>
+    <string name="understanding_great">Got it well!</string>
+    <string name="rate_understanding">Rate your understanding</string>
+    <string name="understanding_dialog_desc">Your rating helps the AI automatically adapt your upcoming schedule.</string>
+    <string name="completed_and_ready">Completed &amp; Ready</string>
+
+    <string name="schedule">Schedule</string>
+    <string name="weekly_schedule">Weekly Schedule</string>
+    <string name="no_tasks_today">No tasks today — enjoy your rest!</string>
+
+    <string name="analytics">Analytics</string>
+    <string name="weekly_report">Weekly Report</string>
+    <string name="studied">Studied</string>
+    <string name="streak">Streak</string>
+    <string name="completion">Completion</string>
+    <string name="daily_study_hours">Daily Study Hours</string>
+    <string name="subjects_progress">Subjects Progress</string>
+    <string name="exam_readiness">Exam Readiness</string>
+    <string name="share_report">Share Report</string>
+    <string name="ready">Ready</string>
+    <string name="needs_work">Needs Work</string>
+    <string name="at_risk">At Risk</string>
+    <string name="readiness_prediction">Exam Readiness Predictions</string>
+    <string name="math_readiness_mock">Mathematics: 87% Ready</string>
+
+    <string name="settings">Settings</string>
+    <string name="language">Language</string>
+    <string name="arabic">Arabic</string>
+    <string name="english">English</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="notifications">Notifications</string>
+    <string name="daily_reminder">Daily Study Reminder</string>
+    <string name="reminder_time">Reminder Time</string>
+    <string name="about">About App</string>
+    <string name="version">Version</string>
+    <string name="reset_data">Reset All Data</string>
+    <string name="reset_confirm">Are you sure? This cannot be undone.</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+
+    <string name="about_developer">About Developer</string>
+    <string name="developer_desc">Learn more about the developer and connect</string>
+    <string name="developer_name_ar">Name (Ar): قرشي محمداحمد</string>
+    <string name="developer_name_en">Name (En): Gorashe Mohamedahmed</string>
+    <string name="developer_email_label">Email:</string>
+    <string name="developer_email">gorashe.suliman@outlook.com</string>
+    <string name="close">Close</string>
+
+    <string name="home">Home</string>
+
+    <string name="notification_daily_title">Your Study Plan for Today 📚</string>
+    <string name="notification_exam_title">Exam Reminder ⚠️</string>
+    <string name="notification_exam_body">%s exam is in %d days!</string>
+
+    <string name="something_went_wrong">Something went wrong</string>
+    <string name="try_again">Try Again</string>
+    <string name="no_subjects_yet">No subjects added yet</string>
+    <string name="add_your_first_subject">Add your first subject to get started</string>
+
+    <string name="subject_math">Mathematics</string>
+    <string name="subject_science">Science</string>
+    <string name="subject_arabic">Arabic</string>
+    <string name="subject_english">English</string>
+    <string name="subject_history">History</string>
+    <string name="subject_physics">Physics</string>
+    <string name="subject_chemistry">Chemistry</string>
+    <string name="subject_biology">Biology</string>
+    <string name="subject_economics">Economics</string>
+
+</resources>

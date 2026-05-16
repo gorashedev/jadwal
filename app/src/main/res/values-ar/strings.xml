@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">جدول</string>
+
+    <string name="onboarding_title_1">رفيقك الذكي للمذاكرة</string>
+    <string name="onboarding_subtitle_1">جدول ذكي يتكيف معك يومياً</string>
+    <string name="onboarding_title_2">تابع تقدمك</string>
+    <string name="onboarding_subtitle_2">اعرف وين أنت قبل كل امتحان بالضبط</string>
+    <string name="onboarding_title_3">ما تفوتك جلسة</string>
+    <string name="onboarding_subtitle_3">تذكيرات ذكية وخطة يومية تخليك على المسار</string>
+    <string name="get_started">نبدأ!</string>
+    <string name="next">التالي</string>
+    <string name="skip">تخطي</string>
+    <string name="welcome_to_jadwal">مرحباً بك في جدول</string>
+    <string name="onboarding_description">مساعدك الدراسي الذكي اللي يتكيف مع روتينك اليومي ويضمن لك أفضل تنظيم بدون تشتت.</string>
+    <string name="ai_flexible_feature">ذكاء اصطناعي مرن</string>
+    <string name="ai_flexible_desc">إذا فاتتك جلسة اليوم، التطبيق يعيد توزيع المهام تلقائياً بدون ما تحس بالإحباط.</string>
+    <string name="start_your_journey">ابدأ رحلتك الآن</string>
+
+    <string name="setup_title">خلنا نجهز جدولك</string>
+    <string name="add_subject">أضف مادة</string>
+    <string name="subject_name">اسم المادة</string>
+    <string name="exam_date">تاريخ الامتحان</string>
+    <string name="how_many_hours">كم ساعة تقدر تذاكر يومياً؟</string>
+    <string name="hours_subtitle">كن واقعياً — الانتظام أهم من الكثرة</string>
+    <string name="hours">ساعات</string>
+    <string name="hour_singular">ساعة</string>
+    <string name="preferred_study_time">امتى تفضل تذاكر؟</string>
+    <string name="morning_option">الصبح (أفضل تركيز) 🌅</string>
+    <string name="evening_option">العصر (بعد الظهر) 🌇</string>
+    <string name="night_option">الليل (هدوء تام) 🌙</string>
+    <string name="morning">الصبح</string>
+    <string name="evening">العصر</string>
+    <string name="night">الليل</string>
+    <string name="how_hard_is_it">كيف هذه المادة بالنسبة لك؟</string>
+    <string name="easy">سهلة</string>
+    <string name="medium">متوسطة</string>
+    <string name="hard">صعبة</string>
+    <string name="generate_schedule">ولّد جدولي</string>
+    <string name="generate_smart_schedule">ولّد جدولي الذكي ✨</string>
+    <string name="how_many_subjects">كم مادة عندك هذا الترم؟</string>
+    <string name="subjects_setup_desc">بنضيفها لجدولك الدراسي.</string>
+    <string name="when_exams_start">امتى تبدأ امتحاناتك؟</string>
+    <string name="exams_setup_desc">حدد التواريخ عشان نحسب لك الوقت المتبقي بالضبط.</string>
+    <string name="toughest_subject_question">وش أصعب مادة بالنسبة لك؟</string>
+    <string name="toughest_subject_desc">بنخصص لها وقت إضافي ومراجعات مكثفة.</string>
+
+    <string name="good_morning">صباح النور</string>
+    <string name="good_afternoon">مساء الخير</string>
+    <string name="good_evening">مساء النور</string>
+    <string name="today_tasks">مهام اليوم</string>
+    <string name="start">ابدأ</string>
+    <string name="start_session">ابدأ الجلسة</string>
+    <string name="minutes">دقيقة</string>
+    <string name="days_until_exam">يوم للامتحان</string>
+    <string name="exam_tomorrow">الامتحان بكرا!</string>
+    <string name="streak_days">يوم متواصل 🔥</string>
+    <string name="all_done_today">خلصت كل مهام اليوم! 🎉</string>
+    <string name="weekly_snapshot">هذا الأسبوع</string>
+    <string name="greeting_user">صباح النور يا محمد!</string>
+    <string name="ready_to_achieve">جاهز تخلص مهامك وتحدياتك اليوم؟</string>
+    <string name="today_progress">إنجاز اليوم</string>
+    <string name="from_minutes_format">%1$d من %2$d دقيقة</string>
+
+    <string name="focus_time">وقت التركيز</string>
+    <string name="break_time">وقت الراحة</string>
+    <string name="cycle_x">جولة %d</string>
+    <string name="end_session">أنهِ الجلسة</string>
+    <string name="session_complete">انتهت الجلسة!</string>
+    <string name="current_focus_session">جلسة التركيز الحالية</string>
+    <string name="pomodoro">بومودورو</string>
+
+    <string name="how_was_understanding">كيف كان فهمك لهذا الجزء?</string>
+    <string name="understanding_poor">ما فهمت</string>
+    <string name="understanding_medium">فهمت جزئياً</string>
+    <string name="understanding_great">فهمت كويس!</string>
+    <string name="rate_understanding">قيّم مستوى فهمك</string>
+    <string name="understanding_dialog_desc">تقييمك يساعد الذكاء الاصطناعي يعيد ضبط جدول الأيام الجاية تلقائياً.</string>
+    <string name="completed_and_ready">مكتمل وجاهز</string>
+
+    <string name="schedule">الجدول</string>
+    <string name="weekly_schedule">جدول الأسبوع</string>
+    <string name="no_tasks_today">ما عندك مهام اليوم — استرح!</string>
+
+    <string name="analytics">الإحصائيات</string>
+    <string name="weekly_report">تقرير الأسبوع</string>
+    <string name="studied">ذاكرت</string>
+    <string name="streak">متواصل</string>
+    <string name="completion">الإنجاز</string>
+    <string name="daily_study_hours">ساعات المذاكرة اليومية</string>
+    <string name="subjects_progress">تقدم المواد</string>
+    <string name="exam_readiness">جاهزيتك للامتحانات</string>
+    <string name="share_report">شارك التقرير</string>
+    <string name="ready">جاهز</string>
+    <string name="needs_work">يحتاج تحسين</string>
+    <string name="at_risk">في خطر</string>
+    <string name="readiness_prediction">توقعات جاهزيتك للامتحان</string>
+    <string name="math_readiness_mock">الرياضيات: جاهز بنسبة 87%</string>
+
+    <string name="settings">الإعدادات</string>
+    <string name="language">اللغة</string>
+    <string name="arabic">العربية</string>
+    <string name="english">الإنجليزية</string>
+    <string name="dark_mode">الوضع الليلي</string>
+    <string name="notifications">الإشعارات</string>
+    <string name="daily_reminder">تذكير المذاكرة اليومية</string>
+    <string name="reminder_time">وقت التذكير</string>
+    <string name="about">عن التطبيق</string>
+    <string name="version">الإصدار</string>
+    <string name="reset_data">حذف كل البيانات</string>
+    <string name="reset_confirm">متأكد؟ هذا الإجراء لا يمكن التراجع عنه.</string>
+    <string name="cancel">إلغاء</string>
+    <string name="confirm">تأكيد</string>
+
+    <string name="about_developer">حول المطور</string>
+    <string name="developer_desc">تعرّف على مطور التطبيق وتواصل معاه</string>
+    <string name="developer_name_ar">الاسم: قرشي محمداحمد</string>
+    <string name="developer_name_en">Name: Gorashe Mohamedahmed</string>
+    <string name="developer_email_label">البريد الإلكتروني:</string>
+    <string name="developer_email">gorashe.suliman@outlook.com</string>
+    <string name="close">إغلاق</string>
+
+    <string name="home">الرئيسية</string>
+
+    <string name="notification_daily_title">جدول يومك 📚</string>
+    <string name="notification_exam_title">تذكير امتحان ⚠️</string>
+    <string name="notification_exam_body">امتحان %s بعد %d يوم!</string>
+
+    <string name="something_went_wrong">في خطأ ما</string>
+    <string name="try_again">حاول مرة ثانية</string>
+    <string name="no_subjects_yet">ما أضفت أي مادة بعد</string>
+    <string name="add_your_first_subject">أضف أول مادة لتبدأ</string>
+
+    <string name="subject_math">الرياضيات</string>
+    <string name="subject_science">العلوم</string>
+    <string name="subject_arabic">اللغة العربية</string>
+    <string name="subject_english">اللغة الإنجليزية</string>
+    <string name="subject_history">التاريخ</string>
+    <string name="subject_physics">الفيزياء</string>
+    <string name="subject_chemistry">الكيمياء</string>
+    <string name="subject_biology">الأحياء</string>
+    <string name="subject_economics">الاقتصاد</string>
+
+</resources>
