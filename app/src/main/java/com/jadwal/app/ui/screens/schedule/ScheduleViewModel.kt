@@ -17,7 +17,7 @@ data class ScheduleItem(
     val subjectName: String,
     val subjectIcon: String,
     val colorHex: String,
-    val dayOfWeek: Int,      // 0=الأحد .. 6=السبت
+    val dayOfWeek: Int,
     val startHour: Int,
     val startMinute: Int,
     val durationMinutes: Int,
@@ -29,6 +29,7 @@ data class ScheduleUiState(
     val selectedDayIndex: Int = 0,
     val weekItems: Map<Int, List<ScheduleItem>> = emptyMap(),
     val upcomingExams: List<ExamBadge> = emptyList(),
+    val examNightExams: List<ExamBadge> = emptyList(), // امتحانات خلال 48 ساعة (وضع الطوارئ)
     val isGenerating: Boolean = false,
 )
 
@@ -79,11 +80,16 @@ class ScheduleViewModel @Inject constructor(
                 }
                 val grouped = items.groupBy { it.dayOfWeek }
                 val exams = scheduleRepository.getUpcomingExamBadges()
+
+                // وضع الطوارئ: امتحانات خلال 48 ساعة (daysUntil <= 2)
+                val nightExams = exams.filter { it.daysUntil <= 2 }
+
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         weekItems = grouped,
                         upcomingExams = exams,
+                        examNightExams = nightExams,
                     )
                 }
             } catch (e: Exception) {
@@ -92,19 +98,13 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
-    /**
-     * توليد جدول أسبوعي بناءً على المواد المحفوظة في قاعدة البيانات.
-     * يُستدعى عند الضغط على زر "توليد الجدول" في الشاشة الفارغة.
-     */
     fun generateSchedule() {
         viewModelScope.launch {
             _uiState.update { it.copy(isGenerating = true) }
             try {
                 val subjects = subjectRepository.getAllSubjects().first()
                 if (subjects.isNotEmpty()) {
-                    // حذف الجدول القديم أولاً لتجنب التكرار
                     scheduleRepository.deleteAllItems()
-
                     val slots = scheduleAlgorithm.generateSchedule(
                         subjects = subjects,
                         dailyHours = 2,

@@ -1,4 +1,4 @@
-package com.jadwal.di
+package com.jadwal.app.di
 
 import android.content.Context
 import androidx.room.Room

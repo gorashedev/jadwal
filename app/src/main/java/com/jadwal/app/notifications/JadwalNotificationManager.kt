@@ -1,4 +1,4 @@
-package com.jadwal.notifications
+package com.jadwal.app.notifications
 
 import android.app.NotificationChannel
 import android.app.NotificationManager

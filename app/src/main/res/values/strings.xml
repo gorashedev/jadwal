@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name">Jadwal</string>
 
+    <!-- Onboarding -->
     <string name="onboarding_title_1">Your Smart Study Companion</string>
     <string name="onboarding_subtitle_1">AI-powered scheduling that adapts to YOU</string>
     <string name="onboarding_title_2">Track Your Progress</string>
@@ -13,11 +13,12 @@
     <string name="next">Next</string>
     <string name="skip">Skip</string>
     <string name="welcome_to_jadwal">Welcome to Jadwal</string>
-    <string name="onboarding_description">Your smart study assistant that adapts to your daily routine and ensures optimal organization without distraction.</string>
+    <string name="onboarding_description">Your smart study assistant that adapts to your daily routine.</string>
     <string name="ai_flexible_feature">Smart Flexible AI</string>
-    <string name="ai_flexible_desc">If you miss a session today, the app automatically redistributes tasks without making you feel discouraged.</string>
+    <string name="ai_flexible_desc">If you miss a session, the app automatically redistributes tasks.</string>
     <string name="start_your_journey">Start Your Journey Now</string>
 
+    <!-- Setup -->
     <string name="setup_title">Let\'s Set Up Your Schedule</string>
     <string name="add_subject">Add Subject</string>
     <string name="subject_name">Subject Name</string>
@@ -46,6 +47,7 @@
     <string name="toughest_subject_question">What is your toughest subject?</string>
     <string name="toughest_subject_desc">We will allocate extra time for it in your schedule.</string>
 
+    <!-- Home -->
     <string name="good_morning">Good morning</string>
     <string name="good_afternoon">Good afternoon</string>
     <string name="good_evening">Good evening</string>
@@ -58,11 +60,10 @@
     <string name="streak_days">Day Streak 🔥</string>
     <string name="all_done_today">All done for today! 🎉</string>
     <string name="weekly_snapshot">This Week</string>
-    <string name="greeting_user">Good morning, Mohammed!</string>
-    <string name="ready_to_achieve">Ready to achieve your tasks today?</string>
     <string name="today_progress">Today\'s Progress</string>
     <string name="from_minutes_format">%1$d of %2$d minutes</string>
 
+    <!-- Session / Pomodoro -->
     <string name="focus_time">Focus Time</string>
     <string name="break_time">Break Time</string>
     <string name="cycle_x">Cycle %d</string>
@@ -70,57 +71,128 @@
     <string name="session_complete">Session Complete!</string>
     <string name="current_focus_session">Current Focus Session</string>
     <string name="pomodoro">Pomodoro</string>
-
+    <string name="rest_break">Break ☕</string>
+    <string name="dnd_active">Do Not Disturb active</string>
+    <string name="rest_message">Rest a little, your brain deserves it 🌿</string>
     <string name="how_was_understanding">How well did you understand this?</string>
     <string name="understanding_poor">Didn\'t get it</string>
     <string name="understanding_medium">Got it partially</string>
     <string name="understanding_great">Got it well!</string>
     <string name="rate_understanding">Rate your understanding</string>
-    <string name="understanding_dialog_desc">Your rating helps the AI automatically adapt your upcoming schedule.</string>
-    <string name="completed_and_ready">Completed &amp; Ready</string>
+    <string name="skip_rating">Skip Rating</string>
+    <string name="excellent">Excellent</string>
+    <string name="good">Good</string>
+    <string name="average">Average</string>
+    <string name="poor">Poor</string>
 
+    <!-- Schedule -->
     <string name="schedule">Schedule</string>
     <string name="weekly_schedule">Weekly Schedule</string>
     <string name="no_tasks_today">No tasks today — enjoy your rest!</string>
+    <string name="manage_subjects">Manage Subjects</string>
+    <string name="scan_exam_schedule">Scan Exam Schedule</string>
+    <string name="reset_schedule">Reset Schedule</string>
+    <string name="exam_emergency_mode">Emergency Mode</string>
+    <string name="generate_auto">Generate Automatically</string>
+    <string name="generating">Generating…</string>
+    <string name="schedule_empty">Schedule is Empty</string>
+    <string name="completed">Completed</string>
+    <string name="upcoming">Upcoming</string>
 
+    <!-- Analytics -->
     <string name="analytics">Analytics</string>
+    <string name="profile">Profile</string>
     <string name="weekly_report">Weekly Report</string>
     <string name="studied">Studied</string>
     <string name="streak">Streak</string>
     <string name="completion">Completion</string>
+    <string name="this_week">This Week</string>
+    <string name="this_month">This Month</string>
     <string name="daily_study_hours">Daily Study Hours</string>
     <string name="subjects_progress">Subjects Progress</string>
-    <string name="exam_readiness">Exam Readiness</string>
-    <string name="share_report">Share Report</string>
-    <string name="ready">Ready</string>
-    <string name="needs_work">Needs Work</string>
-    <string name="at_risk">At Risk</string>
-    <string name="readiness_prediction">Exam Readiness Predictions</string>
-    <string name="math_readiness_mock">Mathematics: 87% Ready</string>
+    <string name="me_vs_past_me">Me Now vs Me Last Week</string>
+    <string name="improvement">Improvement</string>
+    <string name="decline">Decline</string>
+    <string name="last_week">Last Week</string>
 
+    <!-- Profile -->
+    <string name="profile_title">Profile</string>
+    <string name="edit_name">Edit Name</string>
+    <string name="total_study">Total Study</string>
+    <string name="completed_sessions">Sessions</string>
+    <string name="streak_days_label">Streak Days</string>
+    <string name="top_subject">Top Subject</string>
+    <string name="achievements">Achievements</string>
+    <string name="hour">hour</string>
+
+    <!-- AI Chat -->
+    <string name="ai_assistant">AI Assistant</string>
+    <string name="powered_by_gemini">Powered by Google Gemini</string>
+    <string name="connected">Online</string>
+    <string name="clear_chat">Clear Chat</string>
+    <string name="clear_chat_confirm">Delete all messages and start fresh?</string>
+    <string name="clear">Clear</string>
+    <string name="ask_anything">Ask anything about your studies…</string>
+    <string name="send">Send</string>
+
+    <!-- Settings -->
     <string name="settings">Settings</string>
+    <string name="appearance">Appearance</string>
+    <string name="theme_mode">Theme Mode</string>
+    <string name="theme_light">Light ☀️</string>
+    <string name="theme_dark">Dark 🌙</string>
+    <string name="theme_system">System Default 🔄</string>
     <string name="language">Language</string>
+    <string name="lang_arabic">العربية 🇸🇦</string>
+    <string name="lang_english">English 🇬🇧</string>
+    <string name="lang_system">System Default 🔄</string>
+    <string name="lang_restart_note">The app will restart automatically when the language is changed.</string>
     <string name="arabic">Arabic</string>
     <string name="english">English</string>
-    <string name="dark_mode">Dark Mode</string>
     <string name="notifications">Notifications</string>
+    <string name="enable_notifications">Enable Notifications</string>
     <string name="daily_reminder">Daily Study Reminder</string>
     <string name="reminder_time">Reminder Time</string>
+    <string name="edit">Edit</string>
     <string name="about">About App</string>
     <string name="version">Version</string>
+    <string name="ai_engine">AI Engine</string>
+    <string name="about_developer">About Developer</string>
+    <string name="developer_label">Developer</string>
+    <string name="email_label">Email</string>
+    <string name="phone_label">Phone</string>
+    <string name="developer_email">gorashe.suliman@outlook.com</string>
+    <string name="logout_title">Sign Out</string>
+    <string name="logout_confirm">Are you sure you want to sign out?</string>
+    <string name="logout_action">Sign Out</string>
+    <string name="logging_out">Signing out…</string>
     <string name="reset_data">Reset All Data</string>
     <string name="reset_confirm">Are you sure? This cannot be undone.</string>
     <string name="cancel">Cancel</string>
     <string name="confirm">Confirm</string>
 
-    <string name="about_developer">About Developer</string>
-    <string name="developer_desc">Learn more about the developer and connect</string>
-    <string name="developer_name_ar">Name (Ar): قرشي محمداحمد</string>
-    <string name="developer_name_en">Name (En): Gorashe Mohamedahmed</string>
-    <string name="developer_email_label">Email:</string>
-    <string name="developer_email">gorashe.suliman@outlook.com</string>
-    <string name="close">Close</string>
+    <!-- Auth / Reset Password -->
+    <string name="reset_password_title">Reset Password</string>
+    <string name="reset_password_subtitle">Enter your new password below to regain access.</string>
+    <string name="new_password">New Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="update_password">Update Password</string>
 
+    <!-- Home Additions -->
+    <string name="view_full_schedule">Full Schedule</string>
+    <string name="ai_says">Jadwal Says…</string>
+    <string name="ai_default_tip">Consistency is key. You\'re doing great!</string>
+    <string name="student">Student</string>
+    <string name="day_label">Day</string>
+    <string name="all_done_rest">You\'ve completed everything! Enjoy your free time.</string>
+    <string name="exam_alert_title">Upcoming Exam!</string>
+    <string name="exam_day_away">%s exam is tomorrow!</string>
+    <string name="exam_days_away">%1$s exam is in %2$d days!</string>
+    <string name="weekly_summary">Weekly Summary</string>
+    <string name="details">Details</string>
+    <string name="sessions_label">Sessions</string>
+
+    <!-- Navigation -->
     <string name="home">Home</string>
     <string name="nav_home">Home</string>
     <string name="nav_schedule">Schedule</string>
@@ -128,23 +200,20 @@
     <string name="nav_analytics">Analytics</string>
     <string name="nav_settings">Settings</string>
 
+    <!-- Notifications -->
     <string name="notification_daily_title">Your Study Plan for Today 📚</string>
     <string name="notification_exam_title">Exam Reminder ⚠️</string>
     <string name="notification_exam_body">%s exam is in %d days!</string>
+    <string name="session_done_title">Session Complete 🎉</string>
+    <string name="session_done_body">Great job studying %s for %d minutes!</string>
 
+    <!-- Common -->
     <string name="something_went_wrong">Something went wrong</string>
     <string name="try_again">Try Again</string>
     <string name="no_subjects_yet">No subjects added yet</string>
     <string name="add_your_first_subject">Add your first subject to get started</string>
-
-    <string name="subject_math">Mathematics</string>
-    <string name="subject_science">Science</string>
-    <string name="subject_arabic">Arabic</string>
-    <string name="subject_english">English</string>
-    <string name="subject_history">History</string>
-    <string name="subject_physics">Physics</string>
-    <string name="subject_chemistry">Chemistry</string>
-    <string name="subject_biology">Biology</string>
-    <string name="subject_economics">Economics</string>
-
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="back">Back</string>
+    <string name="close">Close</string>
 </resources>

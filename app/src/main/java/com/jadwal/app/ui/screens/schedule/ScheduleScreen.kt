@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -30,8 +31,8 @@ import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.*
 import java.util.Calendar
 
-val arabicDays = listOf("الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت")
-val arabicDaysShort = listOf("أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت")
+val arabicDays      = listOf("الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت")
+val arabicDaysShort = listOf("أحد","اثنين","ثلاثاء","أربعاء","خميس","جمعة","سبت")
 
 @Composable
 fun ScheduleScreen(
@@ -42,6 +43,26 @@ fun ScheduleScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val todayIndex = remember { Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1 }
 
+    var showResetDialog by remember { mutableStateOf(false) }
+
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDialog = false },
+            icon = { Icon(Icons.Rounded.RestartAlt, null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text("إعادة تعيين الجدول", fontWeight = FontWeight.Bold) },
+            text = { Text("سيتم حذف الجدول الحالي بالكامل. هل أنت متأكد؟") },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.resetSchedule(); showResetDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                ) { Text("إعادة تعيين", color = MaterialTheme.colorScheme.onError) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDialog = false }) { Text("إلغاء") }
+            },
+        )
+    }
+
     JadwalBackground {
         Column(
             modifier = Modifier
@@ -50,65 +71,35 @@ fun ScheduleScreen(
                 .navigationBarsPadding(),
         ) {
             // ===== العنوان =====
-            var showResetDialog by remember { mutableStateOf(false) }
+            Text(
+                text = "الجدول الأسبوعي",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(start = 24.dp, top = 16.dp, bottom = 8.dp),
+            )
 
-            if (showResetDialog) {
-                AlertDialog(
-                    onDismissRequest = { showResetDialog = false },
-                    icon = { Icon(Icons.Rounded.RestartAlt, null, tint = MaterialTheme.colorScheme.error) },
-                    title = { Text("إعادة تعيين الجدول", fontWeight = FontWeight.Bold) },
-                    text = { Text("سيتم حذف الجدول الحالي بالكامل. هل أنت متأكد؟") },
-                    confirmButton = {
-                        Button(
-                            onClick = { viewModel.resetSchedule(); showResetDialog = false },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                        ) { Text("إعادة تعيين", color = MaterialTheme.colorScheme.onError) }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showResetDialog = false }) { Text("إلغاء") }
-                    },
-                )
-            }
-
-            Row(
+            // ===== شريط أزرار الإجراءات (كتبويبات أيقونية) =====
+            ScheduleActionBar(
+                onManageSubjects = onManageSubjects,
+                onScanExams = onScanExams,
+                onReset = { showResetDialog = true },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 24.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "الجدول الأسبوعي",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+            )
+
+            // ===== بانر وضع الطوارئ (امتحان خلال 48 ساعة) =====
+            if (uiState.examNightExams.isNotEmpty()) {
+                ExamNightBanner(
+                    exams = uiState.examNightExams,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
                 )
-                Row {
-                    // زر إدارة المواد
-                    IconButton(onClick = onManageSubjects) {
-                        Icon(Icons.Rounded.MenuBook,
-                            contentDescription = "إدارة المواد",
-                            tint = MaterialTheme.colorScheme.primary)
-                    }
-                    // زر مسح جدول الامتحانات بالكاميرا
-                    IconButton(onClick = onScanExams) {
-                        Icon(Icons.Rounded.PhotoCamera,
-                            contentDescription = "مسح جدول الامتحانات",
-                            tint = MaterialTheme.colorScheme.primary)
-                    }
-                    // زر إعادة التعيين
-                    IconButton(onClick = { showResetDialog = true }) {
-                        Icon(Icons.Rounded.RestartAlt, contentDescription = "إعادة تعيين",
-                            tint = MaterialTheme.colorScheme.primary)
-                    }
-                    IconButton(onClick = viewModel::refresh) {
-                        Icon(Icons.Rounded.Refresh, contentDescription = "تحديث",
-                            tint = MaterialTheme.colorScheme.primary)
-                    }
-                }
             }
 
-            // ===== امتحانات قريبة =====
+            // ===== امتحانات قريبة (شارات) =====
             if (uiState.upcomingExams.isNotEmpty()) {
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp),
@@ -139,7 +130,7 @@ fun ScheduleScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // ===== زر توليد الجدول (يظهر فقط عندما لا توجد أي مهام) =====
+            // ===== زر توليد الجدول =====
             if (!uiState.isLoading && uiState.weekItems.isEmpty()) {
                 GenerateScheduleCard(
                     isGenerating = uiState.isGenerating,
@@ -162,15 +153,12 @@ fun ScheduleScreen(
                 label = "day_content",
             ) { dayIndex ->
                 val items = uiState.weekItems[dayIndex] ?: emptyList()
-                if (uiState.isLoading || uiState.isGenerating) {
-                    ScheduleLoadingSkeleton()
-                } else if (items.isEmpty()) {
-                    EmptyDayContent(dayName = arabicDays[dayIndex])
-                } else {
-                    LazyColumn(
+                when {
+                    uiState.isLoading || uiState.isGenerating -> ScheduleLoadingSkeleton()
+                    items.isEmpty() -> EmptyDayContent(dayName = arabicDays[dayIndex])
+                    else -> LazyColumn(
                         contentPadding = PaddingValues(
-                            start = 16.dp, end = 16.dp,
-                            top = 4.dp, bottom = 100.dp,
+                            start = 16.dp, end = 16.dp, top = 4.dp, bottom = 100.dp,
                         ),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
@@ -180,6 +168,117 @@ fun ScheduleScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+// ===== شريط أزرار الإجراءات الأيقونية =====
+@Composable
+fun ScheduleActionBar(
+    onManageSubjects: () -> Unit,
+    onScanExams: () -> Unit,
+    onReset: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    data class ActionItem(val icon: ImageVector, val label: String, val action: () -> Unit, val color: Color)
+
+    val actions = listOf(
+        ActionItem(Icons.Rounded.CalendarMonth,  "الجدول",   {},              JadwalIndigo),
+        ActionItem(Icons.Rounded.MenuBook,       "المواد",   onManageSubjects, JadwalViolet),
+        ActionItem(Icons.Rounded.RestartAlt,     "إعادة",    onReset,         JadwalWarning),
+        ActionItem(Icons.Rounded.PhotoCamera,    "مسح",      onScanExams,     JadwalSuccess),
+    )
+
+    GlassCard(modifier = modifier, cornerRadius = JadwalRadius.lg) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            actions.forEach { item ->
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(onClick = item.action)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                color = item.color.copy(alpha = 0.12f),
+                                shape = CircleShape,
+                            ),
+                    ) {
+                        Icon(
+                            item.icon,
+                            contentDescription = item.label,
+                            tint = item.color,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                    Text(
+                        text = item.label,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = item.color,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ===== بانر وضع طوارئ الامتحان =====
+@Composable
+fun ExamNightBanner(
+    exams: List<ExamBadge>,
+    modifier: Modifier = Modifier,
+) {
+    val firstExam = exams.first()
+    val urgencyColor = if (firstExam.daysUntil == 0) MaterialTheme.colorScheme.error
+                       else JadwalWarning
+
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        color = urgencyColor.copy(alpha = 0.15f),
+        border = androidx.compose.foundation.BorderStroke(1.5.dp, urgencyColor.copy(alpha = 0.5f)),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = if (firstExam.daysUntil == 0) "🚨" else "⚠️",
+                fontSize = 28.sp,
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "وضع الطوارئ — ركّز على ${firstExam.subjectName}!",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = urgencyColor,
+                )
+                Text(
+                    text = when (firstExam.daysUntil) {
+                        0 -> "الامتحان اليوم! راجع كل شيء الآن"
+                        1 -> "الامتحان غداً! خصص بقية وقتك له"
+                        else -> "الامتحان بعد ${firstExam.daysUntil} أيام — ركّز الجهد الآن"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = urgencyColor.copy(alpha = 0.8f),
+                )
+            }
+            Text(firstExam.subjectIcon, fontSize = 26.sp)
         }
     }
 }
@@ -194,17 +293,14 @@ fun DayTab(
     onClick: () -> Unit,
 ) {
     val bgColor by animateColorAsState(
-        targetValue = when {
-            isSelected -> MaterialTheme.colorScheme.primary
-            else -> Color.Transparent
-        },
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
         label = "day_tab_bg",
     )
     val textColor by animateColorAsState(
         targetValue = when {
             isSelected -> MaterialTheme.colorScheme.onPrimary
-            isToday -> MaterialTheme.colorScheme.primary
-            else -> MaterialTheme.colorScheme.onSurfaceVariant
+            isToday    -> MaterialTheme.colorScheme.primary
+            else       -> MaterialTheme.colorScheme.onSurfaceVariant
         },
         label = "day_tab_text",
     )
@@ -217,7 +313,7 @@ fun DayTab(
             .border(
                 width = if (isToday && !isSelected) 1.5.dp else 0.dp,
                 color = if (isToday && !isSelected) MaterialTheme.colorScheme.primary
-                else Color.Transparent,
+                        else Color.Transparent,
                 shape = RoundedCornerShape(16.dp),
             )
             .clickable(onClick = onClick)
@@ -230,7 +326,6 @@ fun DayTab(
             color = textColor,
         )
         Spacer(Modifier.height(4.dp))
-        // نقطة إذا كان هناك مهام
         Box(
             modifier = Modifier
                 .size(5.dp)
@@ -252,93 +347,58 @@ fun ScheduleItemCard(item: ScheduleItem) {
         Color(android.graphics.Color.parseColor(item.colorHex))
     } catch (e: Exception) { JadwalIndigo }
 
-    GlassCard(
-        modifier = Modifier.fillMaxWidth(),
-        cornerRadius = JadwalRadius.md,
-    ) {
+    GlassCard(modifier = Modifier.fillMaxWidth(), cornerRadius = JadwalRadius.md) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            // شريط اللون الجانبي
             Box(
                 modifier = Modifier
-                    .width(4.dp)
-                    .height(56.dp)
+                    .width(4.dp).height(56.dp)
                     .clip(RoundedCornerShape(2.dp))
                     .background(subjectColor)
             )
-
-            // أيقونة المادة
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(52.dp)
-                    .background(
-                        color = subjectColor.copy(alpha = 0.12f),
-                        shape = RoundedCornerShape(14.dp),
-                    )
+                    .background(subjectColor.copy(alpha = 0.12f), RoundedCornerShape(14.dp)),
             ) {
                 Text(item.subjectIcon, fontSize = 24.sp)
             }
-
-            // التفاصيل
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.subjectName,
+                Text(item.subjectName,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+                    color = MaterialTheme.colorScheme.onSurface)
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = "${String.format("%02d:%02d", item.startHour, item.startMinute)}" +
-                            " • ${item.durationMinutes} دقيقة",
+                           " • ${item.durationMinutes} دقيقة",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-
-            // حالة الإنجاز
             if (item.isCompleted) {
-                Surface(
-                    color = JadwalSuccess.copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(8.dp),
-                ) {
+                Surface(color = JadwalSuccess.copy(alpha = 0.12f), shape = RoundedCornerShape(8.dp)) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        Icon(
-                            Icons.Rounded.CheckCircle,
-                            contentDescription = null,
-                            tint = JadwalSuccess,
-                            modifier = Modifier.size(14.dp),
-                        )
-                        Text(
-                            "منجز",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = JadwalSuccess,
-                            fontWeight = FontWeight.SemiBold,
-                        )
+                        Icon(Icons.Rounded.CheckCircle, null,
+                            tint = JadwalSuccess, modifier = Modifier.size(14.dp))
+                        Text("منجز", style = MaterialTheme.typography.labelSmall,
+                            color = JadwalSuccess, fontWeight = FontWeight.SemiBold)
                     }
                 }
             } else {
-                Surface(
-                    color = subjectColor.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(8.dp),
-                ) {
-                    Text(
-                        text = "قادم",
+                Surface(color = subjectColor.copy(alpha = 0.1f), shape = RoundedCornerShape(8.dp)) {
+                    Text("قادم",
                         style = MaterialTheme.typography.labelSmall,
-                        color = subjectColor,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    )
+                        color = subjectColor, fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                 }
             }
         }
@@ -363,12 +423,10 @@ fun ExamBadgeChip(exam: ExamBadge) {
         ) {
             Text(exam.subjectIcon, fontSize = 16.sp)
             Column {
-                Text(
-                    text = exam.subjectName,
+                Text(exam.subjectName,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+                    color = MaterialTheme.colorScheme.onSurface)
                 Text(
                     text = when (exam.daysUntil) {
                         0 -> "⚠️ اليوم!"
@@ -389,58 +447,38 @@ fun ExamBadgeChip(exam: ExamBadge) {
 
 // ===== بطاقة توليد الجدول =====
 @Composable
-fun GenerateScheduleCard(
-    isGenerating: Boolean,
-    onGenerate: () -> Unit,
-) {
+fun GenerateScheduleCard(isGenerating: Boolean, onGenerate: () -> Unit) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
     ) {
         GlassCard(modifier = Modifier.fillMaxWidth(), cornerRadius = JadwalRadius.xl) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
+                modifier = Modifier.fillMaxWidth().padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text("🗓️", fontSize = 36.sp)
-                Text(
-                    text = "الجدول فارغ",
+                Text("الجدول فارغ",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center,
-                )
+                    textAlign = TextAlign.Center)
                 Text(
-                    text = "اضغط على الزر أدناه لتوليد جدول أسبوعي تلقائي بناءً على مواردك",
+                    "اضغط على الزر أدناه لتوليد جدول أسبوعي تلقائي بناءً على مواردك",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(4.dp))
-                Button(
-                    onClick = onGenerate,
-                    enabled = !isGenerating,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
+                Button(onClick = onGenerate, enabled = !isGenerating, modifier = Modifier.fillMaxWidth()) {
                     if (isGenerating) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                        )
+                        CircularProgressIndicator(modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
                         Spacer(Modifier.width(8.dp))
                         Text("جارٍ التوليد...")
                     } else {
-                        Icon(
-                            Icons.Rounded.AutoAwesome,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
+                        Icon(Icons.Rounded.AutoAwesome, null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text("توليد الجدول تلقائياً", fontWeight = FontWeight.Bold)
                     }
@@ -455,32 +493,24 @@ fun GenerateScheduleCard(
 fun EmptyDayContent(dayName: String) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(32.dp),
+        modifier = Modifier.fillMaxWidth().padding(32.dp),
     ) {
         GlassCard(modifier = Modifier.fillMaxWidth(), cornerRadius = JadwalRadius.xl) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(40.dp),
+                modifier = Modifier.fillMaxWidth().padding(40.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text("😌", fontSize = 48.sp)
-                Text(
-                    text = "لا مذاكرة يوم $dayName",
+                Text("لا مذاكرة يوم $dayName",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    text = "استرح أو راجع ما درسته",
+                    textAlign = TextAlign.Center)
+                Text("استرح أو راجع ما درسته",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
+                    textAlign = TextAlign.Center)
             }
         }
     }
@@ -490,28 +520,20 @@ fun EmptyDayContent(dayName: String) {
 @Composable
 fun ScheduleLoadingSkeleton() {
     val shimmer by rememberInfiniteTransition(label = "shimmer").animateFloat(
-        initialValue = 0.3f,
-        targetValue = 0.7f,
+        initialValue = 0.3f, targetValue = 0.7f,
         animationSpec = infiniteRepeatable(
             animation = tween(900, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse,
-        ),
-        label = "alpha",
+        ), label = "alpha",
     )
     val color = MaterialTheme.colorScheme.onSurface.copy(alpha = shimmer * 0.15f)
-
     LazyColumn(
         contentPadding = PaddingValues(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         items(4) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(84.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(color)
-            )
+            Box(modifier = Modifier.fillMaxWidth().height(84.dp)
+                .clip(RoundedCornerShape(16.dp)).background(color))
         }
     }
 }

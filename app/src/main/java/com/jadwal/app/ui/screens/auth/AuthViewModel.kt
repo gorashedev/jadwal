@@ -3,10 +3,8 @@ package com.jadwal.ui.screens.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jadwal.data.preferences.UserPreferencesDataStore
+import com.jadwal.app.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.gotrue.auth
-import io.github.jan.supabase.gotrue.providers.builtin.Email
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -19,12 +17,12 @@ data class AuthUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isSuccess: Boolean = false,
-    val emailSent: Boolean = false, // لشاشة نسيت كلمة السر
+    val emailSent: Boolean = false,
 )
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val supabase: SupabaseClient,
+    private val authRepository: AuthRepository,
     private val prefs: UserPreferencesDataStore,
 ) : ViewModel() {
 
@@ -37,26 +35,13 @@ class AuthViewModel @Inject constructor(
             _uiState.update { it.copy(error = "يرجى ملء جميع الحقول") }
             return
         }
-
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                supabase.auth.signInWith(Email) {
-                    this.email = email.trim()
-                    this.password = password
-                }
+                authRepository.login(email.trim(), password)
                 _uiState.update { it.copy(isLoading = false, isSuccess = true) }
             } catch (e: Exception) {
-                val errorMsg = when {
-                    e.message?.contains("Invalid login credentials") == true ->
-                        "البريد الإلكتروني أو كلمة المرور غير صحيحة"
-                    e.message?.contains("Email not confirmed") == true ->
-                        "يرجى تأكيد بريدك الإلكتروني أولاً"
-                    e.message?.contains("network") == true ->
-                        "تأكد من اتصالك بالإنترنت"
-                    else -> "حدث خطأ، حاول مجدداً"
-                }
-                _uiState.update { it.copy(isLoading = false, error = errorMsg) }
+                _uiState.update { it.copy(isLoading = false, error = mapLoginError(e)) }
             }
         }
     }
@@ -77,29 +62,15 @@ class AuthViewModel @Inject constructor(
                 return
             }
         }
-
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                supabase.auth.signUpWith(Email) {
-                    this.email = email.trim()
-                    this.password = password
-                    data = buildJsonObject {
-                        put("full_name", JsonPrimitive(name.trim()))
-                    }
-                }
-                // حفظ اسم المستخدم محلياً
+                val userData = buildJsonObject { put("full_name", JsonPrimitive(name.trim())) }
+                authRepository.signUp(email.trim(), password, userData)
                 prefs.setUserName(name.trim())
                 _uiState.update { it.copy(isLoading = false, isSuccess = true) }
             } catch (e: Exception) {
-                val errorMsg = when {
-                    e.message?.contains("already registered") == true ->
-                        "هذا البريد الإلكتروني مسجل بالفعل"
-                    e.message?.contains("invalid email") == true ->
-                        "صيغة البريد الإلكتروني غير صحيحة"
-                    else -> "حدث خطأ أثناء إنشاء الحساب"
-                }
-                _uiState.update { it.copy(isLoading = false, error = errorMsg) }
+                _uiState.update { it.copy(isLoading = false, error = mapRegisterError(e)) }
             }
         }
     }
@@ -110,17 +81,44 @@ class AuthViewModel @Inject constructor(
             _uiState.update { it.copy(error = "يرجى إدخال بريدك الإلكتروني") }
             return
         }
-
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                supabase.auth.resetPasswordForEmail(email.trim())
+                authRepository.resetPassword(email.trim())
                 _uiState.update { it.copy(isLoading = false, emailSent = true) }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(isLoading = false, error = "تعذر إرسال البريد، تحقق من العنوان")
+                }
+            }
+        }
+    }
+
+    // ─── إصلاح #3: استيراد جلسة Supabase من الـ Deep Link ───────────────
+    fun importSessionFromDeepLink(fragment: String) {
+        viewModelScope.launch {
+            try {
+                authRepository.importSessionFromFragment(fragment)
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(error = "رابط إعادة التعيين غير صالح أو انتهت صلاحيته")
+                }
+            }
+        }
+    }
+
+    // ─── إصلاح #3: تحديث كلمة المرور ─────────────────────────────────────
+    fun updatePassword(newPassword: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                authRepository.updatePassword(newPassword)
+                _uiState.update { it.copy(isLoading = false, isSuccess = true) }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        error = "تعذر إرسال البريد، تحقق من العنوان"
+                        error = "تعذر تحديث كلمة المرور. حاول طلب رابط جديد."
                     )
                 }
             }
@@ -130,11 +128,28 @@ class AuthViewModel @Inject constructor(
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
+
+    // ─── دوال مساعدة لرسائل الخطأ ────────────────────────────────────────
+
+    private fun mapLoginError(e: Exception): String {
+        val msg = e.message ?: ""
+        return when {
+            msg.contains("Invalid login credentials") -> "البريد الإلكتروني أو كلمة المرور غير صحيحة"
+            msg.contains("Email not confirmed")       -> "يرجى تأكيد بريدك الإلكتروني أولاً"
+            msg.contains("network")                   -> "تأكد من اتصالك بالإنترنت"
+            else                                      -> "حدث خطأ، حاول مجدداً"
+        }
+    }
+
+    private fun mapRegisterError(e: Exception): String {
+        val msg = e.message ?: ""
+        return when {
+            msg.contains("already registered") -> "هذا البريد الإلكتروني مسجل بالفعل"
+            msg.contains("invalid email")      -> "صيغة البريد الإلكتروني غير صحيحة"
+            else                               -> "حدث خطأ أثناء إنشاء الحساب"
+        }
+    }
 }
 
-// دالة مساعدة لبناء JSON بدون import إضافي
-private fun buildJsonObject(block: JsonObjectBuilder.() -> Unit): kotlinx.serialization.json.JsonObject {
-    return kotlinx.serialization.json.buildJsonObject(block)
-}
-
-private typealias JsonObjectBuilder = kotlinx.serialization.json.JsonObjectBuilder
+private fun buildJsonObject(block: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit) =
+    kotlinx.serialization.json.buildJsonObject(block)

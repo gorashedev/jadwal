@@ -1,16 +1,14 @@
-package com.jadwal.notifications
+package com.jadwal.app.notifications
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker
-import androidx.work.*
+import androidx.work.CoroutineWorker
+import androidx.work.WorkerParameters
+import com.jadwal.data.repository.ExamRepository
+import com.jadwal.app.notifications.JadwalNotificationManager
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import com.jadwal.data.repository.ExamRepository
 
-/**
- * ExamAlertWorker — يعمل يومياً للتحقق من قرب أي امتحان.
- * يُرسل إشعاراً عندما يتبقى 7 أيام أو أقل.
- */
 @HiltWorker
 class ExamAlertWorker @AssistedInject constructor(
     @Assisted context: Context,
@@ -22,7 +20,6 @@ class ExamAlertWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         return try {
             val upcomingExams = examRepository.getUpcomingExams(withinDays = 7)
-
             upcomingExams.forEach { exam ->
                 notificationManager.showExamAlert(
                     subjectName = exam.subjectName,
@@ -34,6 +31,8 @@ class ExamAlertWorker @AssistedInject constructor(
             Result.failure()
         }
     }
+
+    private fun getUpcomingExams(withinDays: Int) {}
 
     companion object {
         const val WORK_NAME = "jadwal_exam_alert"

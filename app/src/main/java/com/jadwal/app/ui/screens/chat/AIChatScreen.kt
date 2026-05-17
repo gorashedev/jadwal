@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.DeleteSweep
 import androidx.compose.material.icons.rounded.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -37,6 +38,7 @@ fun AIChatScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    var showClearDialog by remember { mutableStateOf(false) }
 
     // التمرير التلقائي إلى آخر رسالة
     LaunchedEffect(uiState.messages.size) {
@@ -47,6 +49,25 @@ fun AIChatScreen(
         }
     }
 
+    // حوار تأكيد مسح المحادثة
+    if (showClearDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearDialog = false },
+            icon = { Icon(Icons.Rounded.DeleteSweep, null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text("مسح المحادثة", fontWeight = FontWeight.Bold) },
+            text = { Text("هل تريد حذف جميع رسائل المحادثة وبدء من جديد؟") },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.clearHistory(); showClearDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                ) { Text("مسح", color = Color.White) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearDialog = false }) { Text("إلغاء") }
+            },
+        )
+    }
+
     JadwalBackground {
         Column(
             modifier = Modifier
@@ -55,10 +76,8 @@ fun AIChatScreen(
                 .navigationBarsPadding()
                 .imePadding(),
         ) {
-            // ===== الهيدر =====
-            ChatHeader()
+            ChatHeader(onClearHistory = { showClearDialog = true })
 
-            // ===== قائمة الرسائل =====
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f),
@@ -73,18 +92,13 @@ fun AIChatScreen(
                         ChatBubble(message = message)
                     }
                 }
-
-                // مؤشر الكتابة
                 if (uiState.isTyping) {
-                    item {
-                        TypingIndicator()
-                    }
+                    item { TypingIndicator() }
                 }
             }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
 
-            // ===== حقل الإدخال =====
             ChatInputBar(
                 text = uiState.inputText,
                 onTextChange = viewModel::onInputChange,
@@ -96,7 +110,7 @@ fun AIChatScreen(
 }
 
 @Composable
-private fun ChatHeader() {
+private fun ChatHeader(onClearHistory: () -> Unit) {
     GlassCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -128,7 +142,7 @@ private fun ChatHeader() {
                     modifier = Modifier.size(22.dp),
                 )
             }
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     "المساعد الدراسي",
                     style = MaterialTheme.typography.titleMedium,
@@ -141,7 +155,7 @@ private fun ChatHeader() {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Spacer(Modifier.weight(1f))
+            // مؤشر الاتصال
             Box(
                 modifier = Modifier
                     .size(8.dp)
@@ -154,6 +168,18 @@ private fun ChatHeader() {
                 color = Color(0xFF4CAF50),
                 fontWeight = FontWeight.Medium,
             )
+            // زر مسح المحادثة
+            IconButton(
+                onClick = onClearHistory,
+                modifier = Modifier.size(36.dp),
+            ) {
+                Icon(
+                    Icons.Rounded.DeleteSweep,
+                    contentDescription = "مسح المحادثة",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
     }
 }
@@ -248,7 +274,8 @@ private fun TypingIndicator() {
         Spacer(Modifier.width(8.dp))
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 18.dp, bottomStart = 4.dp))
+                .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp,
+                    bottomEnd = 18.dp, bottomStart = 4.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
                 .padding(horizontal = 14.dp, vertical = 12.dp),
         ) {

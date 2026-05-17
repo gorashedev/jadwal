@@ -8,6 +8,12 @@ sealed class Screen(val route: String) {
     data object ForgotPassword : Screen("forgot_password")
     data object Setup          : Screen("setup")
 
+    // ─── إصلاح #3: إضافة شاشة إعادة تعيين كلمة المرور ───────────────────
+    // تستقبل الـ fragment من Deep Link كـ argument
+    data object ResetPassword  : Screen("reset_password/{fragment}") {
+        fun createRoute(encodedFragment: String) = "reset_password/$encodedFragment"
+    }
+
     // ===== شاشات الـ BottomBar الرئيسية =====
     data object Home      : Screen("home")
     data object Schedule  : Screen("schedule")
@@ -40,6 +46,7 @@ sealed class Screen(val route: String) {
                 Register.route,
                 ForgotPassword.route,
                 Setup.route,
+                ResetPassword.route,
                 Session.route,
                 AISuggestion.route,
                 Profile.route,

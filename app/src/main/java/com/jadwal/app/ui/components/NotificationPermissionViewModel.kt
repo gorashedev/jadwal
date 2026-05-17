@@ -3,7 +3,7 @@ package com.jadwal.ui.components
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jadwal.data.preferences.UserPreferencesDataStore
-import com.jadwal.notifications.NotificationScheduler
+import com.jadwal.app.notifications.NotificationScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

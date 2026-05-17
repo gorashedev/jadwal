@@ -1,4 +1,4 @@
-package com.jadwal.di
+package com.jadwal.app.di
 
 import android.content.Context
 import com.google.ai.client.generativeai.GenerativeModel
@@ -33,7 +33,8 @@ object AppModule {
     @Singleton
     fun provideGenerativeModel(): GenerativeModel =
         GenerativeModel(
-            modelName = "gemini-2.0-flash",  // مجاني وسريع
+            // gemini-1.5-flash — اسم النموذج الصحيح لـ SDK 0.9.0 (بدون -latest)
+            modelName = "gemini-1.5-flash",
             apiKey = BuildConfig.GEMINI_API_KEY,
         )
 
@@ -46,9 +47,6 @@ object AppModule {
     @Singleton
     fun provideScheduleAlgorithm(impl: DefaultScheduleAlgorithm): ScheduleAlgorithm = impl
 
-    // ==========================================
-    // إعدادات قاعدة بيانات Supabase السحابية
-    // ==========================================
     @Provides
     @Singleton
     fun provideSupabaseClient(): SupabaseClient {
@@ -56,8 +54,8 @@ object AppModule {
             supabaseUrl = BuildConfig.SUPABASE_URL,
             supabaseKey = BuildConfig.SUPABASE_KEY
         ) {
-            install(Postgrest) // إضافة مكتبة إدارة الجداول وقاعدة البيانات
-            install(Auth)    // إضافة مكتبة إدارة حسابات المستخدمين وتسجيل الدخول
+            install(Postgrest)
+            install(Auth)
         }
     }
 }

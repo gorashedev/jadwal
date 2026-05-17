@@ -16,12 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.jadwal.R
 import com.jadwal.ui.components.GlassCard
 import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.navigation.Screen
@@ -37,7 +39,6 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // مراقبة حدث تسجيل الخروج
     LaunchedEffect(Unit) {
         viewModel.logoutEvent.collect { onLogout() }
     }
@@ -49,39 +50,46 @@ fun SettingsScreen(
         is24Hour = true,
     )
 
-    // مربع تعديل الوقت
     if (showTimePicker) {
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
-            title = { Text("وقت التذكير") },
+            title = { Text(stringResource(R.string.reminder_time)) },
             text = { TimePicker(state = timePickerState) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.setNotificationTime(timePickerState.hour, timePickerState.minute)
                     showTimePicker = false
-                }) { Text("حفظ") }
+                }) { Text(stringResource(R.string.save)) }
             },
             dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) { Text("إلغاء") }
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
             },
         )
     }
 
-    // مربع تأكيد تسجيل الخروج
     if (uiState.showLogoutDialog) {
         AlertDialog(
             onDismissRequest = viewModel::dismissLogoutDialog,
-            icon = { Icon(Icons.Rounded.Logout, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("تسجيل الخروج", fontWeight = FontWeight.Bold) },
-            text = { Text("هل أنت متأكد أنك تريد تسجيل الخروج؟") },
+            icon = {
+                Icon(Icons.Rounded.Logout, contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error)
+            },
+            title = { Text(stringResource(R.string.logout_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.logout_confirm)) },
             confirmButton = {
                 Button(
                     onClick = viewModel::logout,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                ) { Text("خروج", color = MaterialTheme.colorScheme.onError) }
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error),
+                ) { Text(stringResource(R.string.logout_action),
+                    color = MaterialTheme.colorScheme.onError) }
             },
             dismissButton = {
-                TextButton(onClick = viewModel::dismissLogoutDialog) { Text("إلغاء") }
+                TextButton(onClick = viewModel::dismissLogoutDialog) {
+                    Text(stringResource(R.string.cancel))
+                }
             },
         )
     }
@@ -96,22 +104,16 @@ fun SettingsScreen(
                 .padding(bottom = 100.dp),
         ) {
             // ===== العنوان =====
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 20.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "الإعدادات",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-            }
+            Text(
+                text = stringResource(R.string.settings),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 20.dp),
+            )
 
-            // ===== قسم المظهر =====
-            SettingsSectionTitle("المظهر", Icons.Rounded.Palette)
+            // ===== المظهر =====
+            SettingsSectionTitle(stringResource(R.string.appearance), Icons.Rounded.Palette)
 
             GlassCard(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -119,14 +121,14 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     SettingsSubtitle(
-                        "وضع المظهر",
+                        stringResource(R.string.theme_mode),
                         modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp),
                     )
                     Column(modifier = Modifier.selectableGroup()) {
                         listOf(
-                            "LIGHT" to "فاتح ☀️",
-                            "DARK"  to "داكن 🌙",
-                            "SYSTEM" to "تلقائي (حسب الجهاز) 🔄",
+                            "LIGHT"  to stringResource(R.string.theme_light),
+                            "DARK"   to stringResource(R.string.theme_dark),
+                            "SYSTEM" to stringResource(R.string.theme_system),
                         ).forEach { (mode, label) ->
                             Row(
                                 modifier = Modifier
@@ -141,27 +143,25 @@ fun SettingsScreen(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 RadioButton(selected = uiState.themeMode == mode, onClick = null)
-                                Text(
-                                    text = label,
+                                Text(text = label,
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
+                                    color = MaterialTheme.colorScheme.onSurface)
                             }
                         }
                     }
 
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 
-                    // ===== قسم اللغة =====
+                    // ===== اللغة =====
                     SettingsSubtitle(
-                        "لغة التطبيق",
+                        stringResource(R.string.language),
                         modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp),
                     )
                     Column(modifier = Modifier.selectableGroup()) {
                         listOf(
-                            "ar" to "العربية 🇸🇦",
-                            "en" to "English 🇬🇧",
-                            ""   to "تلقائي (حسب الجهاز) 🔄",
+                            "ar" to stringResource(R.string.lang_arabic),
+                            "en" to stringResource(R.string.lang_english),
+                            ""   to stringResource(R.string.lang_system),
                         ).forEach { (code, label) ->
                             Row(
                                 modifier = Modifier
@@ -176,11 +176,9 @@ fun SettingsScreen(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 RadioButton(selected = uiState.languageCode == code, onClick = null)
-                                Text(
-                                    text = label,
+                                Text(text = label,
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
+                                    color = MaterialTheme.colorScheme.onSurface)
                             }
                         }
                     }
@@ -201,7 +199,7 @@ fun SettingsScreen(
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(16.dp))
                             Text(
-                                "سيُعاد تشغيل التطبيق تلقائياً عند تغيير اللغة",
+                                stringResource(R.string.lang_restart_note),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
@@ -213,8 +211,8 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // ===== قسم الإشعارات =====
-            SettingsSectionTitle("الإشعارات", Icons.Rounded.Notifications)
+            // ===== الإشعارات =====
+            SettingsSectionTitle(stringResource(R.string.notifications), Icons.Rounded.Notifications)
 
             GlassCard(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -227,11 +225,11 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column {
-                            Text("تفعيل الإشعارات",
+                            Text(stringResource(R.string.enable_notifications),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onSurface)
-                            Text("تذكير يومي بجدول المذاكرة",
+                            Text(stringResource(R.string.daily_reminder),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -249,7 +247,7 @@ fun SettingsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column {
-                                Text("وقت التذكير",
+                                Text(stringResource(R.string.reminder_time),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface)
@@ -264,7 +262,7 @@ fun SettingsScreen(
                             FilledTonalButton(onClick = { showTimePicker = true }) {
                                 Icon(Icons.Rounded.Edit, null, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text("تعديل")
+                                Text(stringResource(R.string.edit))
                             }
                         }
                     }
@@ -273,27 +271,28 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // ===== معلومات التطبيق =====
-            SettingsSectionTitle("عن التطبيق", Icons.Rounded.Info)
+            // ===== عن التطبيق =====
+            SettingsSectionTitle(stringResource(R.string.about), Icons.Rounded.Info)
 
             GlassCard(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 cornerRadius = JadwalRadius.lg,
             ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    SettingsInfoRow("الإصدار", "1.0.0 (MVP)")
+                    SettingsInfoRow(stringResource(R.string.version), "1.0.0 (MVP)")
                     HorizontalDivider()
-                    SettingsInfoRow("الذكاء الاصطناعي", "Google Gemini 1.5 Flash")
+                    SettingsInfoRow(stringResource(R.string.ai_engine), "Google Gemini 1.5 Flash")
                 }
             }
 
             Spacer(Modifier.height(16.dp))
 
-            // ===== قسم المطور =====
-            SettingsSectionTitle("عن المطور", Icons.Rounded.Code)
+            // ===== عن المطور =====
+            SettingsSectionTitle(stringResource(R.string.about_developer), Icons.Rounded.Code)
 
             GlassCard(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -312,7 +311,7 @@ fun SettingsScreen(
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp))
                         Column {
-                            Text("المطور",
+                            Text(stringResource(R.string.developer_label),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text("Gorashe Mohamed | قرشي محمد",
@@ -328,9 +327,9 @@ fun SettingsScreen(
                         onClick = {
                             val intent = Intent(Intent.ACTION_SENDTO).apply {
                                 data = Uri.parse("mailto:gorashe.suliman@outlook.com")
-                                putExtra(Intent.EXTRA_SUBJECT, "جدول - تواصل")
+                                putExtra(Intent.EXTRA_SUBJECT, "Jadwal - Contact")
                             }
-                            context.startActivity(Intent.createChooser(intent, "إرسال بريد"))
+                            context.startActivity(Intent.createChooser(intent, "Send email"))
                         },
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
                         shape = MaterialTheme.shapes.small,
@@ -345,7 +344,7 @@ fun SettingsScreen(
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("البريد الإلكتروني",
+                                Text(stringResource(R.string.email_label),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text("gorashe.suliman@outlook.com",
@@ -364,7 +363,9 @@ fun SettingsScreen(
                     Surface(
                         onClick = {
                             context.startActivity(
-                                Intent(Intent.ACTION_DIAL).apply { data = Uri.parse("tel:+201010736525") }
+                                Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:+201010736525")
+                                }
                             )
                         },
                         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f),
@@ -380,7 +381,7 @@ fun SettingsScreen(
                                 tint = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.size(20.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("رقم الهاتف",
+                                Text(stringResource(R.string.phone_label),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text("+20 1010736525",
@@ -398,7 +399,7 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // ===== زر تسجيل الخروج =====
+            // ===== تسجيل الخروج =====
             GlassCard(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 cornerRadius = JadwalRadius.lg,
@@ -428,7 +429,10 @@ fun SettingsScreen(
                                 modifier = Modifier.size(22.dp))
                         }
                         Text(
-                            text = if (uiState.isLoggingOut) "جارٍ تسجيل الخروج..." else "تسجيل الخروج",
+                            text = if (uiState.isLoggingOut)
+                                stringResource(R.string.logging_out)
+                            else
+                                stringResource(R.string.logout_title),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.error,

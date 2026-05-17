@@ -1,4 +1,4 @@
-package com.jadwal.notifications
+package com.jadwal.app.notifications
 
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging

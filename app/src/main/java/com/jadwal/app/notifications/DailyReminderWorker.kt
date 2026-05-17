@@ -1,17 +1,14 @@
-package com.jadwal.notifications
+package com.jadwal.app.notifications
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker
-import androidx.work.*
+import androidx.work.CoroutineWorker
+import androidx.work.WorkerParameters
+import com.jadwal.data.repository.ScheduleRepository
+import com.jadwal.app.notifications.JadwalNotificationManager
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import com.jadwal.data.repository.ScheduleRepository
-import java.util.concurrent.TimeUnit
 
-/**
- * DailyReminderWorker — يعمل في الخلفية حتى عندما يكون التطبيق مغلقاً.
- * يتحقق من مهام اليوم ثم يُرسل إشعار التذكير.
- */
 @HiltWorker
 class DailyReminderWorker @AssistedInject constructor(
     @Assisted context: Context,
@@ -22,21 +19,17 @@ class DailyReminderWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            // جلب مهام اليوم من قاعدة البيانات
             val todayTasks = scheduleRepository.getTodayScheduleWithSubjects()
             val pendingTasks = todayTasks.filter { !it.isCompleted }
-
             val firstSubject = pendingTasks.firstOrNull()?.subjectName ?: ""
             val tasksCount = pendingTasks.size
 
-            // إرسال إشعار التذكير اليومي
             notificationManager.showDailyReminder(
                 subjectName = firstSubject,
                 tasksCount = tasksCount,
             )
             Result.success()
         } catch (e: Exception) {
-            // إعادة المحاولة مرة واحدة فقط عند الفشل
             if (runAttemptCount < 1) Result.retry() else Result.failure()
         }
     }

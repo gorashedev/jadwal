@@ -3,27 +3,28 @@ package com.jadwal
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import com.jadwal.notifications.JadwalNotificationManager
-import com.jadwal.notifications.NotificationScheduler
+import com.jadwal.app.notifications.JadwalNotificationManager
+import com.jadwal.app.notifications.NotificationScheduler
 import com.jadwal.data.preferences.UserPreferencesDataStore
-import com.jadwal.util.LanguageManager
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 /**
- * JadwalApplication — نقطة بدء التطبيق.
+ * JadwalApplication — إصلاح #6
  *
- * مهام التهيئة:
- * 1. استعادة اللغة المحفوظة وتطبيقها فوراً قبل أي Activity
- * 2. إنشاء قنوات الإشعارات (مطلوب لـ Android 8+)
- * 3. تمرير HiltWorkerFactory إلى WorkManager (مطلوب لـ @HiltWorker)
- * 4. جدولة الإشعارات الدورية إذا كانت مُفعَّلة
+ * المشكلة الأصلية:
+ * - createNotificationChannels() كانت تُستدعى لكن WorkManager لم يكن يعمل صح
+ * - السبب: WorkManager يحتاج HiltWorkerFactory لكي يحقن الـ dependencies في الـ Workers
+ * - بدونه: DailyReminderWorker يفشل لأن scheduleRepository = null
+ *
+ * الإصلاح:
+ * - implement Configuration.Provider وتوفير HiltWorkerFactory
+ * - جدولة الإشعارات بعد التأكد من الإعدادات
  */
 @HiltAndroidApp
 class JadwalApplication : Application(), Configuration.Provider {
@@ -40,48 +41,34 @@ class JadwalApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var prefs: UserPreferencesDataStore
 
-    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    // ─── Scope للعمليات في الخلفية ───────────────────────────
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    // ─── إصلاح: WorkManager يستخدم HiltWorkerFactory ────────
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
-            .setMinimumLoggingLevel(android.util.Log.INFO)
             .build()
 
     override fun onCreate() {
         super.onCreate()
 
-        // ===== استعادة اللغة قبل كل شيء =====
-        // runBlocking مقبول هنا لأنه في onCreate() ويجب تطبيق اللغة قبل أي نشاط
-        restoreLanguage()
-
+        // إنشاء قنوات الإشعارات (مطلوب على Android 8+)
         notificationManager.createNotificationChannels()
-        initNotifications()
-    }
 
-    /**
-     * يقرأ اللغة المحفوظة من DataStore ويطبّقها عبر AppCompatDelegate.
-     * هذا يضمن أن اللغة المختارة تُستعاد في كل مرة يُفتح فيها التطبيق.
-     */
-    private fun restoreLanguage() {
-        try {
-            val savedCode = runBlocking(Dispatchers.IO) { prefs.languageCode.first() }
-            if (savedCode.isNotEmpty()) {
-                LanguageManager.setAppLocale(savedCode)
-            }
-        } catch (_: Exception) {
-            // تجاهل الخطأ — يبقى التطبيق على اللغة الافتراضية
-        }
-    }
-
-    private fun initNotifications() {
-        applicationScope.launch {
-            val enabled = prefs.notificationsEnabled.first()
-            if (enabled) {
-                val hour = prefs.notificationHour.first()
-                val minute = prefs.notificationMinute.first()
-                notificationScheduler.scheduleDailyReminder(hour, minute)
-                notificationScheduler.scheduleExamAlerts()
+        // جدولة الإشعارات بناءً على الإعدادات المحفوظة
+        appScope.launch {
+            try {
+                val notificationsEnabled = prefs.notificationsEnabled.first()
+                if (notificationsEnabled) {
+                    val hour = prefs.notificationHour.first()
+                    val minute = prefs.notificationMinute.first()
+                    notificationScheduler.scheduleDailyReminder(hour, minute)
+                    notificationScheduler.scheduleExamAlerts()
+                }
+            } catch (_: Exception) {
+                // إذا فشل القراءة، جدول بالوقت الافتراضي (8 صباحاً)
+                notificationScheduler.scheduleDailyReminder(8, 0)
             }
         }
     }

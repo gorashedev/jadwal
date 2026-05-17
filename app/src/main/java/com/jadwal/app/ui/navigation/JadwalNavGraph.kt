@@ -5,13 +5,16 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.jadwal.ui.screens.ai.AISuggestionScreen
 import com.jadwal.ui.screens.analytics.AnalyticsScreen
 import com.jadwal.ui.screens.auth.ForgotPasswordScreen
 import com.jadwal.ui.screens.auth.LoginScreen
 import com.jadwal.ui.screens.auth.RegisterScreen
+import com.jadwal.ui.screens.auth.ResetPasswordScreen
 import com.jadwal.ui.screens.chat.AIChatScreen
 import com.jadwal.ui.screens.home.HomeScreen
 import com.jadwal.ui.screens.scan.ExamScanScreen
@@ -66,7 +69,7 @@ fun JadwalNavGraph(
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
@@ -88,6 +91,27 @@ fun JadwalNavGraph(
         composable(Screen.ForgotPassword.route) {
             ForgotPasswordScreen(
                 onEmailSent = { navController.popBackStack() },
+                onNavigateBack = { navController.popBackStack() },
+            )
+        }
+
+        // ─── إصلاح #3: شاشة إعادة تعيين كلمة المرور ─────────────────────
+        // تُفتح عبر Deep Link: com.jadwal.app://reset-password#token...
+        composable(
+            route = Screen.ResetPassword.route,
+            arguments = listOf(
+                navArgument("fragment") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val encodedFragment = backStackEntry.arguments?.getString("fragment") ?: ""
+            ResetPasswordScreen(
+                encodedFragment = encodedFragment,
+                onPasswordUpdated = {
+                    // بعد تغيير كلمة المرور، انتقل للـ Home
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
                 onNavigateBack = { navController.popBackStack() },
             )
         }
@@ -137,17 +161,14 @@ fun JadwalNavGraph(
             )
         }
 
-        // ===== شاشة المساعد الذكي (دردشة) =====
         composable(Screen.AiChat.route) {
             AIChatScreen()
         }
 
-        // ===== شاشة إدارة المواد =====
         composable(Screen.Subjects.route) {
             SubjectsScreen(onBack = { navController.popBackStack() })
         }
 
-        // ===== شاشة الجلسة =====
         composable("${Screen.Session.route}/{scheduleItemId}") { backStackEntry ->
             val itemId = backStackEntry.arguments?.getString("scheduleItemId") ?: ""
             SessionScreen(
@@ -156,7 +177,6 @@ fun JadwalNavGraph(
             )
         }
 
-        // ===== شاشة الذكاء الاصطناعي للجدول =====
         composable(Screen.AISuggestion.route) {
             AISuggestionScreen(
                 onBack = { navController.popBackStack() },
@@ -168,12 +188,10 @@ fun JadwalNavGraph(
             )
         }
 
-        // ===== شاشة الملف الشخصي =====
         composable(Screen.Profile.route) {
             ProfileScreen(onBack = { navController.popBackStack() })
         }
 
-        // ===== مسح جدول الامتحانات بالذكاء الاصطناعي =====
         composable(Screen.ExamScan.route) {
             ExamScanScreen(
                 onBack = { navController.popBackStack() },

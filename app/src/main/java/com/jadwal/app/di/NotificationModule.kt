@@ -1,8 +1,8 @@
-package com.jadwal.di
+package com.jadwal.app.di
 
 import android.content.Context
 import androidx.work.WorkManager
-import com.jadwal.notifications.*
+import com.jadwal.app.notifications.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

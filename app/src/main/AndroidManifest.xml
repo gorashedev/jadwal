@@ -2,13 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- الأذونات المطلوبة -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
     <application
         android:name=".JadwalApplication"
@@ -23,34 +23,38 @@
         android:localeConfig="@xml/locales_config"
         tools:targetApi="31">
 
-        <!--
-            إصلاح: AppCompatActivity تستلزم AppTheme يرث من Theme.AppCompat
-            تأكد أن Theme.Jadwal في styles.xml يرث من:
-              Theme.AppCompat.DayNight.NoActionBar
-            وليس من Theme.Material3 مباشرةً
-            (يمكن استخدام Theme.AppCompat.Light.NoActionBar أيضاً)
-        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize"
             android:launchMode="singleTask">
 
+            <!-- Launcher -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
             <!--
-                إصلاح: Deep Link لتأكيد البريد الإلكتروني عبر Supabase
-                الخطوات:
-                1. في Supabase Dashboard → Authentication → URL Configuration
-                2. Site URL: com.jadwal.app://login-callback
-                3. Redirect URLs: أضف: com.jadwal.app://login-callback
+                إصلاح #3: Deep Link لاستقبال روابط Supabase Auth
+                ─────────────────────────────────────────────────
+                Supabase يُرسل ريدايركت لهذا العنوان:
+                com.jadwal.app://reset-password#access_token=xxx&type=recovery
 
-                يجب أن يتطابق android:scheme مع ما تم ضبطه في Supabase
+                تأكد أن redirectTo في Supabase Dashboard (Authentication > URL Configuration)
+                يتضمن: com.jadwal.app://reset-password
             -->
-            <intent-filter android:autoVerify="true">
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="com.jadwal.app"
+                    android:host="reset-password" />
+            </intent-filter>
+
+            <!-- Deep Link عام للـ Auth callbacks الأخرى (تسجيل الدخول، تأكيد البريد) -->
+            <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
@@ -61,9 +65,8 @@
 
         </activity>
 
-        <!-- مستقبل إعادة التشغيل لإعادة جدولة الإشعارات -->
         <receiver
-            android:name=".notifications.BootReceiver"
+            android:name=".app.notifications.BootReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -72,13 +75,14 @@
             </intent-filter>
         </receiver>
 
-        <!-- مستقبل تشغيل الإشعارات المجدولة -->
-        <receiver
-            android:name=".notifications.NotificationReceiver"
-            android:enabled="true"
-            android:exported="false" />
+        <service
+            android:name=".app.notifications.JadwalFcmService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
-        <!-- FileProvider لصور الكاميرا المؤقتة -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -89,12 +93,15 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- Splash Screen Provider -->
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
             android:exported="false"
             tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
             <meta-data
                 android:name="androidx.emoji2.text.EmojiCompatInitializer"
                 android:value="androidx.startup" />

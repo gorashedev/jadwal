@@ -19,12 +19,12 @@ interface ScheduleAlgorithm {
 /**
  * DefaultScheduleAlgorithm — خوارزمية توليد الجدول الأسبوعي
  *
- * تعمل بالطريقة التالية:
- * - أيام الدراسة: الأحد إلى الخميس (0-4)
+ * - أيام الدراسة: جميع أيام الأسبوع (0-6) بما فيها الجمعة والسبت
  * - توزيع الوقت نسبياً بحسب صعوبة المادة (صعبة = وقت أكثر)
  * - وقت البدء حسب تفضيل المستخدم (صباح = 8ص، مساء = 7م)
  * - كل جلسة بين 30 و 120 دقيقة
  * - استراحة 15 دقيقة بين الجلسات
+ * - يمكن تقليل وقت الجمعة/السبت كمكافأة عند إنجاز الأهداف
  */
 @Singleton
 class DefaultScheduleAlgorithm @Inject constructor() : ScheduleAlgorithm {
@@ -39,14 +39,18 @@ class DefaultScheduleAlgorithm @Inject constructor() : ScheduleAlgorithm {
         val startHour = when (preferredTime) {
             StudyTime.MORNING -> 8
             StudyTime.EVENING -> 19
-            StudyTime.NIGHT -> 21
+            StudyTime.NIGHT   -> 21
         }
 
-        // أيام الدراسة: الأحد (0) إلى الخميس (4)
-        val studyDays = listOf(0, 1, 2, 3, 4)
-        val dailyMinutes = (dailyHours * 60).coerceAtLeast(60)
+        // جميع أيام الأسبوع — الجمعة والسبت بنصف الوقت كمكافأة
+        val studyDays = listOf(0, 1, 2, 3, 4, 5, 6)
+        val dailyMinutesMap = studyDays.associateWith { day ->
+            when (day) {
+                5, 6 -> ((dailyHours * 60) / 2).coerceAtLeast(30) // جمعة/سبت = نصف الوقت
+                else -> (dailyHours * 60).coerceAtLeast(60)
+            }
+        }
 
-        // أوزان الصعوبة: صعبة=3، متوسطة=2، سهلة=1
         fun Subject.weight(): Int = when (difficulty) {
             Difficulty.HARD   -> 3
             Difficulty.MEDIUM -> 2
@@ -57,7 +61,8 @@ class DefaultScheduleAlgorithm @Inject constructor() : ScheduleAlgorithm {
         val slots = mutableListOf<ScheduleSlot>()
 
         for (dayOfWeek in studyDays) {
-            var currentTotalMinutes = startHour * 60  // نقطة البداية بالدقائق
+            val dailyMinutes = dailyMinutesMap[dayOfWeek] ?: continue
+            var currentTotalMinutes = startHour * 60
 
             subjects.forEach { subject ->
                 val proportion = subject.weight().toFloat() / totalWeight
@@ -65,28 +70,25 @@ class DefaultScheduleAlgorithm @Inject constructor() : ScheduleAlgorithm {
                     .toInt()
                     .coerceIn(30, 120)
 
-                val slotHour = currentTotalMinutes / 60
+                val slotHour   = currentTotalMinutes / 60
                 val slotMinute = currentTotalMinutes % 60
 
-                // لا نضيف جلسات بعد منتصف الليل
                 if (slotHour < 24) {
                     slots.add(
                         ScheduleSlot(
-                            id = UUID.randomUUID().toString(),
-                            subjectId = subject.id,
+                            id          = UUID.randomUUID().toString(),
+                            subjectId   = subject.id,
                             subjectName = subject.name,
                             subjectIcon = subject.icon,
-                            colorHex = subject.colorHex,
-                            dayOfWeek = dayOfWeek,
-                            startHour = slotHour,
+                            colorHex    = subject.colorHex,
+                            dayOfWeek   = dayOfWeek,
+                            startHour   = slotHour,
                             startMinute = slotMinute,
                             durationMinutes = duration,
-                            priority = subject.weight(),
+                            priority    = subject.weight(),
                         )
                     )
                 }
-
-                // تحريك مؤشر الوقت (المدة + 15 دقيقة استراحة)
                 currentTotalMinutes += duration + 15
             }
         }
