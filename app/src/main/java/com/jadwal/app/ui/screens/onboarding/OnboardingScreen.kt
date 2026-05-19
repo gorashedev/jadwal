@@ -15,10 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.jadwal.R
 import com.jadwal.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -29,47 +32,54 @@ data class OnboardingPage(
     val gradientColors: List<Color>,
 )
 
-val onboardingPages = listOf(
-    OnboardingPage(
-        emoji = "📚",
-        title = "جدولك الدراسي الذكي",
-        subtitle = "جدول يحلّل موادّك وامتحاناتك ويبني لك خطة مذاكرة مثالية تناسب وقتك",
-        gradientColors = listOf(Color(0xFF667EEA), Color(0xFF764BA2)),
-    ),
-    OnboardingPage(
-        emoji = "🤖",
-        title = "مدعوم بالذكاء الاصطناعي",
-        subtitle = "يستخدم Gemini لتحليل أدائك وتقديم اقتراحات يومية مخصصة تساعدك على التقدم",
-        gradientColors = listOf(Color(0xFF11998E), Color(0xFF38EF7D)),
-    ),
-    OnboardingPage(
-        emoji = "🔔",
-        title = "لا تنسَ أي امتحان",
-        subtitle = "تذكيرات ذكية قبل كل امتحان وتنبيهات يومية تضمن أنك دائماً على المسار الصحيح",
-        gradientColors = listOf(Color(0xFFFF6B6B), Color(0xFFFFE66D)),
-    ),
-    OnboardingPage(
-        emoji = "📈",
-        title = "تابع تقدمك يومياً",
-        subtitle = "إحصائيات مفصّلة تُظهر لك كم ذاكرت، وأين تحتاج إلى تحسين، واحتفل بإنجازاتك",
-        gradientColors = listOf(Color(0xFF4776E6), Color(0xFF8E54E9)),
-    ),
-)
-
 @Composable
-fun OnboardingScreen(onFinish: () -> Unit) {
-    val pagerState = rememberPagerState(pageCount = { onboardingPages.size })
+fun OnboardingScreen(
+    onFinish: () -> Unit,
+    viewModel: OnboardingViewModel = hiltViewModel(),
+) {
+    val pages = listOf(
+        OnboardingPage(
+            emoji = "📚",
+            title = stringResource(R.string.onboarding_title_1),
+            subtitle = stringResource(R.string.onboarding_subtitle_1),
+            gradientColors = listOf(Color(0xFF667EEA), Color(0xFF764BA2)),
+        ),
+        OnboardingPage(
+            emoji = "🤖",
+            title = stringResource(R.string.onboarding_title_2),
+            subtitle = stringResource(R.string.onboarding_subtitle_2),
+            gradientColors = listOf(Color(0xFF11998E), Color(0xFF38EF7D)),
+        ),
+        OnboardingPage(
+            emoji = "🔔",
+            title = stringResource(R.string.onboarding_title_3),
+            subtitle = stringResource(R.string.onboarding_subtitle_3),
+            gradientColors = listOf(Color(0xFFFF6B6B), Color(0xFFFFE66D)),
+        ),
+        OnboardingPage(
+            emoji = "📈",
+            title = stringResource(R.string.onboarding_title_4),
+            subtitle = stringResource(R.string.onboarding_subtitle_4),
+            gradientColors = listOf(Color(0xFF4776E6), Color(0xFF8E54E9)),
+        ),
+    )
+
+    val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
+
+    fun finishOnboarding() {
+        viewModel.completeOnboarding()
+        onFinish()
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
         ) { page ->
-            OnboardingPageContent(page = onboardingPages[page])
+            OnboardingPageContent(page = pages[page])
         }
 
-        // ===== أزرار التنقل والنقاط =====
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -79,12 +89,11 @@ fun OnboardingScreen(onFinish: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            // نقاط المؤشر
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                repeat(onboardingPages.size) { index ->
+                repeat(pages.size) { index ->
                     val isSelected = pagerState.currentPage == index
                     val width by animateDpAsState(
                         targetValue = if (isSelected) 24.dp else 8.dp,
@@ -104,13 +113,12 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                 }
             }
 
-            // زر التالي / ابدأ
-            val isLastPage = pagerState.currentPage == onboardingPages.size - 1
+            val isLastPage = pagerState.currentPage == pages.size - 1
 
             Button(
                 onClick = {
                     if (isLastPage) {
-                        onFinish()
+                        finishOnboarding()
                     } else {
                         scope.launch {
                             pagerState.animateScrollToPage(pagerState.currentPage + 1)
@@ -127,17 +135,17 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                     .height(56.dp),
             ) {
                 Text(
-                    text = if (isLastPage) "ابدأ الآن 🚀" else "التالي",
+                    text = if (isLastPage) stringResource(R.string.get_started)
+                           else stringResource(R.string.next),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
                 )
             }
 
-            // زر التخطي
             if (!isLastPage) {
-                TextButton(onClick = onFinish) {
+                TextButton(onClick = { finishOnboarding() }) {
                     Text(
-                        text = "تخطي",
+                        text = stringResource(R.string.skip),
                         color = Color.White.copy(alpha = 0.7f),
                         style = MaterialTheme.typography.bodyMedium,
                     )

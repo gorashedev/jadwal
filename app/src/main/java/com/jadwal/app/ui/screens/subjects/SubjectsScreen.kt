@@ -30,6 +30,8 @@ import com.jadwal.domain.model.Subject
 import com.jadwal.ui.components.GlassCard
 import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.*
+import androidx.compose.ui.res.stringResource
+import com.jadwal.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,7 +72,7 @@ fun SubjectsScreen(
                 ExtendedFloatingActionButton(
                     onClick = viewModel::showAddDialog,
                     icon = { Icon(Icons.Rounded.Add, null) },
-                    text = { Text("إضافة مادة") },
+                    text = { Text(stringResource(R.string.add_subject_button)) },
                     containerColor = JadwalIndigo,
                     contentColor = Color.White,
                 )
@@ -90,19 +92,19 @@ fun SubjectsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Rounded.ArrowBack, "رجوع",
+                        Icon(Icons.Rounded.ArrowBack, stringResource(R.string.back),
                             tint = MaterialTheme.colorScheme.onBackground)
                     }
                     Spacer(Modifier.width(4.dp))
                     Column {
                         Text(
-                            "إدارة المواد",
+                            stringResource(R.string.manage_subjects_title),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                         Text(
-                            "${uiState.subjects.size} مادة دراسية",
+                            stringResource(R.string.subjects_count, uiState.subjects.size),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -151,19 +153,23 @@ private fun SubjectCard(
 ) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
+    // فحص اللغة الحالية
+    val currentLang = java.util.Locale.getDefault().language
+    val displayTitle = if (currentLang == "en" && subject.nameEn.isNotBlank()) subject.nameEn else subject.name
+
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("حذف ${subject.name}؟") },
-            text = { Text("هل أنت متأكد من حذف هذه المادة؟ لا يمكن التراجع عن هذه العملية.") },
+            title = { Text(stringResource(R.string.delete_subject_title, displayTitle)) },
+            text = { Text(stringResource(R.string.delete_subject_confirm)) },
             confirmButton = {
                 Button(
                     onClick = { onDelete(); showDeleteConfirm = false },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                ) { Text("حذف", color = MaterialTheme.colorScheme.onError) }
+                ) { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.onError) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("إلغاء") }
+                TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) }
             },
         )
     }
@@ -175,7 +181,6 @@ private fun SubjectCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // أيقونة المادة مع لون الخلفية
             val subjectColor = runCatching {
                 Color(android.graphics.Color.parseColor(subject.colorHex))
             }.getOrDefault(JadwalIndigo)
@@ -194,12 +199,13 @@ private fun SubjectCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    subject.name,
+                    displayTitle, // استخدام الاسم الصحيح هنا
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-                if (subject.nameEn.isNotBlank()) {
+                // إذا كنا في النسخة العربية والمادة لها اسم إنجليزي نظهره كاسم ثانوي
+                if (currentLang != "en" && subject.nameEn.isNotBlank()) {
                     Text(
                         subject.nameEn,
                         style = MaterialTheme.typography.bodySmall,
@@ -217,12 +223,12 @@ private fun SubjectCard(
 
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Rounded.Edit, "تعديل",
+                    Icon(Icons.Rounded.Edit, stringResource(R.string.edit),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(18.dp))
                 }
                 IconButton(onClick = { showDeleteConfirm = true }, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Rounded.Delete, "حذف",
+                    Icon(Icons.Rounded.Delete, stringResource(R.string.delete),
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(18.dp))
                 }
@@ -234,9 +240,9 @@ private fun SubjectCard(
 @Composable
 private fun DifficultyChip(difficulty: Difficulty) {
     val (label, color) = when (difficulty) {
-        Difficulty.EASY   -> "سهل" to Color(0xFF66BB6A)
-        Difficulty.MEDIUM -> "متوسط" to Color(0xFFFFA726)
-        Difficulty.HARD   -> "صعب" to Color(0xFFEF5350)
+        Difficulty.EASY   -> stringResource(R.string.difficulty_easy) to Color(0xFF66BB6A)
+        Difficulty.MEDIUM -> stringResource(R.string.difficulty_medium) to Color(0xFFFFA726)
+        Difficulty.HARD   -> stringResource(R.string.difficulty_hard) to Color(0xFFEF5350)
     }
     Box(
         modifier = Modifier
@@ -258,7 +264,7 @@ private fun ProgressChip(completed: Int, total: Int) {
             .padding(horizontal = 8.dp, vertical = 3.dp),
     ) {
         Text(
-            "$completed/$total فصل",
+            stringResource(R.string.chapters_done_format, completed, total),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -275,14 +281,14 @@ private fun EmptySubjectsState(onAdd: () -> Unit) {
         Text("📚", style = MaterialTheme.typography.displayLarge)
         Spacer(Modifier.height(16.dp))
         Text(
-            "لا توجد مواد دراسية بعد",
+            stringResource(R.string.no_subjects_yet),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            "أضف موادك الدراسية لتبدأ في تنظيم جدولك",
+            stringResource(R.string.add_your_first_subject),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -293,7 +299,7 @@ private fun EmptySubjectsState(onAdd: () -> Unit) {
         ) {
             Icon(Icons.Rounded.Add, null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
-            Text("إضافة مادة الآن")
+            Text(stringResource(R.string.add_subject_now))
         }
     }
 }
@@ -326,10 +332,10 @@ private fun SubjectDialog(
                 TextButton(onClick = {
                     onExamDateChange(datePickerState.selectedDateMillis)
                     showDatePicker = false
-                }) { Text("تأكيد") }
+                }) { Text(stringResource(R.string.confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("إلغاء") }
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) }
             },
         ) {
             DatePicker(state = datePickerState)
@@ -339,7 +345,7 @@ private fun SubjectDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                if (formState.isEditing) "تعديل المادة" else "إضافة مادة جديدة",
+                if (formState.isEditing) stringResource(R.string.subject_dialog_title_edit) else stringResource(R.string.subject_dialog_title_add),
                 fontWeight = FontWeight.Bold,
             )
         },
@@ -352,8 +358,8 @@ private fun SubjectDialog(
                 OutlinedTextField(
                     value = formState.name,
                     onValueChange = onNameChange,
-                    label = { Text("اسم المادة *") },
-                    placeholder = { Text("مثال: الرياضيات") },
+                    label = { Text(stringResource(R.string.subject_name_label)) },
+                    placeholder = { Text(stringResource(R.string.subject_name_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     isError = errorMessage != null && formState.name.isBlank(),
@@ -363,8 +369,8 @@ private fun SubjectDialog(
                 OutlinedTextField(
                     value = formState.nameEn,
                     onValueChange = onNameEnChange,
-                    label = { Text("الاسم بالإنجليزية (اختياري)") },
-                    placeholder = { Text("مثال: Mathematics") },
+                    label = { Text(stringResource(R.string.subject_name_en_label)) },
+                    placeholder = { Text(stringResource(R.string.subject_name_en_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                 )
@@ -373,22 +379,22 @@ private fun SubjectDialog(
                 OutlinedTextField(
                     value = formState.totalChapters,
                     onValueChange = onChaptersChange,
-                    label = { Text("عدد الفصول") },
+                    label = { Text(stringResource(R.string.chapters_count_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
 
                 // الصعوبة
-                Text("مستوى الصعوبة",
+                Text(stringResource(R.string.difficulty_label),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Difficulty.entries.forEach { diff ->
                         val (label, color) = when (diff) {
-                            Difficulty.EASY   -> "سهل" to Color(0xFF66BB6A)
-                            Difficulty.MEDIUM -> "متوسط" to Color(0xFFFFA726)
-                            Difficulty.HARD   -> "صعب" to Color(0xFFEF5350)
+                            Difficulty.EASY   -> stringResource(R.string.difficulty_easy) to Color(0xFF66BB6A)
+                            Difficulty.MEDIUM -> stringResource(R.string.difficulty_medium) to Color(0xFFFFA726)
+                            Difficulty.HARD   -> stringResource(R.string.difficulty_hard) to Color(0xFFEF5350)
                         }
                         FilterChip(
                             selected = formState.difficulty == diff,
@@ -403,7 +409,7 @@ private fun SubjectDialog(
                 }
 
                 // اختيار الأيقونة
-                Text("الأيقونة",
+                Text(stringResource(R.string.icon_label),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -431,7 +437,7 @@ private fun SubjectDialog(
                 }
 
                 // اختيار اللون
-                Text("لون المادة",
+                Text(stringResource(R.string.color_label),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -458,7 +464,7 @@ private fun SubjectDialog(
                 }
 
                 // موعد الامتحان
-                Text("موعد الامتحان (اختياري)",
+                Text(stringResource(R.string.exam_date_label),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
 
@@ -473,13 +479,13 @@ private fun SubjectDialog(
                             val cal = java.util.Calendar.getInstance()
                             cal.timeInMillis = formState.examDate
                             "${cal.get(java.util.Calendar.YEAR)}/${cal.get(java.util.Calendar.MONTH) + 1}/${cal.get(java.util.Calendar.DAY_OF_MONTH)}"
-                        } else "اختر تاريخ الامتحان"
+                        } else stringResource(R.string.choose_exam_date)
                     )
                     if (formState.examDate != null) {
                         Spacer(Modifier.weight(1f))
                         Icon(
                             Icons.Rounded.Close,
-                            contentDescription = "إزالة التاريخ",
+                            contentDescription = stringResource(R.string.remove_date_desc),
                             modifier = Modifier
                                 .size(16.dp)
                                 .clickable { onExamDateChange(null) },
@@ -503,11 +509,11 @@ private fun SubjectDialog(
                 onClick = onSave,
                 colors = ButtonDefaults.buttonColors(containerColor = JadwalIndigo),
             ) {
-                Text(if (formState.isEditing) "حفظ التعديلات" else "إضافة المادة")
+                Text(if (formState.isEditing) stringResource(R.string.save_changes) else stringResource(R.string.add_subject_action))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("إلغاء") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         },
     )
 }

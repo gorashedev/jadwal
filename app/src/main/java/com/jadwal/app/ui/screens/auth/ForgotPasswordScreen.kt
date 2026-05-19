@@ -23,6 +23,8 @@ import com.jadwal.ui.components.GlassCard
 import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.JadwalRadius
 import com.jadwal.ui.theme.JadwalSuccess
+import androidx.compose.ui.res.stringResource
+import com.jadwal.R
 
 @Composable
 fun ForgotPasswordScreen(
@@ -58,7 +60,7 @@ fun ForgotPasswordScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.Rounded.ArrowBack, contentDescription = "رجوع")
+                    Icon(Icons.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
             }
 
@@ -75,7 +77,7 @@ fun ForgotPasswordScreen(
             Spacer(Modifier.height(24.dp))
 
             Text(
-                text = "استعادة كلمة المرور",
+                text = stringResource(R.string.forgot_password_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -83,7 +85,7 @@ fun ForgotPasswordScreen(
             )
 
             Text(
-                text = "سنرسل لك رابط إعادة تعيين كلمة المرور على بريدك الإلكتروني",
+                text = stringResource(R.string.forgot_password_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -111,13 +113,13 @@ fun ForgotPasswordScreen(
                             modifier = Modifier.size(48.dp),
                         )
                         Text(
-                            "تم إرسال الرابط! ✅",
+                            stringResource(R.string.reset_sent_ok),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = JadwalSuccess,
                         )
                         Text(
-                            "تحقق من بريدك الإلكتروني واتبع الرابط لإعادة تعيين كلمة المرور",
+                            stringResource(R.string.reset_sent_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -141,7 +143,7 @@ fun ForgotPasswordScreen(
                         OutlinedTextField(
                             value = email,
                             onValueChange = { email = it },
-                            label = { Text("البريد الإلكتروني") },
+                            label = { Text(stringResource(R.string.email)) },
                             leadingIcon = { Icon(Icons.Rounded.Email, null) },
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Email,
@@ -192,7 +194,7 @@ fun ForgotPasswordScreen(
                                     strokeWidth = 2.5.dp,
                                 )
                             } else {
-                                Text("إرسال رابط الاستعادة", fontSize = 16.sp)
+                                Text(stringResource(R.string.send_reset_link_action), fontSize = 16.sp)
                             }
                         }
                     }

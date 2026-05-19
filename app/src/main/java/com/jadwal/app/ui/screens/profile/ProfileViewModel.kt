@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jadwal.R
 import com.jadwal.data.preferences.UserPreferencesDataStore
 import com.jadwal.data.repository.SessionRepository
 import com.jadwal.data.repository.SubjectRepository
@@ -18,8 +19,8 @@ import javax.inject.Inject
 
 data class AchievementBadge(
     val emoji: String,
-    val title: String,
-    val description: String,
+    val titleRes: Int,
+    val descriptionRes: Int,
     val isUnlocked: Boolean,
 )
 
@@ -44,7 +45,6 @@ class ProfileViewModel @Inject constructor(
     private val prefs: UserPreferencesDataStore,
     private val sessionRepository: SessionRepository,
     private val subjectRepository: SubjectRepository,
-    // ─── إصلاح #5: نحتاج Context لنسخ الصورة إلى مجلد داخلي دائم ───
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -56,7 +56,6 @@ class ProfileViewModel @Inject constructor(
     }
 
     private fun loadProfile() {
-        // ─── مراقبة DataStore بشكل مستمر ───
         viewModelScope.launch {
             combine(
                 prefs.userName,
@@ -69,10 +68,6 @@ class ProfileViewModel @Inject constructor(
                     it.copy(
                         userName = userName,
                         streakDays = streak,
-                        // ─── إصلاح: تحقق أن الملف لا يزال موجوداً ───
-                        // المشكلة كانت: يُحفظ المسار الأصلي من gallery
-                        // بعد إعادة التشغيل Android يسحب الصلاحية المؤقتة
-                        // الحل: ننسخ الصورة للمجلد الداخلي filesDir
                         profilePhotoPath = if (photoPath.isNotBlank() && File(photoPath).exists())
                             photoPath else "",
                     )
@@ -114,24 +109,12 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    // ─── إصلاح #5: نسخ الصورة إلى مجلد داخلي دائم قبل حفظ المسار ───
-    /**
-     * المشكلة الأصلية:
-     * عند اختيار صورة من الـ Gallery، Android يعطي URI مؤقت (content://)
-     * بعد قفل التطبيق تنتهي صلاحية الوصول لهذا URI
-     *
-     * الحل:
-     * ننسخ الصورة فوراً إلى context.filesDir (مجلد داخلي دائم)
-     * ونحفظ المسار الكامل الجديد في DataStore
-     */
     fun onPhotoSelected(uri: Uri) {
         viewModelScope.launch {
             try {
-                // إنشاء ملف دائم في المجلد الداخلي
                 val profileDir = File(context.filesDir, "profile").also { it.mkdirs() }
                 val destFile = File(profileDir, "avatar.jpg")
 
-                // نسخ الصورة
                 context.contentResolver.openInputStream(uri)?.use { input ->
                     destFile.outputStream().use { output ->
                         input.copyTo(output)
@@ -142,9 +125,7 @@ class ProfileViewModel @Inject constructor(
                 prefs.setProfilePhotoPath(permanentPath)
                 _uiState.update { it.copy(profilePhotoPath = permanentPath) }
 
-            } catch (e: Exception) {
-                // فشل نسخ الصورة — لا نحدث UI
-            }
+            } catch (e: Exception) { }
         }
     }
 
@@ -171,27 +152,23 @@ class ProfileViewModel @Inject constructor(
         _uiState.update { it.copy(showEditNameDialog = false) }
     }
 
-    // ─── حساب الشارات ───────────────────────────────────────────
-    private fun calculateBadges(
-        sessions: List<Session>,
-        subjects: List<Subject>,
-    ): List<AchievementBadge> {
+    private fun calculateBadges(sessions: List<Session>, subjects: List<Subject>): List<AchievementBadge> {
         val totalMinutes = sessions.sumOf { it.durationMinutes }
         val totalHours = totalMinutes / 60
         val totalSessions = sessions.size
         val streak = _uiState.value.streakDays
 
         return listOf(
-            AchievementBadge("🎯", "أول خطوة",    "أكمل أول جلسة مذاكرة",            totalSessions >= 1),
-            AchievementBadge("📚", "مذاكر نشيط",  "أكمل 10 جلسات مذاكرة",             totalSessions >= 10),
-            AchievementBadge("🏆", "محترف",       "أكمل 50 جلسة مذاكرة",              totalSessions >= 50),
-            AchievementBadge("⏰", "10 ساعات",    "ذاكر 10 ساعات إجمالاً",             totalHours >= 10),
-            AchievementBadge("🌟", "50 ساعة",     "ذاكر 50 ساعة إجمالاً",             totalHours >= 50),
-            AchievementBadge("💎", "100 ساعة",    "ذاكر 100 ساعة إجمالاً",            totalHours >= 100),
-            AchievementBadge("🔥", "3 أيام 🔥",   "ذاكر 3 أيام متواصلة",              streak >= 3),
-            AchievementBadge("⚡", "أسبوع كامل",  "ذاكر أسبوعاً بدون انقطاع",        streak >= 7),
-            AchievementBadge("👑", "شهر متواصل",  "ذاكر شهراً كاملاً بدون انقطاع",   streak >= 30),
-            AchievementBadge("🎓", "متعدد المواد","أضف 5 مواد أو أكثر",               subjects.size >= 5),
+            AchievementBadge("🎯", R.string.badge_first_step_title, R.string.badge_first_step_desc, totalSessions >= 1),
+            AchievementBadge("📚", R.string.badge_active_title, R.string.badge_active_desc, totalSessions >= 10),
+            AchievementBadge("🏆", R.string.badge_pro_title, R.string.badge_pro_desc, totalSessions >= 50),
+            AchievementBadge("⏰", R.string.badge_10h_title, R.string.badge_10h_desc, totalHours >= 10),
+            AchievementBadge("🌟", R.string.badge_50h_title, R.string.badge_50h_desc, totalHours >= 50),
+            AchievementBadge("💎", R.string.badge_100h_title, R.string.badge_100h_desc, totalHours >= 100),
+            AchievementBadge("🔥", R.string.badge_3d_title, R.string.badge_3d_desc, streak >= 3),
+            AchievementBadge("⚡", R.string.badge_1w_title, R.string.badge_1w_desc, streak >= 7),
+            AchievementBadge("👑", R.string.badge_1m_title, R.string.badge_1m_desc, streak >= 30),
+            AchievementBadge("🎓", R.string.badge_multi_title, R.string.badge_multi_desc, subjects.size >= 5),
         )
     }
 }

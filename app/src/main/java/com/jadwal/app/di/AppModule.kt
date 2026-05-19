@@ -33,8 +33,7 @@ object AppModule {
     @Singleton
     fun provideGenerativeModel(): GenerativeModel =
         GenerativeModel(
-            // gemini-1.5-flash — اسم النموذج الصحيح لـ SDK 0.9.0 (بدون -latest)
-            modelName = "gemini-1.5-flash",
+                modelName = "gemini-2.0-flash",
             apiKey = BuildConfig.GEMINI_API_KEY,
         )
 

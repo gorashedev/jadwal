@@ -24,7 +24,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jadwal.R
 import com.jadwal.ui.components.GlassCard
 import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.*
@@ -54,16 +56,16 @@ fun AIChatScreen(
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
             icon = { Icon(Icons.Rounded.DeleteSweep, null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("مسح المحادثة", fontWeight = FontWeight.Bold) },
-            text = { Text("هل تريد حذف جميع رسائل المحادثة وبدء من جديد؟") },
+            title = { Text(stringResource(R.string.clear_chat), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.clear_chat_confirm)) },
             confirmButton = {
                 Button(
                     onClick = { viewModel.clearHistory(); showClearDialog = false },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                ) { Text("مسح", color = Color.White) }
+                ) { Text(stringResource(R.string.clear), color = Color.White) }
             },
             dismissButton = {
-                TextButton(onClick = { showClearDialog = false }) { Text("إلغاء") }
+                TextButton(onClick = { showClearDialog = false }) { Text(stringResource(R.string.cancel)) }
             },
         )
     }
@@ -144,13 +146,13 @@ private fun ChatHeader(onClearHistory: () -> Unit) {
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "المساعد الدراسي",
+                    stringResource(R.string.ai_assistant),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    "مدعوم بـ Google Gemini",
+                    stringResource(R.string.powered_by_gemini),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -163,7 +165,7 @@ private fun ChatHeader(onClearHistory: () -> Unit) {
                     .background(Color(0xFF4CAF50))
             )
             Text(
-                "متصل",
+                stringResource(R.string.connected),
                 style = MaterialTheme.typography.labelSmall,
                 color = Color(0xFF4CAF50),
                 fontWeight = FontWeight.Medium,
@@ -175,7 +177,7 @@ private fun ChatHeader(onClearHistory: () -> Unit) {
             ) {
                 Icon(
                     Icons.Rounded.DeleteSweep,
-                    contentDescription = "مسح المحادثة",
+                    contentDescription = stringResource(R.string.clear_chat),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp),
                 )
@@ -309,7 +311,7 @@ private fun ChatInputBar(
             modifier = Modifier.weight(1f),
             placeholder = {
                 Text(
-                    "اسأل عن أي شيء دراسي...",
+                    stringResource(R.string.ask_anything),
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 )
             },
@@ -334,7 +336,7 @@ private fun ChatInputBar(
         ) {
             Icon(
                 Icons.Rounded.Send,
-                contentDescription = "إرسال",
+                contentDescription = stringResource(R.string.send),
                 tint = if (text.isNotBlank() && !isTyping) Color.White
                        else MaterialTheme.colorScheme.onSurfaceVariant,
             )

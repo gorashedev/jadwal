@@ -28,6 +28,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jadwal.ui.components.GlassCard
 import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.*
+import androidx.compose.ui.res.stringResource
+import com.jadwal.R
 
 @Composable
 fun LoginScreen(
@@ -62,20 +64,20 @@ fun LoginScreen(
 
             // ===== الشعار والعنوان =====
             Text(
-                text = "جدول",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.primary,
             )
             Text(
-                text = "مرحباً بك مجدداً 👋",
+                text = stringResource(R.string.login_welcome),
                 style = MaterialTheme.typography.headlineSmall,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(top = 8.dp),
             )
             Text(
-                text = "سجّل دخولك للمتابعة",
+                text = stringResource(R.string.login_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -97,7 +99,7 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        label = { Text("البريد الإلكتروني") },
+                        label = { Text(stringResource(R.string.email)) },
                         leadingIcon = {
                             Icon(Icons.Rounded.Email, contentDescription = null)
                         },
@@ -117,7 +119,7 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("كلمة المرور") },
+                        label = { Text(stringResource(R.string.password)) },
                         leadingIcon = {
                             Icon(Icons.Rounded.Lock, contentDescription = null)
                         },
@@ -127,7 +129,7 @@ fun LoginScreen(
                                     imageVector = if (passwordVisible)
                                         Icons.Rounded.VisibilityOff
                                     else Icons.Rounded.Visibility,
-                                    contentDescription = if (passwordVisible) "إخفاء" else "إظهار",
+                                    contentDescription = if (passwordVisible) stringResource(R.string.hide_password) else stringResource(R.string.show_password),
                                 )
                             }
                         },
@@ -155,7 +157,7 @@ fun LoginScreen(
                         modifier = Modifier.align(Alignment.Start),
                     ) {
                         Text(
-                            text = "نسيت كلمة المرور؟",
+                            text = stringResource(R.string.forgot_password),
                             color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.labelLarge,
                         )
@@ -210,7 +212,7 @@ fun LoginScreen(
                             )
                         } else {
                             Text(
-                                text = "تسجيل الدخول",
+                                text = stringResource(R.string.sign_in),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontSize = 16.sp,
                             )
@@ -226,13 +228,13 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "ليس لديك حساب؟",
+                    text = stringResource(R.string.no_account),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 TextButton(onClick = onNavigateToRegister) {
                     Text(
-                        text = "أنشئ حساباً الآن",
+                        text = stringResource(R.string.create_account_link),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.labelLarge,
                     )

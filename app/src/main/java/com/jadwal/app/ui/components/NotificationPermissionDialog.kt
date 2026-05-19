@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.res.stringResource
+import com.jadwal.R
 import com.jadwal.ui.theme.*
 
 /**
@@ -211,7 +213,7 @@ fun NotificationRationaleCard(
 
                 // ===== العنوان =====
                 Text(
-                    text = "فعّل الإشعارات",
+                    text = stringResource(R.string.enable_notifications),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -221,7 +223,7 @@ fun NotificationRationaleCard(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    text = "لكي لا تفوتك أي جلسة مذاكرة",
+                    text = stringResource(R.string.notif_perm_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -232,20 +234,20 @@ fun NotificationRationaleCard(
                 // ===== قائمة المزايا =====
                 BenefitRow(
                     emoji = "📚",
-                    title = "تذكير يومي بالمذاكرة",
-                    subtitle = "في الوقت الذي تختاره",
+                    title = stringResource(R.string.daily_reminder),
+                    subtitle = stringResource(R.string.notif_daily_sub),
                 )
                 Spacer(Modifier.height(12.dp))
                 BenefitRow(
                     emoji = "⚠️",
-                    title = "تنبيه قبل الامتحانات",
-                    subtitle = "قبل 7 أيام، 3 أيام، ويوم الامتحان",
+                    title = stringResource(R.string.notif_exam_title),
+                    subtitle = stringResource(R.string.notif_exam_sub),
                 )
                 Spacer(Modifier.height(12.dp))
                 BenefitRow(
                     emoji = "🎉",
-                    title = "احتفال بإنجازاتك",
-                    subtitle = "إشعار عند إكمال كل جلسة مذاكرة",
+                    title = stringResource(R.string.notif_achievement_title),
+                    subtitle = stringResource(R.string.notif_achievement_sub),
                 )
 
                 Spacer(Modifier.height(28.dp))
@@ -268,7 +270,7 @@ fun NotificationRationaleCard(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "السماح بالإشعارات",
+                        text = stringResource(R.string.enable_notifications),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
@@ -282,7 +284,7 @@ fun NotificationRationaleCard(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        text = "ليس الآن",
+                        text = stringResource(R.string.later),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -292,7 +294,7 @@ fun NotificationRationaleCard(
 
                 // ===== نص طمأنة =====
                 Text(
-                    text = "يمكنك تغيير هذا في الإعدادات في أي وقت",
+                    text = stringResource(R.string.notif_change_anytime),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center,

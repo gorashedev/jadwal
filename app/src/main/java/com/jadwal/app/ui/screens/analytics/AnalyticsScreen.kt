@@ -32,6 +32,8 @@ import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.screens.profile.ProfileContent
 import com.jadwal.ui.screens.profile.ProfileViewModel
 import com.jadwal.ui.theme.*
+import androidx.compose.ui.res.stringResource
+import com.jadwal.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +73,7 @@ fun AnalyticsScreen(
                             .fillMaxWidth()
                             .padding(4.dp),
                     ) {
-                        listOf("الملف الشخصي", "الإحصائيات").forEachIndexed { index, title ->
+                        listOf(stringResource(R.string.profile), stringResource(R.string.analytics)).forEachIndexed { index, title ->
                             val isSelected = topTab == index
                             Box(
                                 contentAlignment = Alignment.Center,
@@ -99,7 +101,7 @@ fun AnalyticsScreen(
                 // زر تحديث الإحصائيات (يظهر فقط في تبويب الإحصائيات)
                 AnimatedVisibility(visible = topTab == 1) {
                     FilledTonalIconButton(onClick = viewModel::refresh) {
-                        Icon(Icons.Rounded.Refresh, contentDescription = "تحديث",
+                        Icon(Icons.Rounded.Refresh, contentDescription = stringResource(R.string.refresh),
                             modifier = Modifier.size(20.dp))
                     }
                 }
@@ -186,7 +188,7 @@ fun AnalyticsScreen(
                             indicator = {},
                             divider = {},
                         ) {
-                            listOf("هذا الأسبوع", "هذا الشهر").forEachIndexed { index, title ->
+                            listOf(stringResource(R.string.this_week), stringResource(R.string.this_month)).forEachIndexed { index, title ->
                                 val isSelected = selectedTab == index
                                 Tab(
                                     selected = isSelected,
@@ -235,7 +237,7 @@ fun AnalyticsScreen(
                                 Column(modifier = Modifier.padding(20.dp)) {
                                     if (chartTab == 0) {
                                         WeeklyBarChartTitle(
-                                            bestDay = uiState.bestDayLabel,
+                                            bestDayRes = uiState.bestDayLabelRes,
                                             bestMinutes = uiState.bestDayMinutes,
                                         )
                                         Spacer(Modifier.height(16.dp))
@@ -310,7 +312,7 @@ fun MeVsPastMeCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "أنا الآن مقابل أنا الأسبوع الماضي",
+                    text = stringResource(R.string.me_vs_past_me),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -325,7 +327,7 @@ fun MeVsPastMeCard(
             ) {
                 // هذا الأسبوع
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("هذا الأسبوع",
+                    Text(stringResource(R.string.this_week_label),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
@@ -334,7 +336,7 @@ fun MeVsPastMeCard(
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.primary,
                     )
-                    Text("ساعة",
+                    Text(stringResource(R.string.hour_short),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -354,7 +356,7 @@ fun MeVsPastMeCard(
                         )
                     }
                     Text(
-                        text = if (isImproved) "تحسّن" else "تراجع",
+                        text = if (isImproved) stringResource(R.string.improvement) else stringResource(R.string.decline),
                         style = MaterialTheme.typography.labelSmall,
                         color = accentColor,
                     )
@@ -362,7 +364,7 @@ fun MeVsPastMeCard(
 
                 // الأسبوع الماضي
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("الأسبوع الماضي",
+                    Text(stringResource(R.string.last_week_label),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
@@ -371,7 +373,7 @@ fun MeVsPastMeCard(
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
-                    Text("ساعة",
+                    Text(stringResource(R.string.hour_short),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -379,11 +381,11 @@ fun MeVsPastMeCard(
 
             // رسالة تحفيزية
             val message = when {
-                percent >= 50  -> "رائع! أنت تتحسن بشكل ملحوظ 🌟"
-                percent >= 20  -> "أداء جيد! استمر في هذا الإيقاع 💪"
-                percent >= 0   -> "مستقر، حاول إضافة وقت أكثر الأسبوع القادم"
-                percent >= -20 -> "لا بأس، استدرك هذا الأسبوع القادم 🎯"
-                else           -> "تحتاج إلى مذاكرة أكثر — ابدأ الآن! 📚"
+                percent >= 50  -> stringResource(R.string.improve_great)
+                percent >= 20  -> stringResource(R.string.improve_good)
+                percent >= 0   -> stringResource(R.string.improve_stable)
+                percent >= -20 -> stringResource(R.string.improve_low)
+                else           -> stringResource(R.string.improve_none)
             }
             Text(
                 text = message,
@@ -406,10 +408,10 @@ fun QuickSummaryRow(
     modifier: Modifier = Modifier,
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        QuickStatCard("%.1f".format(weekHours), "ساعة", "هذا الأسبوع", "⏱️", Modifier.weight(1f))
-        QuickStatCard("$sessions", "جلسة", "منجزة", "✅", Modifier.weight(1f))
-        QuickStatCard("$avgMinutes", "د", "متوسط يومي", "📊", Modifier.weight(1f))
-        QuickStatCard("$streak", "يوم", "السلسلة", "🔥", Modifier.weight(1f))
+        QuickStatCard("%.1f".format(weekHours), stringResource(R.string.hour_short), stringResource(R.string.this_week_label), "⏱️", Modifier.weight(1f))
+        QuickStatCard("$sessions", stringResource(R.string.session_unit), stringResource(R.string.completed), "✅", Modifier.weight(1f))
+        QuickStatCard("$avgMinutes", stringResource(R.string.minute_abbrev), stringResource(R.string.avg_daily_label), "📊", Modifier.weight(1f))
+        QuickStatCard("$streak", stringResource(R.string.day_label), stringResource(R.string.streak), "🔥", Modifier.weight(1f))
     }
 }
 
@@ -439,16 +441,16 @@ fun QuickStatCard(value: String, unit: String, label: String, icon: String, modi
 
 // ===== رسم بياني أسبوعي =====
 @Composable
-fun WeeklyBarChartTitle(bestDay: String, bestMinutes: Int) {
+fun WeeklyBarChartTitle(bestDayRes: Int, bestMinutes: Int) {
     Row(modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
-        Text("دقائق المذاكرة اليومية",
+        Text(stringResource(R.string.daily_study_minutes),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-        if (bestDay.isNotEmpty()) {
+        if (bestDayRes != 0) {
             Surface(color = JadwalIndigo.copy(alpha = 0.12f), shape = RoundedCornerShape(8.dp)) {
-                Text("🏆 $bestDay", style = MaterialTheme.typography.labelSmall,
+                Text("🏆 ${stringResource(bestDayRes)}", style = MaterialTheme.typography.labelSmall,
                     color = JadwalIndigo, fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
             }
@@ -510,14 +512,15 @@ fun WeeklyBarChart(bars: List<DayBar>, modifier: Modifier = Modifier) {
             bars.forEach { bar ->
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(36.dp)) {
                     if (bar.minutes > 0) {
-                        Text("${bar.minutes}د", style = MaterialTheme.typography.labelSmall,
+                        Text("${bar.minutes}" + stringResource(R.string.minute_abbrev), style = MaterialTheme.typography.labelSmall,
                             color = if (bar.isToday) JadwalViolet
                                     else MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 9.sp)
                     }
-                    Text(bar.label.take(3), style = MaterialTheme.typography.labelSmall,
+                    // بدلاً من: Text(bar.label.take(3)...)
+                    Text(stringResource(bar.labelRes).take(3), style = MaterialTheme.typography.labelSmall,
                         color = if (bar.isToday) JadwalViolet
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = if (bar.isToday) FontWeight.Bold else FontWeight.Normal,
                         textAlign = TextAlign.Center, maxLines = 1)
                 }
@@ -529,7 +532,7 @@ fun WeeklyBarChart(bars: List<DayBar>, modifier: Modifier = Modifier) {
 // ===== رسم بياني شهري =====
 @Composable
 fun MonthlyLineChartTitle(totalHours: Float) {
-    Text("ساعات المذاكرة الشهرية — إجمالي: %.1f ساعة".format(totalHours),
+    Text(stringResource(R.string.monthly_study_hours_total, totalHours),
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
 }
@@ -573,7 +576,7 @@ fun MonthlyLineChart(points: List<MonthlyPoint>, modifier: Modifier = Modifier) 
                     Text("%.1f".format(p.hours),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 9.sp)
-                    Text(p.weekLabel.replace("الأسبوع ", "أ"),
+                    Text(p.weekLabel.replace(stringResource(R.string.week_prefix), stringResource(R.string.week_abbrev)),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -587,7 +590,7 @@ fun MonthlyLineChart(points: List<MonthlyPoint>, modifier: Modifier = Modifier) 
 fun SubjectStatsSection(stats: List<SubjectStat>, modifier: Modifier = Modifier) {
     GlassCard(modifier = modifier, cornerRadius = JadwalRadius.xl) {
         Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
-            Text("أداؤك في كل مادة",
+            Text(stringResource(R.string.subject_performance),
                 style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 16.dp))
@@ -636,7 +639,7 @@ fun SubjectStatRow(stat: SubjectStat) {
                 color = subjectColor, trackColor = MaterialTheme.colorScheme.surfaceVariant,
             )
             Spacer(Modifier.height(4.dp))
-            Text("${stat.completedSessions} جلسات • ${stat.totalMinutes / 60} ساعة",
+            Text(stringResource(R.string.sessions_hours_summary, stat.completedSessions, stat.totalMinutes / 60),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -647,11 +650,11 @@ fun SubjectStatRow(stat: SubjectStat) {
 @Composable
 fun MotivationCard(weekHours: Float, sessions: Int, modifier: Modifier = Modifier) {
     val (emoji, message) = when {
-        weekHours >= 15 -> "🌟" to "أداء رائع هذا الأسبوع! أنت في القمة"
-        weekHours >= 10 -> "💪" to "عمل ممتاز! حافظ على هذا الإيقاع"
-        weekHours >= 5  -> "📈" to "بداية جيدة! حاول زيادة وقت المذاكرة قليلاً"
-        sessions > 0    -> "🌱" to "بداية كل رحلة خطوة — استمر!"
-        else            -> "🎯" to "اليوم هو أفضل يوم للبدء — انطلق الآن!"
+        weekHours >= 15 -> "🌟" to stringResource(R.string.improve_great)
+        weekHours >= 10 -> "💪" to stringResource(R.string.improve_good)
+        weekHours >= 5  -> "📈" to stringResource(R.string.improve_stable)
+        sessions > 0    -> "🌱" to stringResource(R.string.improve_low)
+        else            -> "🎯" to stringResource(R.string.improve_none)
     }
     GlassCard(modifier = modifier, cornerRadius = JadwalRadius.lg, glassAlpha = 0.2f) {
         Row(modifier = Modifier.fillMaxWidth().padding(16.dp),

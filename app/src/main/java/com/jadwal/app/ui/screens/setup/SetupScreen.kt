@@ -31,6 +31,8 @@ import com.jadwal.domain.model.StudyTime
 import com.jadwal.ui.components.GlassCard
 import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.*
+import androidx.compose.ui.res.stringResource
+import com.jadwal.R
 
 @Composable
 fun SetupScreen(
@@ -59,13 +61,13 @@ fun SetupScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        text = "الخطوة ${currentStep + 1} من $totalSteps",
+                        text = stringResource(R.string.step_format, currentStep + 1, totalSteps),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     if (currentStep > 0) {
                         TextButton(onClick = { currentStep-- }) {
-                            Text("رجوع")
+                            Text(stringResource(R.string.back))
                         }
                     }
                 }
@@ -146,13 +148,13 @@ fun SubjectsStep(
             .padding(horizontal = 24.dp),
     ) {
         Text(
-            text = "ما هي موادّك؟",
+            text = stringResource(R.string.setup_subjects_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
         )
         Text(
-            text = "أضف المواد التي ستذاكرها",
+            text = stringResource(R.string.setup_subjects_sub),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp, bottom = 20.dp),
@@ -179,12 +181,12 @@ fun SubjectsStep(
                         ) {
                             Text("📚", fontSize = 48.sp)
                             Text(
-                                text = "لا توجد مواد بعد",
+                                text = stringResource(R.string.no_subjects_yet),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Text(
-                                text = "اضغط على الزر أدناه لإضافة مادتك الأولى",
+                                text = stringResource(R.string.add_your_first_subject),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
@@ -213,7 +215,7 @@ fun SubjectsStep(
                 ) {
                     Icon(Icons.Rounded.Add, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("إضافة مادة")
+                    Text(stringResource(R.string.add_subject))
                 }
             }
         }
@@ -228,7 +230,7 @@ fun SubjectsStep(
                 .fillMaxWidth()
                 .height(52.dp),
         ) {
-            Text("التالي", fontSize = 16.sp)
+            Text(stringResource(R.string.next), fontSize = 16.sp)
         }
 
         Spacer(Modifier.height(16.dp))
@@ -272,7 +274,7 @@ fun SubjectInputCard(
                 OutlinedTextField(
                     value = subject.name,
                     onValueChange = onUpdateName,
-                    placeholder = { Text("اسم المادة، مثال: رياضيات") },
+                    placeholder = { Text(stringResource(R.string.subject_name_placeholder)) },
                     singleLine = true,
                     shape = MaterialTheme.shapes.small,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -283,7 +285,7 @@ fun SubjectInputCard(
                 IconButton(onClick = onRemove) {
                     Icon(
                         Icons.Rounded.Delete,
-                        contentDescription = "حذف",
+                        contentDescription = stringResource(R.string.delete),
                         tint = MaterialTheme.colorScheme.error,
                     )
                 }
@@ -338,13 +340,13 @@ fun ExamDatesStep(
             .padding(horizontal = 24.dp),
     ) {
         Text(
-            "متى امتحاناتك؟",
+            stringResource(R.string.setup_exams_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
         )
         Text(
-            "حدد تواريخ الامتحانات لكل مادة (اختياري)",
+            stringResource(R.string.setup_exams_sub),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp, bottom = 20.dp),
@@ -370,7 +372,7 @@ fun ExamDatesStep(
                 .fillMaxWidth()
                 .height(52.dp),
         ) {
-            Text("التالي", fontSize = 16.sp)
+            Text(stringResource(R.string.next), fontSize = 16.sp)
         }
         Spacer(Modifier.height(16.dp))
     }
@@ -412,7 +414,7 @@ fun ExamDateCard(
                         text = subject.examDateMillis?.let {
                             java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
                                 .format(java.util.Date(it))
-                        } ?: "لم يُحدَّد بعد",
+                        } ?: stringResource(R.string.not_set_yet),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (subject.examDateMillis != null)
                             MaterialTheme.colorScheme.primary
@@ -435,10 +437,10 @@ fun ExamDateCard(
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { onSetDate(it) }
                     showDatePicker = false
-                }) { Text("تأكيد") }
+                }) { Text(stringResource(R.string.confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("إلغاء") }
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) }
             },
         ) {
             DatePicker(state = datePickerState)
@@ -461,13 +463,13 @@ fun StudyHoursStep(
     ) {
         Column {
             Text(
-                "كم ساعة تذاكر يومياً؟",
+                stringResource(R.string.setup_hours_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
             )
             Text(
-                "سيبني جدول جدولك بناءً على هذا",
+                stringResource(R.string.setup_hours_sub),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp, bottom = 24.dp),
@@ -500,7 +502,7 @@ fun StudyHoursStep(
                                 else MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = if (hours == 1) "ساعة" else "ساعات",
+                                text = if (hours == 1) stringResource(R.string.hour_singular) else stringResource(R.string.hours),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = if (isSelected) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -519,7 +521,7 @@ fun StudyHoursStep(
                     .fillMaxWidth()
                     .height(52.dp),
             ) {
-                Text("التالي", fontSize = 16.sp)
+                Text(stringResource(R.string.next), fontSize = 16.sp)
             }
             Spacer(Modifier.height(16.dp))
         }
@@ -547,14 +549,14 @@ fun DifficultyAndTimeStep(
     ) {
         item {
             Text(
-                "صعوبة كل مادة",
+                stringResource(R.string.setup_difficulty_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(top = 4.dp),
             )
             Text(
-                "سيُعطي جدول وقتاً أكثر للمواد الصعبة",
+                stringResource(R.string.setup_difficulty_sub),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
@@ -580,9 +582,9 @@ fun DifficultyAndTimeStep(
                     Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf(
-                            Difficulty.EASY to "سهلة",
-                            Difficulty.MEDIUM to "متوسطة",
-                            Difficulty.HARD to "صعبة",
+                            Difficulty.EASY to stringResource(R.string.easy),
+                            Difficulty.MEDIUM to stringResource(R.string.medium),
+                            Difficulty.HARD to stringResource(R.string.hard),
                         ).forEach { (difficulty, label) ->
                             val isSelected = subject.difficulty == difficulty
                             FilterChip(
@@ -598,7 +600,7 @@ fun DifficultyAndTimeStep(
 
         item {
             Text(
-                "متى تفضل المذاكرة؟",
+                stringResource(R.string.setup_time_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -612,9 +614,9 @@ fun DifficultyAndTimeStep(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 listOf(
-                    StudyTime.MORNING to "🌅" to "الصباح",
-                    StudyTime.EVENING to "🌆" to "المساء",
-                    StudyTime.NIGHT to "🌙" to "الليل",
+                    StudyTime.MORNING to "🌅" to stringResource(R.string.morning),
+                    StudyTime.EVENING to "🌆" to stringResource(R.string.evening),
+                    StudyTime.NIGHT to "🌙" to stringResource(R.string.night),
                 ).forEach { (timePair, label) ->
                     val (time, icon) = timePair
                     val isSelected = selectedTime == time
@@ -679,7 +681,7 @@ fun DifficultyAndTimeStep(
                 } else {
                     Icon(Icons.Rounded.AutoAwesome, null, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("توليد الجدول الذكي", fontSize = 16.sp)
+                    Text(stringResource(R.string.generate_smart_schedule), fontSize = 16.sp)
                 }
             }
             Spacer(Modifier.height(16.dp))

@@ -80,14 +80,15 @@ class SettingsViewModel @Inject constructor(
      * كل الـ Composables بالـ locale الجديد — بما في ذلك stringResource().
      */
     fun setLanguage(code: String) {
+        // حفظ متزامن في SharedPreferences حتى يُطبَّق الـ locale عند بدء التطبيق
+        prefs.saveLanguageSync(code)
         viewModelScope.launch {
             prefs.setLanguageCode(code)
         }
-        // يجب استدعاء هذا على الـ main thread مباشرةً
-        val localeList = when {
-            code == "ar" -> LocaleListCompat.forLanguageTags("ar")
-            code == "en" -> LocaleListCompat.forLanguageTags("en")
-            else         -> LocaleListCompat.getEmptyLocaleList() // system default
+        val localeList = when (code) {
+            "ar" -> LocaleListCompat.forLanguageTags("ar")
+            "en" -> LocaleListCompat.forLanguageTags("en")
+            else -> LocaleListCompat.getEmptyLocaleList()
         }
         AppCompatDelegate.setApplicationLocales(localeList)
     }
@@ -120,6 +121,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 authRepository.signOut()
             } catch (_: Exception) { }
+            prefs.setLoggedIn(false)
             _uiState.update { it.copy(isLoggingOut = false) }
             _logoutEvent.send(Unit)
         }

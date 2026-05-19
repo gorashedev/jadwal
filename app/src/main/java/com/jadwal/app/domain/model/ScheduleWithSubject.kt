@@ -9,6 +9,7 @@ data class ScheduleWithSubject(
     val id: String,
     val subjectId: String,
     val subjectName: String,
+    val subjectNameEn: String,
     val subjectIcon: String,
     val subjectColor: String,
     val scheduledDate: Long,

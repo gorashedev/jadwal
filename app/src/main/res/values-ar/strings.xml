@@ -9,6 +9,8 @@
     <string name="onboarding_subtitle_2">اعرف أين أنت قبل كل امتحان بدقة</string>
     <string name="onboarding_title_3">لا تفوّت شيئاً</string>
     <string name="onboarding_subtitle_3">تذكيرات ذكية وخطط يومية تبقيك على المسار</string>
+    <string name="onboarding_title_4">تابع تقدمك يومياً</string>
+    <string name="onboarding_subtitle_4">إحصائيات مفصّلة تُظهر كم ذاكرت وأين تحتاج تحسين</string>
     <string name="get_started">ابدأ الآن</string>
     <string name="next">التالي</string>
     <string name="skip">تخطّي</string>
@@ -48,9 +50,10 @@
     <string name="toughest_subject_desc">سنخصص لها وقتاً أكثر في الجدول.</string>
 
     <!-- الرئيسية -->
-    <string name="good_morning">صباح الخير</string>
+    <string name="good_morning">صباح النور</string>
     <string name="good_afternoon">مساء الخير</string>
     <string name="good_evening">مساء النور</string>
+    <string name="good_night">مرحباً</string>
     <string name="today_tasks">مهام اليوم</string>
     <string name="start">ابدأ</string>
     <string name="start_session">ابدأ الجلسة</string>
@@ -65,6 +68,7 @@
 
     <!-- الجلسة / بومودورو -->
     <string name="focus_time">وقت التركيز</string>
+    <string name="session_rating_question">كيف كانت جلسة %s؟</string>
     <string name="break_time">وقت الراحة</string>
     <string name="cycle_x">الدورة %d</string>
     <string name="end_session">إنهاء الجلسة</string>
@@ -76,9 +80,7 @@
     <string name="rest_message">استرح قليلاً، عقلك يستحق ذلك 🌿</string>
     <string name="how_was_understanding">كيف كان مستوى الفهم؟</string>
     <string name="understanding_poor">لم أفهم</string>
-    <string name="understanding_medium">فهمت جزئياً</string>
     <string name="understanding_great">فهمت جيداً!</string>
-    <string name="rate_understanding">قيّم مستوى فهمك</string>
     <string name="skip_rating">تخطي التقييم</string>
     <string name="excellent">ممتاز</string>
     <string name="good">جيد</string>
@@ -158,6 +160,7 @@
     <string name="version">الإصدار</string>
     <string name="ai_engine">محرك الذكاء الاصطناعي</string>
     <string name="about_developer">عن المطور</string>
+    <string name="developer_name">Gorashe Mohamed | قرشي محمد</string>
     <string name="developer_label">المطور</string>
     <string name="email_label">البريد الإلكتروني</string>
     <string name="phone_label">رقم الهاتف</string>
@@ -216,4 +219,175 @@
     <string name="delete">حذف</string>
     <string name="back">رجوع</string>
     <string name="close">إغلاق</string>
+
+    <!-- شاشة الإحصائيات -->
+    <string name="this_week_label">هذا الأسبوع</string>
+    <string name="last_week_label">الأسبوع الماضي</string>
+    <string name="hour_short">ساعة</string>
+    <string name="minute_short">دقيقة</string>
+    <string name="daily_study_minutes">دقائق المذاكرة اليومية</string>
+    <string name="monthly_study_hours_total">ساعات المذاكرة الشهرية — إجمالي: %.1f ساعة</string>
+    <string name="subject_performance">أداؤك في كل مادة</string>
+    <string name="sessions_hours_summary">%1$d جلسات • %2$d ساعة</string>
+    <string name="minute_abbrev">د</string>
+
+    <!-- شاشة الجدول -->
+    <string name="reset_schedule_title">إعادة تعيين الجدول</string>
+    <string name="reset_schedule_confirm">سيتم حذف الجدول الحالي بالكامل. هل أنت متأكد؟</string>
+    <string name="reset_schedule_action">إعادة تعيين</string>
+    <string name="status_done">منجز</string>
+    <string name="status_upcoming">قادم</string>
+    <string name="generating_schedule">جارٍ التوليد…</string>
+    <string name="generate_schedule_auto">توليد الجدول تلقائياً</string>
+    <string name="no_study_day">لا مذاكرة يوم %s</string>
+    <string name="rest_or_review">استرح أو راجع ما درسته</string>
+
+    <!-- شاشة الجلسة -->
+
+    <!-- شاشة اقتراحات الذكاء الاصطناعي -->
+    <string name="retry">حاول مجدداً</string>
+    <string name="select_all">الكل</string>
+    <string name="saving">جارٍ الحفظ…</string>
+
+    <!-- شاشة المواد -->
+    <string name="add_subject_button">إضافة مادة</string>
+    <string name="delete_subject_title">حذف %s؟</string>
+    <string name="delete_subject_confirm">هل أنت متأكد من حذف هذه المادة؟ لا يمكن التراجع عن هذه العملية.</string>
+    <string name="add_subject_now">إضافة مادة الآن</string>
+    <string name="subject_dialog_title_edit">تعديل المادة</string>
+    <string name="subject_dialog_title_add">إضافة مادة جديدة</string>
+    <string name="subject_name_label">اسم المادة *</string>
+    <string name="subject_name_placeholder">مثال: الرياضيات</string>
+    <string name="subject_name_en_label">الاسم بالإنجليزية (اختياري)</string>
+    <string name="subject_name_en_placeholder">مثال: Mathematics</string>
+    <string name="chapters_count_label">عدد الفصول</string>
+    <string name="difficulty_label">مستوى الصعوبة</string>
+    <string name="icon_label">الأيقونة</string>
+    <string name="color_label">لون المادة</string>
+    <string name="exam_date_label">موعد الامتحان (اختياري)</string>
+    <string name="choose_exam_date">اختر تاريخ الامتحان</string>
+    <string name="remove_date_desc">إزالة التاريخ</string>
+    <string name="save_changes">حفظ التعديلات</string>
+    <string name="add_subject_action">إضافة المادة</string>
+    <string name="difficulty_easy">سهل</string>
+    <string name="difficulty_medium">متوسط</string>
+    <string name="difficulty_hard">صعب</string>
+    <string name="chapters_done_format">%1$d/%2$d فصل</string>
+
+    <!-- شاشة الملف الشخصي -->
+    <string name="edit_name_dialog_title">تعديل الاسم</string>
+    <string name="name_label">الاسم</string>
+    <string name="top_subject_label">أعلى مادة مذاكرة</string>
+    <string name="achievement_badges">شارات الإنجاز</string>
+    <string name="unlocked_badge">مفتوح ✓</string>
+
+    <!-- شاشة مسح الامتحانات -->
+    <string name="scan_title">مسح جدول الامتحانات</string>
+    <string name="scan_subtitle">بالذكاء الاصطناعي</string>
+    <string name="analyzing">جاري التحليل…</string>
+    <string name="ai_analyzing_image">✨ يحلل الذكاء الاصطناعي الصورة</string>
+    <string name="may_take_seconds">قد يستغرق ذلك بضع ثوانٍ…</string>
+    <string name="extraction_results">نتائج الاستخراج</string>
+    <string name="exams_extracted">استُخرج %d امتحان — حدد ما تريد حفظه</string>
+    <string name="rescan">إعادة المسح</string>
+    <string name="no_exams_found">لم يتمكن الذكاء الاصطناعي من استخراج أي امتحانات</string>
+    <string name="ensure_clear_image">تأكد أن الصورة تحتوي على جدول امتحانات واضح</string>
+    <string name="capture_new_photo">التقاط صورة جديدة</string>
+    <string name="analyzed_by_gemini">تم التحليل بواسطة Gemini AI</string>
+    <string name="selected_to_save">المحدد للحفظ:</string>
+    <string name="selected_count_exams">%d امتحان</string>
+    <string name="save_to_calendar">حفظ في التقويم</string>
+    <string name="duplicate_label">متطابقة</string>
+    <string name="saved_success">تم الحفظ بنجاح!</string>
+    <string name="saved_count_exams">تم حفظ %d امتحان في تقويمك</string>
+    <string name="view_schedule">عرض الجدول</string>
+    <string name="scan_another">مسح جدول آخر</string>
+
+    <!-- شاشات المصادقة -->
+    <string name="email_label_field">البريد الإلكتروني</string>
+    <string name="password_label_field">كلمة المرور</string>
+    <string name="full_name_label">الاسم الكامل</string>
+    <string name="confirm_password_label">تأكيد كلمة المرور</string>
+    <string name="passwords_not_match">كلمتا المرور غير متطابقتان</string>
+    <string name="create_account_action">إنشاء الحساب</string>
+    <string name="send_reset_link_action">إرسال رابط الاستعادة</string>
+    <string name="later">لاحقاً</string>
+    <string name="open_settings">فتح الإعدادات</string>
+    <!-- ملف شخصي -->
+    <string name="streak_days_format">%d أيام متتالية</string>
+    <string name="top_subject_hours_format">%1$d ساعة %2$d دقيقة</string>
+    <string name="hours_plural">ساعات</string>
+
+    <!-- جلسة -->
+    <string name="break_encourage">استرح قليلاً، عقلك يستحق ذلك 🌿</string>
+    <string name="pause">إيقاف مؤقت</string>
+    <string name="play">تشغيل</string>
+    <string name="session_progress">تقدم الجلسة</string>
+    <string name="rate_understanding">قيّم مستوى فهمك:</string>
+    <string name="understanding_excellent">ممتاز</string>
+    <string name="understanding_excellent_desc">فهمت كل شيء بوضوح</string>
+    <string name="understanding_good">جيد</string>
+    <string name="understanding_good_desc">فهمت معظم المحتوى</string>
+    <string name="understanding_medium">متوسط</string>
+    <string name="understanding_medium_desc">أحتاج مراجعة بعض النقاط</string>
+    <string name="understanding_weak">ضعيف</string>
+    <string name="understanding_weak_desc">أحتاج إعادة دراسة الموضوع</string>
+
+    <!-- جدول -->
+    <string name="emergency_mode_title">وضع الطوارئ — ركّز على %s!</string>
+    <string name="today_label">⚠️ اليوم!</string>
+    <string name="tomorrow_label">⚠️ غداً</string>
+    <string name="days_left_format">بعد %d أيام</string>
+    <string name="schedule_empty_tip">اضغط على الزر أدناه لتوليد جدول أسبوعي تلقائي بناءً على موادك</string>
+
+    <!-- إحصائيات -->
+    <string name="week_prefix">الأسبوع </string>
+    <string name="week_abbrev">أ</string>
+
+    <!-- الإعداد -->
+    <string name="step_format">الخطوة %1$d من %2$d</string>
+    <string name="setup_subjects_title">ما هي موادّك؟</string>
+    <string name="setup_subjects_sub">أضف المواد التي ستذاكرها</string>
+    <string name="setup_exams_title">متى امتحاناتك؟</string>
+    <string name="setup_exams_sub">حدد تواريخ الامتحانات لكل مادة (اختياري)</string>
+    <string name="not_set_yet">لم يُحدَّد بعد</string>
+    <string name="setup_hours_title">كم ساعة تذاكر يومياً؟</string>
+    <string name="setup_hours_sub">سيبني جدول جدولك بناءً على هذا</string>
+    <string name="setup_difficulty_title">صعوبة كل مادة</string>
+    <string name="setup_difficulty_sub">سيُعطي جدول وقتاً أكثر للمواد الصعبة</string>
+    <string name="setup_time_title">متى تفضل المذاكرة؟</string>
+
+    <!-- اقتراحات الذكاء الاصطناعي -->
+    <string name="ai_suggestion_title">اقتراح الذكاء الاصطناعي</string>
+    <string name="ai_loading_1">جارٍ تحليل موادّك ومواعيد امتحاناتك... 🔍</string>
+    <string name="ai_loading_2">أحسب أفضل توزيع للوقت... ⚖️</string>
+    <string name="ai_loading_3">أُولوية المواد الصعبة أولاً... 📊</string>
+    <string name="ai_loading_4">أُنهي الجدول المثالي لك... ✨</string>
+    <string name="ai_schedule_ready">جدولك المخصص جاهز!</string>
+    <string name="ai_select_sessions">اختر ما تريد إضافته (%1$d/%2$d)</string>
+    <string name="day_fallback">يوم %d</string>
+    <string name="gemini_note">ملاحظة Gemini</string>
+    <string name="save_sessions_format">حفظ %d جلسة في الجدول</string>
+    <string name="priority_format">أولوية %d</string>
+    <string name="selected_label">مُختار</string>
+    <string name="day_sun">الأحد</string>
+    <string name="day_mon">الاثنين</string>
+    <string name="day_tue">الثلاثاء</string>
+    <string name="day_wed">الأربعاء</string>
+    <string name="day_thu">الخميس</string>
+    <string name="day_fri">الجمعة</string>
+    <string name="day_sat">السبت</string>
+
+    <!-- حوار الإشعارات -->
+    <string name="notif_perm_subtitle">لكي لا تفوتك أي جلسة مذاكرة</string>
+    <string name="notif_daily_sub">في الوقت الذي تختاره</string>
+    <string name="notif_exam_title">تنبيه قبل الامتحانات</string>
+    <string name="notif_exam_sub">قبل 7 أيام، 3 أيام، ويوم الامتحان</string>
+    <string name="notif_achievement_title">احتفال بإنجازاتك</string>
+    <string name="notif_achievement_sub">إشعار عند إكمال كل جلسة مذاكرة</string>
+    <string name="notif_change_anytime">يمكنك تغيير هذا في الإعدادات في أي وقت</string>
+
+    <!-- حوار وضع التركيز -->
+    <string name="dnd_title">تفعيل وضع التركيز</string>
+    <string name="dnd_body">للحصول على أفضل تجربة مذاكرة، يمكن لجدول إيقاف المقاطعات تلقائياً أثناء جلسات البومودورو</string>
 </resources>

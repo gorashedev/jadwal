@@ -23,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jadwal.R
 import com.jadwal.ui.components.GlassCard
+import java.util.Calendar
 import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.components.NotificationPermissionHandler
 import com.jadwal.ui.components.NotificationPermissionViewModel
@@ -56,8 +57,15 @@ fun HomeScreen(
                 .statusBarsPadding()
                 .padding(bottom = 100.dp)
         ) {
+            val greetingHour = remember { Calendar.getInstance().get(Calendar.HOUR_OF_DAY) }
+            val greeting = when {
+                greetingHour in 5..11  -> "${stringResource(R.string.good_morning)} 🌅"
+                greetingHour in 12..16 -> "${stringResource(R.string.good_afternoon)} ☀️"
+                greetingHour in 17..20 -> "${stringResource(R.string.good_evening)} 🌆"
+                else                   -> "${stringResource(R.string.good_night)} 🌙"
+            }
             HomeHeader(
-                greeting = uiState.greeting,
+                greeting = greeting,
                 userName = uiState.userName,
                 streakDays = uiState.streakDays,
                 modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 8.dp),

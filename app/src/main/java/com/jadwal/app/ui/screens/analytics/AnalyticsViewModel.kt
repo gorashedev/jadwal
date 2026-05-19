@@ -9,11 +9,13 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
+import com.jadwal.R
+
 
 // ===== نماذج البيانات =====
 
 data class DayBar(
-    val label: String,
+    val labelRes: Int, // بدلاً من val label: String
     val minutes: Int,
     val isToday: Boolean = false,
 )
@@ -51,7 +53,7 @@ data class AnalyticsUiState(
     val subjectStats: List<SubjectStat> = emptyList(),
 
     // ===== أفضل يوم =====
-    val bestDayLabel: String = "",
+    val bestDayLabelRes: Int = 0,
     val bestDayMinutes: Int = 0,
 
     // ===== Streak =====
@@ -117,7 +119,7 @@ class AnalyticsViewModel @Inject constructor(
                         monthTotalHours = monthData.sumOf { p -> p.hours.toDouble() }.toFloat(),
                         monthCompletedSessions = (monthData.sumOf { p -> p.hours.toDouble() } * 2).toInt(),
                         subjectStats = subjectData,
-                        bestDayLabel = bestDay?.label ?: "",
+                        bestDayLabelRes = bestDay?.labelRes ?: 0,
                         bestDayMinutes = bestDay?.minutes ?: 0,
                         lastWeekTotalHours = lastWeekHours,
                         weekVsPastDiff = diff,
@@ -141,7 +143,7 @@ class AnalyticsViewModel @Inject constructor(
                         monthTotalHours = 32f,
                         monthCompletedSessions = 45,
                         subjectStats = emptyList(),
-                        bestDayLabel = "الأربعاء",
+                        bestDayLabelRes = R.string.day_wed,
                         bestDayMinutes = 120,
                         streakDays = 5,
                         lastWeekTotalHours = lastWeekHours,
@@ -155,16 +157,15 @@ class AnalyticsViewModel @Inject constructor(
     }
 
     private suspend fun loadWeekData(): List<DayBar> {
-        val arabicDays = listOf("الأحد", "الاثنين", "الثلاثاء", "الأربعاء",
-            "الخميس", "الجمعة", "السبت")
+        val daysLabelsRes = listOf(R.string.day_sun, R.string.day_mon, R.string.day_tue, R.string.day_wed, R.string.day_thu, R.string.day_fri, R.string.day_sat)
         val todayDow = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1
         return try {
             val sessions = scheduleRepository.getWeekSessions()
-            arabicDays.mapIndexed { index, label ->
+            daysLabelsRes.mapIndexed { index, labelRes ->
                 val dayMins = sessions
                     .filter { it.dayOfWeek == index }
                     .sumOf { it.completedMinutes }
-                DayBar(label = label, minutes = dayMins, isToday = index == todayDow)
+                DayBar(labelRes = labelRes, minutes = dayMins, isToday = index == todayDow)
             }
         } catch (e: Exception) {
             getFallbackWeekBars()
@@ -196,10 +197,10 @@ class AnalyticsViewModel @Inject constructor(
     private fun getFallbackWeekBars(): List<DayBar> {
         val todayDow = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1
         val minutes = listOf(45, 90, 30, 120, 60, 20, 40)
-        return listOf("الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت")
-            .mapIndexed { i, label ->
-                DayBar(label = label, minutes = minutes[i], isToday = i == todayDow)
-            }
+        val daysLabelsRes = listOf(R.string.day_sun, R.string.day_mon, R.string.day_tue, R.string.day_wed, R.string.day_thu, R.string.day_fri, R.string.day_sat)
+        return daysLabelsRes.mapIndexed { i, labelRes ->
+            DayBar(labelRes = labelRes, minutes = minutes[i], isToday = i == todayDow)
+        }
     }
 
     private fun getFallbackMonthPoints(): List<MonthlyPoint> = listOf(

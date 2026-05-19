@@ -1,31 +1,30 @@
 package com.jadwal
 
 import android.net.Uri
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
  * DeepLinkManager — وسيط بين MainActivity والـ Compose
  *
- * إصلاح #3: عندما يضغط المستخدم على رابط إعادة تعيين كلمة المرور
- * في البريد الإلكتروني، يُعيد التوجيه للتطبيق عبر:
- * com.jadwal.app://reset-password#access_token=xxx&type=recovery
- *
- * MainActivity تستقبل الـ URI وترسله هنا.
- * JadwalApp يستمع ويوجه المستخدم لشاشة ResetPassword.
+ * إصلاح #3: استخدام StateFlow<Uri?> بدلاً من SharedFlow(replay=1)
+ * حتى لا يُعاد إطلاق الـ URI القديم في كل فتح للتطبيق.
+ * بعد معالجة الـ URI في JadwalApp تُستدعى consumeUri() لإعادة القيمة إلى null.
  */
 @Singleton
 class DeepLinkManager @Inject constructor() {
 
-    private val _pendingUri = MutableSharedFlow<Uri>(
-        extraBufferCapacity = 1,
-        replay = 1, // يحتفظ بآخر قيمة حتى يُجمع عليها
-    )
-    val pendingUri: SharedFlow<Uri> = _pendingUri
+    private val _pendingUri = MutableStateFlow<Uri?>(null)
+    val pendingUri: StateFlow<Uri?> = _pendingUri.asStateFlow()
 
     fun handleUri(uri: Uri) {
-        _pendingUri.tryEmit(uri)
+        _pendingUri.value = uri
+    }
+
+    fun consumeUri() {
+        _pendingUri.value = null
     }
 }

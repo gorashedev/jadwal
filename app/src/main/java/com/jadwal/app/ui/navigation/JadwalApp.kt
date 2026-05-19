@@ -1,8 +1,6 @@
 package com.jadwal.ui.navigation
 
-import android.app.Activity
 import android.net.Uri
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
@@ -15,10 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.os.LocaleListCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -28,43 +24,17 @@ import androidx.navigation.compose.rememberNavController
 import com.jadwal.DeepLinkManager
 import com.jadwal.R
 import com.jadwal.data.preferences.UserPreferencesDataStore
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.delay
 
 @Composable
 fun JadwalApp(
     prefs: UserPreferencesDataStore,
     deepLinkManager: DeepLinkManager,
 ) {
-    // ─── إصلاح #4: تطبيق اللغة قبل أي رسم ───────────────────────────────
-    // المشكلة كانت: AppCompatDelegate.setApplicationLocales يُستدعى بعد
-    // أن تُرسم الشاشات، لذا الشاشات الأولى تستخدم اللغة الخاطئة.
-    // الحل: نقرأ اللغة المحفوظة ونطبقها أول شيء في LaunchedEffect(Unit)
-    // هذا يضمن أن كل stringResource() يُقرأ بالـ locale الصحيح.
-    LaunchedEffect(Unit) {
-        val savedCode = prefs.languageCode.first()
-        if (savedCode.isNotBlank()) {
-            val desiredTags = when (savedCode) {
-                "ar" -> "ar"
-                "en" -> "en"
-                else -> return@LaunchedEffect
-            }
-            val currentTags = AppCompatDelegate.getApplicationLocales().toLanguageTags()
-            if (currentTags != desiredTags) {
-                AppCompatDelegate.setApplicationLocales(
-                    LocaleListCompat.forLanguageTags(desiredTags)
-                )
-                // setApplicationLocales ستُعيد بناء الـ Activity تلقائياً
-                // مما يجعل كل stringResource() يُعاد قراءته بالـ locale الصحيح
-            }
-        }
-    }
-
-    // ─── إصلاح #1 & #2: startDestination صحيح ───────────────────────────
-    // نستخدم StartupViewModel الذي يتحقق من جلسة Supabase الحقيقية
     val startupViewModel: StartupViewModel = hiltViewModel()
     val startDestination by startupViewModel.startDestination.collectAsStateWithLifecycle()
 
-    // انتظر حتى يُحدَّد الوجهة الصحيحة
+    // انتظر حتى يُحدَّد startDestination
     if (startDestination == null) return
 
     val navController = rememberNavController()
@@ -72,25 +42,27 @@ fun JadwalApp(
     val currentDestination = navBackStackEntry?.destination
     val showBottomBar = Screen.bottomBarScreens.any { it == currentDestination?.route }
 
-    // ─── إصلاح #3: معالجة Deep Link إعادة تعيين كلمة المرور ─────────────
-    val context = LocalContext.current
-    LaunchedEffect(Unit) {
-        deepLinkManager.pendingUri.collect { uri ->
-            if (uri.scheme == "com.jadwal.app" && uri.host == "reset-password") {
-                // Supabase تُرسل الـ token في الـ fragment بعد "#"
-                val fragment = uri.fragment ?: ""
-                if (fragment.isNotBlank()) {
-                    // نمرر الـ fragment للـ ViewModel عبر الـ route
-                    navController.navigate(
-                        Screen.ResetPassword.createRoute(Uri.encode(fragment))
-                    ) {
-                        // أزل شاشة Login إن كانت موجودة لتجنب الرجوع إليها
-                        popUpTo(Screen.Login.route) { inclusive = false }
-                        launchSingleTop = true
-                    }
+    // ─── معالجة Deep Link عندما يكون التطبيق يعمل بالفعل (onNewIntent) ────
+    // هذا يختلف عن حالة فتح التطبيق من صفر — تلك حالة يُعالجها StartupViewModel.
+    // هذه الحالة: المستخدم يضغط الرابط والتطبيق مفتوح في الخلفية.
+    val pendingUri by deepLinkManager.pendingUri.collectAsStateWithLifecycle()
+    LaunchedEffect(pendingUri) {
+        val uri = pendingUri ?: return@LaunchedEffect
+        if (uri.scheme == "com.jadwal.app" && uri.host == "reset-password") {
+            val fragment = uri.fragment ?: ""
+            if (fragment.isNotBlank()) {
+                // نُعطي NavHost وقتاً لإكمال التهيئة (frame واحد على الأقل)
+                delay(200)
+                navController.navigate(
+                    Screen.ResetPassword.createRoute(Uri.encode(fragment))
+                ) {
+                    // أزل كل الـ backstack للحصول على back stack نظيف
+                    popUpTo(0) { inclusive = false }
+                    launchSingleTop = true
                 }
             }
         }
+        deepLinkManager.consumeUri()
     }
 
     Scaffold(

@@ -36,6 +36,9 @@ import coil.compose.AsyncImage
 import com.jadwal.ui.components.GlassCard
 import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.*
+import androidx.compose.ui.res.stringResource
+import com.jadwal.R
+
 
 // ===== الشاشة الكاملة مع عنوان ورجوع =====
 @Composable
@@ -51,18 +54,18 @@ fun ProfileScreen(
     if (uiState.showEditNameDialog) {
         AlertDialog(
             onDismissRequest = viewModel::dismissEditNameDialog,
-            title = { Text("تعديل الاسم") },
+            title = { Text(stringResource(R.string.edit_name_dialog_title)) },
             text = {
                 OutlinedTextField(
                     value = uiState.editNameText,
                     onValueChange = viewModel::onEditNameChange,
-                    label = { Text("الاسم") },
+                    label = { Text(stringResource(R.string.name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
             },
-            confirmButton = { Button(onClick = viewModel::saveNewName) { Text("حفظ") } },
-            dismissButton = { TextButton(onClick = viewModel::dismissEditNameDialog) { Text("إلغاء") } },
+            confirmButton = { Button(onClick = viewModel::saveNewName) { Text(stringResource(R.string.save)) } },
+            dismissButton = { TextButton(onClick = viewModel::dismissEditNameDialog) { Text(stringResource(R.string.cancel)) } },
         )
     }
 
@@ -83,10 +86,10 @@ fun ProfileScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.Rounded.ArrowBack, contentDescription = "رجوع")
+                    Icon(Icons.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
                 Text(
-                    text = "الملف الشخصي",
+                    text = stringResource(R.string.profile_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -139,7 +142,7 @@ fun ProfileContent(
             if (uiState.profilePhotoPath.isNotBlank()) {
                 AsyncImage(
                     model = uiState.profilePhotoPath,
-                    contentDescription = "صورة الملف الشخصي",
+                    contentDescription = stringResource(R.string.profile_title),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize().clip(CircleShape),
                 )
@@ -165,7 +168,7 @@ fun ProfileContent(
                     onClick = onPickPhoto,
                 ),
         ) {
-            Icon(Icons.Rounded.CameraAlt, "تغيير الصورة",
+            Icon(Icons.Rounded.CameraAlt, stringResource(R.string.edit),
                 tint = Color.White, modifier = Modifier.size(16.dp))
         }
     }
@@ -178,13 +181,13 @@ fun ProfileContent(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
-            text = if (uiState.userName.isNotBlank()) uiState.userName else "طالب",
+            text = if (uiState.userName.isNotBlank()) uiState.userName else stringResource(R.string.student),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
         )
         IconButton(onClick = onShowEditName, modifier = Modifier.size(32.dp)) {
-            Icon(Icons.Rounded.Edit, "تعديل الاسم",
+            Icon(Icons.Rounded.Edit, stringResource(R.string.edit_name),
                 tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
         }
     }
@@ -202,7 +205,7 @@ fun ProfileContent(
             ) {
                 Text("🔥", fontSize = 16.sp)
                 Text(
-                    "${uiState.streakDays} يوم متتالي",
+                    stringResource(R.string.streak_days_format, uiState.streakDays),
                     style = MaterialTheme.typography.labelLarge,
                     color = JadwalWarning,
                     fontWeight = FontWeight.SemiBold,
@@ -226,24 +229,24 @@ fun ProfileContent(
             value = if (uiState.totalStudyHours >= 1f)
                 "%.1f".format(uiState.totalStudyHours)
             else "${uiState.totalStudyMinutes}",
-            unit = if (uiState.totalStudyHours >= 1f) "ساعة" else "دقيقة",
-            label = "إجمالي\nالمذاكرة",
+            unit = if (uiState.totalStudyHours >= 1f) stringResource(R.string.hour_short) else stringResource(R.string.minute_short),
+            label = stringResource(R.string.total_study),
             color = JadwalIndigo,
         )
         ProfileStatCard(
             modifier = Modifier.weight(1f),
             icon = "📖",
             value = "${uiState.totalSessions}",
-            unit = "جلسة",
-            label = "جلسات\nمكتملة",
+            unit = stringResource(R.string.completed_sessions),
+            label = stringResource(R.string.completed_sessions),
             color = JadwalViolet,
         )
         ProfileStatCard(
             modifier = Modifier.weight(1f),
             icon = "🔥",
             value = "${uiState.streakDays}",
-            unit = "يوم",
-            label = "أيام\nمتتالية",
+            unit = stringResource(R.string.day_label),
+            label = stringResource(R.string.streak_days_label),
             color = JadwalWarning,
         )
     }
@@ -270,14 +273,14 @@ fun ProfileContent(
                     Text(uiState.topSubjectIcon, fontSize = 26.sp)
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("أعلى مادة مذاكرة",
+                    Text(stringResource(R.string.top_subject_label),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(uiState.topSubjectName,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold)
                     Text(
-                        "${uiState.topSubjectMinutes / 60} ساعة ${uiState.topSubjectMinutes % 60} دقيقة",
+                        stringResource(R.string.top_subject_hours_format, uiState.topSubjectMinutes / 60, uiState.topSubjectMinutes % 60),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -297,7 +300,7 @@ fun ProfileContent(
     ) {
         Icon(Icons.Rounded.MilitaryTech, null,
             tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-        Text("شارات الإنجاز",
+        Text(stringResource(R.string.achievement_badges),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary)
@@ -395,7 +398,7 @@ private fun BadgeItem(
             Text(badge.emoji, fontSize = 28.sp,
                 modifier = Modifier.graphicsLayer(alpha = alpha))
             Text(
-                text = badge.title,
+                text = stringResource(id = badge.titleRes),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = if (badge.isUnlocked) MaterialTheme.colorScheme.onSurface
@@ -403,7 +406,7 @@ private fun BadgeItem(
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = badge.description,
+                text = stringResource(id = badge.descriptionRes),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
                 textAlign = TextAlign.Center,
@@ -411,7 +414,7 @@ private fun BadgeItem(
             )
             if (badge.isUnlocked) {
                 Surface(color = JadwalSuccess.copy(alpha = 0.15f), shape = RoundedCornerShape(4.dp)) {
-                    Text("مفتوح ✓",
+                    Text(stringResource(R.string.unlocked_badge),
                         style = MaterialTheme.typography.labelSmall,
                         color = JadwalSuccess,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))

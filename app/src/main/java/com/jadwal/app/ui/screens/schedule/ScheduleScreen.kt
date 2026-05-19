@@ -30,9 +30,8 @@ import com.jadwal.ui.components.GlassCard
 import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.*
 import java.util.Calendar
-
-val arabicDays      = listOf("الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت")
-val arabicDaysShort = listOf("أحد","اثنين","ثلاثاء","أربعاء","خميس","جمعة","سبت")
+import androidx.compose.ui.res.stringResource
+import com.jadwal.R
 
 @Composable
 fun ScheduleScreen(
@@ -42,6 +41,14 @@ fun ScheduleScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val todayIndex = remember { Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1 }
+    
+    val arabicDays = listOf(
+        stringResource(R.string.day_sun), stringResource(R.string.day_mon),
+        stringResource(R.string.day_tue), stringResource(R.string.day_wed),
+        stringResource(R.string.day_thu), stringResource(R.string.day_fri),
+        stringResource(R.string.day_sat)
+    )
+    val arabicDaysShort = androidx.compose.ui.res.stringArrayResource(R.array.days_short)
 
     var showResetDialog by remember { mutableStateOf(false) }
 
@@ -49,16 +56,16 @@ fun ScheduleScreen(
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
             icon = { Icon(Icons.Rounded.RestartAlt, null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("إعادة تعيين الجدول", fontWeight = FontWeight.Bold) },
-            text = { Text("سيتم حذف الجدول الحالي بالكامل. هل أنت متأكد؟") },
+            title = { Text(stringResource(R.string.reset_schedule_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.reset_schedule_confirm)) },
             confirmButton = {
                 Button(
                     onClick = { viewModel.resetSchedule(); showResetDialog = false },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                ) { Text("إعادة تعيين", color = MaterialTheme.colorScheme.onError) }
+                ) { Text(stringResource(R.string.reset_schedule_action), color = MaterialTheme.colorScheme.onError) }
             },
             dismissButton = {
-                TextButton(onClick = { showResetDialog = false }) { Text("إلغاء") }
+                TextButton(onClick = { showResetDialog = false }) { Text(stringResource(R.string.cancel)) }
             },
         )
     }
@@ -72,7 +79,7 @@ fun ScheduleScreen(
         ) {
             // ===== العنوان =====
             Text(
-                text = "الجدول الأسبوعي",
+                text = stringResource(R.string.weekly_schedule),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -183,10 +190,10 @@ fun ScheduleActionBar(
     data class ActionItem(val icon: ImageVector, val label: String, val action: () -> Unit, val color: Color)
 
     val actions = listOf(
-        ActionItem(Icons.Rounded.CalendarMonth,  "الجدول",   {},              JadwalIndigo),
-        ActionItem(Icons.Rounded.MenuBook,       "المواد",   onManageSubjects, JadwalViolet),
-        ActionItem(Icons.Rounded.RestartAlt,     "إعادة",    onReset,         JadwalWarning),
-        ActionItem(Icons.Rounded.PhotoCamera,    "مسح",      onScanExams,     JadwalSuccess),
+        ActionItem(Icons.Rounded.CalendarMonth,  stringResource(R.string.schedule),   {},              JadwalIndigo),
+        ActionItem(Icons.Rounded.MenuBook,       stringResource(R.string.manage_subjects),   onManageSubjects, JadwalViolet),
+        ActionItem(Icons.Rounded.RestartAlt,     stringResource(R.string.reset_action),    onReset,         JadwalWarning),
+        ActionItem(Icons.Rounded.PhotoCamera,    stringResource(R.string.scan_exam_schedule),      onScanExams,     JadwalSuccess),
     )
 
     GlassCard(modifier = modifier, cornerRadius = JadwalRadius.lg) {
@@ -263,16 +270,16 @@ fun ExamNightBanner(
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "وضع الطوارئ — ركّز على ${firstExam.subjectName}!",
+                    text = stringResource(R.string.emergency_mode_title, firstExam.subjectName),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.ExtraBold,
                     color = urgencyColor,
                 )
                 Text(
                     text = when (firstExam.daysUntil) {
-                        0 -> "الامتحان اليوم! راجع كل شيء الآن"
-                        1 -> "الامتحان غداً! خصص بقية وقتك له"
-                        else -> "الامتحان بعد ${firstExam.daysUntil} أيام — ركّز الجهد الآن"
+                        0 -> stringResource(R.string.exam_today_msg)
+                        1 -> stringResource(R.string.exam_tomorrow_msg)
+                        else -> stringResource(R.string.exam_in_days_msg, firstExam.daysUntil)
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = urgencyColor.copy(alpha = 0.8f),
@@ -375,7 +382,7 @@ fun ScheduleItemCard(item: ScheduleItem) {
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = "${String.format("%02d:%02d", item.startHour, item.startMinute)}" +
-                           " • ${item.durationMinutes} دقيقة",
+                           " • ${item.durationMinutes} " + stringResource(R.string.minute_short),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -389,13 +396,13 @@ fun ScheduleItemCard(item: ScheduleItem) {
                     ) {
                         Icon(Icons.Rounded.CheckCircle, null,
                             tint = JadwalSuccess, modifier = Modifier.size(14.dp))
-                        Text("منجز", style = MaterialTheme.typography.labelSmall,
+                        Text(stringResource(R.string.status_done), style = MaterialTheme.typography.labelSmall,
                             color = JadwalSuccess, fontWeight = FontWeight.SemiBold)
                     }
                 }
             } else {
                 Surface(color = subjectColor.copy(alpha = 0.1f), shape = RoundedCornerShape(8.dp)) {
-                    Text("قادم",
+                    Text(stringResource(R.string.status_upcoming),
                         style = MaterialTheme.typography.labelSmall,
                         color = subjectColor, fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
@@ -429,9 +436,9 @@ fun ExamBadgeChip(exam: ExamBadge) {
                     color = MaterialTheme.colorScheme.onSurface)
                 Text(
                     text = when (exam.daysUntil) {
-                        0 -> "⚠️ اليوم!"
-                        1 -> "⚠️ غداً"
-                        else -> "بعد ${exam.daysUntil} أيام"
+                        0 -> stringResource(R.string.today_label)
+                        1 -> stringResource(R.string.tomorrow_label)
+                        else -> stringResource(R.string.days_left_format, exam.daysUntil)
                     },
                     style = MaterialTheme.typography.labelSmall,
                     color = when {
@@ -459,13 +466,13 @@ fun GenerateScheduleCard(isGenerating: Boolean, onGenerate: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text("🗓️", fontSize = 36.sp)
-                Text("الجدول فارغ",
+                Text(stringResource(R.string.schedule_empty),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center)
                 Text(
-                    "اضغط على الزر أدناه لتوليد جدول أسبوعي تلقائي بناءً على مواردك",
+                    stringResource(R.string.schedule_empty_tip),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -476,11 +483,11 @@ fun GenerateScheduleCard(isGenerating: Boolean, onGenerate: () -> Unit) {
                         CircularProgressIndicator(modifier = Modifier.size(18.dp),
                             strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
                         Spacer(Modifier.width(8.dp))
-                        Text("جارٍ التوليد...")
+                        Text(stringResource(R.string.generating_schedule))
                     } else {
                         Icon(Icons.Rounded.AutoAwesome, null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("توليد الجدول تلقائياً", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.generate_schedule_auto), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -502,12 +509,12 @@ fun EmptyDayContent(dayName: String) {
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text("😌", fontSize = 48.sp)
-                Text("لا مذاكرة يوم $dayName",
+                Text(stringResource(R.string.no_study_day, dayName),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center)
-                Text("استرح أو راجع ما درسته",
+                Text(stringResource(R.string.rest_or_review),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center)

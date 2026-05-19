@@ -45,6 +45,8 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.res.stringResource
+import com.jadwal.R
 
 @Composable
 fun ExamScanScreen(
@@ -161,16 +163,16 @@ private fun PickImageStep(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Rounded.ArrowBack, "رجوع",
+                Icon(Icons.Rounded.ArrowBack, stringResource(R.string.back),
                     tint = MaterialTheme.colorScheme.onBackground)
             }
             Spacer(Modifier.width(8.dp))
             Column {
-                Text("مسح جدول الامتحانات",
+                Text(stringResource(R.string.scan_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground)
-                Text("بالذكاء الاصطناعي",
+                Text(stringResource(R.string.scan_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary)
             }
@@ -202,7 +204,7 @@ private fun PickImageStep(
         Spacer(Modifier.height(32.dp))
 
         Text(
-            "التقط صورة لجدول الامتحانات\nوسيستخرج الذكاء الاصطناعي المواعيد تلقائياً",
+            stringResource(R.string.scan_tip_body),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -219,7 +221,7 @@ private fun PickImageStep(
         ) {
             Icon(Icons.Rounded.CameraAlt, null, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
-            Text("التقاط صورة بالكاميرا",
+            Text(stringResource(R.string.capture_camera),
                 style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         }
 
@@ -238,7 +240,7 @@ private fun PickImageStep(
                 modifier = Modifier.size(20.dp),
                 tint = JadwalIndigo)
             Spacer(Modifier.width(10.dp))
-            Text("اختيار من معرض الصور",
+            Text(stringResource(R.string.pick_gallery),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = JadwalIndigo)
@@ -257,7 +259,7 @@ private fun PickImageStep(
                     tint = Color(0xFFFFA726),
                     modifier = Modifier.size(20.dp))
                 Text(
-                    "نصيحة: احرص على أن تكون الصورة واضحة وبدون ظل للحصول على أفضل النتائج",
+                    stringResource(R.string.scan_quality_tip),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -310,7 +312,7 @@ private fun AnalyzingStep(imageBitmap: Bitmap?) {
                             modifier = Modifier.size(48.dp),
                         )
                         Spacer(Modifier.height(16.dp))
-                        Text("جاري التحليل...",
+                        Text(stringResource(R.string.analyzing),
                             color = Color.White,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold)
@@ -323,12 +325,12 @@ private fun AnalyzingStep(imageBitmap: Bitmap?) {
 
         Spacer(Modifier.height(32.dp))
 
-        Text("✨ يحلل الذكاء الاصطناعي الصورة",
+        Text(stringResource(R.string.ai_analyzing_image),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground)
         Spacer(Modifier.height(8.dp))
-        Text("قد يستغرق ذلك بضع ثوانٍ...",
+        Text(stringResource(R.string.may_take_seconds),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
@@ -364,22 +366,22 @@ private fun ReviewStep(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onRetry) {
-                Icon(Icons.Rounded.ArrowBack, "رجوع",
+                Icon(Icons.Rounded.ArrowBack, stringResource(R.string.back),
                     tint = MaterialTheme.colorScheme.onBackground)
             }
             Column(modifier = Modifier.weight(1f)) {
-                Text("نتائج الاستخراج",
+                Text(stringResource(R.string.extraction_results),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground)
-                Text("استُخرج ${exams.size} امتحان — حدد ما تريد حفظه",
+                Text(stringResource(R.string.exams_extracted, exams.size),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             TextButton(onClick = onRetry) {
                 Icon(Icons.Rounded.Refresh, null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                Text("إعادة المسح")
+                Text(stringResource(R.string.rescan))
             }
         }
 
@@ -392,13 +394,13 @@ private fun ReviewStep(
             ) {
                 Text("😕", fontSize = 64.sp)
                 Spacer(Modifier.height(16.dp))
-                Text("لم يتمكن الذكاء الاصطناعي من استخراج أي امتحانات",
+                Text(stringResource(R.string.no_exams_found),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center)
                 Spacer(Modifier.height(8.dp))
-                Text("تأكد أن الصورة تحتوي على جدول امتحانات واضح",
+                Text(stringResource(R.string.ensure_clear_image),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center)
@@ -409,7 +411,7 @@ private fun ReviewStep(
                 ) {
                     Icon(Icons.Rounded.CameraAlt, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("التقاط صورة جديدة")
+                    Text(stringResource(R.string.capture_new_photo))
                 }
             }
         } else {
@@ -448,7 +450,7 @@ private fun ReviewStep(
                             ) {
                                 Icon(Icons.Rounded.AutoAwesome, null,
                                     tint = Color.White, modifier = Modifier.size(14.dp))
-                                Text("تم التحليل بواسطة Gemini AI",
+                                Text(stringResource(R.string.analyzed_by_gemini),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color.White)
                             }
@@ -491,10 +493,10 @@ private fun ReviewStep(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text("المحدد للحفظ:",
+                        Text(stringResource(R.string.selected_to_save),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("$selectedCount امتحان",
+                        Text(stringResource(R.string.selected_count_exams, selectedCount),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = JadwalIndigo)
@@ -515,7 +517,7 @@ private fun ReviewStep(
                         } else {
                             Icon(Icons.Rounded.Save, null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text("حفظ في التقويم",
+                            Text(stringResource(R.string.save_to_calendar),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold)
                         }
@@ -591,7 +593,7 @@ private fun ExtractedExamCard(
                                 .background(Color(0xFF66BB6A).copy(alpha = 0.15f))
                                 .padding(horizontal = 6.dp, vertical = 2.dp),
                         ) {
-                            Text("متطابقة",
+                            Text(stringResource(R.string.duplicate_label),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color(0xFF4CAF50),
                                 fontWeight = FontWeight.SemiBold)
@@ -645,7 +647,7 @@ private fun ExtractedExamCard(
                 onClick = onRemove,
                 modifier = Modifier.size(32.dp),
             ) {
-                Icon(Icons.Rounded.Close, "حذف",
+                Icon(Icons.Rounded.Close, stringResource(R.string.delete),
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(16.dp))
             }
@@ -685,14 +687,14 @@ private fun SavedStep(
 
         Spacer(Modifier.height(24.dp))
 
-        Text("تم الحفظ بنجاح!",
+        Text(stringResource(R.string.saved_success),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.ExtraBold,
             color = MaterialTheme.colorScheme.onBackground)
 
         Spacer(Modifier.height(8.dp))
 
-        Text("تم حفظ $count امتحان في تقويمك",
+        Text(stringResource(R.string.saved_count_exams, count),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center)
@@ -707,7 +709,7 @@ private fun SavedStep(
         ) {
             Icon(Icons.Rounded.CalendarMonth, null, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
-            Text("عرض الجدول",
+            Text(stringResource(R.string.view_schedule),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold)
         }
@@ -721,7 +723,7 @@ private fun SavedStep(
         ) {
             Icon(Icons.Rounded.CameraAlt, null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
-            Text("مسح جدول آخر",
+            Text(stringResource(R.string.scan_another),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium)
         }
@@ -754,7 +756,7 @@ private fun ErrorBanner(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onErrorContainer)
             IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
-                Icon(Icons.Rounded.Close, "إغلاق",
+                Icon(Icons.Rounded.Close, stringResource(R.string.close),
                     modifier = Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.onErrorContainer)
             }

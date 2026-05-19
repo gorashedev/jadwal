@@ -28,6 +28,8 @@ import com.jadwal.ui.components.PomodoroProgress
 import com.jadwal.ui.components.PomodoroTimerCircle
 import com.jadwal.ui.components.UnderstandingDialog
 import com.jadwal.ui.theme.*
+import androidx.compose.ui.res.stringResource
+import com.jadwal.R
 
 @Composable
 fun SessionScreen(
@@ -73,10 +75,10 @@ fun SessionScreen(
                     }
                     viewModel.endSession()
                 }) {
-                    Icon(Icons.Rounded.Close, contentDescription = "إنهاء")
+                    Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.end_session))
                 }
                 Text(
-                    text = if (uiState.isBreak) "فترة الراحة ☕" else uiState.subjectName,
+                    text = if (uiState.isBreak) stringResource(R.string.rest_break) else uiState.subjectName,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -107,7 +109,7 @@ fun SessionScreen(
                     modifier = Modifier.padding(bottom = 8.dp),
                 ) {
                     Text(
-                        text = "استرح قليلاً، عقلك يستحق ذلك 🌿",
+                        text = stringResource(R.string.break_encourage),
                         style = MaterialTheme.typography.bodyMedium,
                         color = JadwalSuccess,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -150,7 +152,7 @@ fun SessionScreen(
                     onClick = viewModel::endSession,
                     modifier = Modifier.size(56.dp),
                 ) {
-                    Icon(Icons.Rounded.Stop, contentDescription = "إنهاء", modifier = Modifier.size(24.dp))
+                    Icon(Icons.Rounded.Stop, contentDescription = stringResource(R.string.end_session), modifier = Modifier.size(24.dp))
                 }
 
                 val bgColor = if (uiState.isBreak) JadwalSuccess else JadwalIndigo
@@ -167,7 +169,7 @@ fun SessionScreen(
                     ) { isRunning ->
                         Icon(
                             imageVector = if (isRunning) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                            contentDescription = if (isRunning) "إيقاف مؤقت" else "تشغيل",
+                            contentDescription = if (isRunning) stringResource(R.string.pause) else stringResource(R.string.play),
                             modifier = Modifier.size(36.dp),
                         )
                     }
@@ -177,7 +179,7 @@ fun SessionScreen(
                     onClick = viewModel::skipBreak,
                     modifier = Modifier.size(56.dp),
                 ) {
-                    Icon(Icons.Rounded.SkipNext, contentDescription = "تخطي", modifier = Modifier.size(24.dp))
+                    Icon(Icons.Rounded.SkipNext, contentDescription = stringResource(R.string.skip_rating), modifier = Modifier.size(24.dp))
                 }
             }
 
@@ -207,12 +209,12 @@ fun SessionProgressBar(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = "تقدم الجلسة",
+                text = stringResource(R.string.session_progress),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "$elapsedMinutes / $totalMinutes د",
+                text = "$elapsedMinutes / $totalMinutes " + stringResource(R.string.minute_abbrev),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -265,7 +267,7 @@ fun UnderstandingRatingSheet(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                text = "كيف كانت جلسة $subjectName؟",
+                text = stringResource(R.string.session_rating_question, subjectName),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -277,12 +279,12 @@ fun UnderstandingRatingSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                SessionStatChip("⏱️", "$minutesStudied", "دقيقة")
-                SessionStatChip("🍅", "$pomodoroCount", "دورات")
+                SessionStatChip("⏱️", "$minutesStudied", stringResource(R.string.minute_short))
+                SessionStatChip("🍅", "$pomodoroCount", stringResource(R.string.pomodoro))
             }
 
             Text(
-                text = "قيّم مستوى فهمك:",
+                text = stringResource(R.string.rate_understanding),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -294,32 +296,32 @@ fun UnderstandingRatingSheet(
             ) {
                 UnderstandingButton(
                     emoji = "🤩",
-                    title = "ممتاز",
-                    subtitle = "فهمت كل شيء بوضوح",
+                    title = stringResource(R.string.understanding_excellent),
+                    subtitle = stringResource(R.string.understanding_excellent_desc),
                     color = JadwalSuccess,
                     onClick = { onRate(UnderstandingLevel.EXCELLENT) },
                     isLoading = isSaving,
                 )
                 UnderstandingButton(
                     emoji = "👍",
-                    title = "جيد",
-                    subtitle = "فهمت معظم المحتوى",
+                    title = stringResource(R.string.understanding_good),
+                    subtitle = stringResource(R.string.understanding_good_desc),
                     color = JadwalIndigo,
                     onClick = { onRate(UnderstandingLevel.GOOD) },
                     isLoading = isSaving,
                 )
                 UnderstandingButton(
                     emoji = "😐",
-                    title = "متوسط",
-                    subtitle = "أحتاج مراجعة بعض النقاط",
+                    title = stringResource(R.string.understanding_medium),
+                    subtitle = stringResource(R.string.understanding_medium_desc),
                     color = JadwalWarning,
                     onClick = { onRate(UnderstandingLevel.AVERAGE) },
                     isLoading = isSaving,
                 )
                 UnderstandingButton(
                     emoji = "😟",
-                    title = "ضعيف",
-                    subtitle = "أحتاج إعادة دراسة الموضوع",
+                    title = stringResource(R.string.understanding_weak),
+                    subtitle = stringResource(R.string.understanding_weak_desc),
                     color = JadwalError,
                     onClick = { onRate(UnderstandingLevel.POOR) },
                     isLoading = isSaving,
@@ -327,7 +329,7 @@ fun UnderstandingRatingSheet(
             }
 
             TextButton(onClick = onSkip) {
-                Text("تخطي التقييم", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.skip_rating), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

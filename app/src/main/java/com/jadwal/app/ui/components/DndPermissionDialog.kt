@@ -9,8 +9,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.res.stringResource
+import com.jadwal.R
 
 /**
  * DndPermissionDialog — إصلاح #4
@@ -54,13 +55,13 @@ fun DndPermissionDialog(
                 )
 
                 Text(
-                    text = "تفعيل وضع التركيز",
+                    text = stringResource(R.string.dnd_title),
                     style = MaterialTheme.typography.titleLarge,
                     textAlign = TextAlign.Center,
                 )
 
                 Text(
-                    text = "للحصول على أفضل تجربة مذاكرة، يمكن لجدول إيقاف المقاطعات تلقائياً أثناء جلسات البومودورو.\n\nتحتاج منح الإذن من إعدادات الجهاز.",
+                    text = stringResource(R.string.dnd_body),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -74,14 +75,14 @@ fun DndPermissionDialog(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text("لاحقاً")
+                        Text(stringResource(R.string.later))
                     }
 
                     Button(
                         onClick = onGoToSettings,
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text("فتح الإعدادات")
+                        Text(stringResource(R.string.open_settings))
                     }
                 }
             }

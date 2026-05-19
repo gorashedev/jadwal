@@ -27,6 +27,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jadwal.ui.components.GlassCard
 import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.JadwalRadius
+import androidx.compose.ui.res.stringResource
+import com.jadwal.R
 
 @Composable
 fun RegisterScreen(
@@ -65,21 +67,21 @@ fun RegisterScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.Rounded.ArrowBack, contentDescription = "رجوع")
+                    Icon(Icons.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
             }
 
             Spacer(Modifier.height(16.dp))
 
             Text(
-                text = "إنشاء حساب جديد",
+                text = stringResource(R.string.register_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onBackground,
             )
             Text(
-                text = "ابدأ رحلتك الدراسية مع جدول",
+                text = stringResource(R.string.register_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -101,7 +103,7 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text("الاسم الكامل") },
+                        label = { Text(stringResource(R.string.full_name)) },
                         leadingIcon = { Icon(Icons.Rounded.Person, null) },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                         keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
@@ -114,7 +116,7 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        label = { Text("البريد الإلكتروني") },
+                        label = { Text(stringResource(R.string.email)) },
                         leadingIcon = { Icon(Icons.Rounded.Email, null) },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email,
@@ -130,7 +132,7 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("كلمة المرور") },
+                        label = { Text(stringResource(R.string.password)) },
                         leadingIcon = { Icon(Icons.Rounded.Lock, null) },
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -157,12 +159,12 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
-                        label = { Text("تأكيد كلمة المرور") },
+                        label = { Text(stringResource(R.string.confirm_password)) },
                         leadingIcon = { Icon(Icons.Rounded.Lock, null) },
                         isError = confirmPassword.isNotEmpty() && password != confirmPassword,
                         supportingText = {
                             if (confirmPassword.isNotEmpty() && password != confirmPassword) {
-                                Text("كلمتا المرور غير متطابقتان")
+                                Text(stringResource(R.string.passwords_not_match))
                             }
                         },
                         visualTransformation = PasswordVisualTransformation(),
@@ -231,7 +233,7 @@ fun RegisterScreen(
                                 strokeWidth = 2.5.dp,
                             )
                         } else {
-                            Text("إنشاء الحساب", fontSize = 16.sp)
+                            Text(stringResource(R.string.create_account_action), fontSize = 16.sp)
                         }
                     }
                 }
@@ -241,13 +243,13 @@ fun RegisterScreen(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "لديك حساب بالفعل؟",
+                    stringResource(R.string.already_have_account),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 TextButton(onClick = onNavigateBack) {
                     Text(
-                        "تسجيل الدخول",
+                        stringResource(R.string.sign_in),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.labelLarge,
                     )

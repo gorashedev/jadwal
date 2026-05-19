@@ -1,17 +1,17 @@
 package com.jadwal.ui.screens.home
 
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jadwal.data.preferences.UserPreferencesDataStore
 import com.jadwal.data.repository.AIRepository
 import com.jadwal.data.repository.ScheduleRepository
+import com.jadwal.domain.model.ScheduleWithSubject
 import com.jadwal.domain.model.StudentSummary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.Calendar
 import javax.inject.Inject
+import androidx.compose.ui.graphics.Color  // ← هذا كان مفقوداً
 
 // ===== نموذج المهمة اليومية =====
 data class TodayTask(
@@ -35,7 +35,6 @@ data class UpcomingExam(
 )
 
 data class HomeUiState(
-    val greeting: String = "مرحباً",
     val userName: String = "",
     val streakDays: Int = 0,
     val todayTasks: List<TodayTask> = emptyList(),
@@ -67,7 +66,6 @@ class HomeViewModel @Inject constructor(
 
     private fun loadHomeData() {
         viewModelScope.launch {
-            // اسم المستخدم
             prefs.userName.collect { name ->
                 _uiState.update { it.copy(userName = name) }
             }
@@ -75,22 +73,20 @@ class HomeViewModel @Inject constructor(
 
         viewModelScope.launch {
             prefs.streakDays.collect { streak ->
-                _uiState.update { state ->
-                    state.copy(
-                        streakDays = streak,
-                        greeting = getGreeting(),
-                    )
-                }
+                _uiState.update { state -> state.copy(streakDays = streak) }
             }
         }
 
         viewModelScope.launch {
-            // تحميل مهام اليوم
+            // التحقق من لغة النظام الحالية
+            val isEn = java.util.Locale.getDefault().language == "en"
+
             try {
                 val todayItems = scheduleRepository.getTodayScheduleWithSubjects().map { item ->
                     TodayTask(
                         scheduleItemId = item.id,
-                        subjectName = item.subjectName,
+                        // هنا التعديل: اختيار الاسم الإنجليزي إذا كان متاحاً وكانت اللغة إنجليزية
+                        subjectName = if (isEn && item.subjectNameEn.isNotBlank()) item.subjectNameEn else item.subjectName,
                         subjectIcon = item.subjectIcon,
                         subjectColor = try {
                             Color(android.graphics.Color.parseColor(item.subjectColor))
@@ -103,8 +99,8 @@ class HomeViewModel @Inject constructor(
                         startMinute = item.startMinute,
                     )
                 }
-                val completedMins = todayItems.filter { it.isCompleted }
-                    .sumOf { it.allocatedMinutes }
+
+                val completedMins = todayItems.filter { it.isCompleted }.sumOf { it.allocatedMinutes }
                 val totalMins = todayItems.sumOf { it.allocatedMinutes }
 
                 _uiState.update { state ->
@@ -115,7 +111,7 @@ class HomeViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                // تجاهل الخطأ وإظهار قائمة فارغة
+                // تجاهل الخطأ
             }
         }
     }
@@ -141,17 +137,6 @@ class HomeViewModel @Inject constructor(
             } finally {
                 _uiState.update { it.copy(isAiLoading = false) }
             }
-        }
-    }
-
-    // ===== تحديد التحية حسب الوقت =====
-    private fun getGreeting(): String {
-        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        return when {
-            hour in 5..11 -> "صباح النور 🌅"
-            hour in 12..16 -> "مساء الخير 🌤️"
-            hour in 17..20 -> "مساء النور 🌆"
-            else -> "مرحباً 🌙"
         }
     }
 

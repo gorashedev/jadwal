@@ -3,11 +3,13 @@ package com.jadwal
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -33,6 +35,19 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        // إصلاح #4: تطبيق اللغة المحفوظة قبل رسم أي محتوى
+        // نقرأ من SharedPreferences بشكل متزامن لأن DataStore لا يدعم القراءة المتزامنة
+        val savedLang = prefs.getLanguageSync()
+        if (savedLang.isNotBlank()) {
+            val desired = LocaleListCompat.forLanguageTags(savedLang)
+            val current = AppCompatDelegate.getApplicationLocales()
+            if (current.toLanguageTags() != desired.toLanguageTags()) {
+                AppCompatDelegate.setApplicationLocales(desired)
+                return // ستُعاد بناء الـ Activity فوراً بالـ locale الصحيح
+            }
+        }
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // معالجة الـ Deep Link إذا جاء التطبيق مفتوحاً عبره

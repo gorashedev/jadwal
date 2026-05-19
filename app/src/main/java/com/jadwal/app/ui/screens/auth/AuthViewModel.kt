@@ -39,6 +39,7 @@ class AuthViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 authRepository.login(email.trim(), password)
+                prefs.setLoggedIn(true)
                 _uiState.update { it.copy(isLoading = false, isSuccess = true) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = mapLoginError(e)) }
@@ -68,6 +69,7 @@ class AuthViewModel @Inject constructor(
                 val userData = buildJsonObject { put("full_name", JsonPrimitive(name.trim())) }
                 authRepository.signUp(email.trim(), password, userData)
                 prefs.setUserName(name.trim())
+                prefs.setLoggedIn(true)
                 _uiState.update { it.copy(isLoading = false, isSuccess = true) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = mapRegisterError(e)) }

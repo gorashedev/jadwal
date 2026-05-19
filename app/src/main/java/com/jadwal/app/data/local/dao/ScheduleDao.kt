@@ -56,7 +56,7 @@ interface ScheduleDao {
 
     @Query("""
         SELECT 
-            s.id, s.subjectId, sub.name as subjectName, sub.icon as subjectIcon, sub.colorHex as subjectColor,
+            s.id, s.subjectId, sub.name as subjectName, sub.nameEn as subjectNameEn, sub.icon as subjectIcon, sub.colorHex as subjectColor,
             s.scheduledDate, s.allocatedMinutes, s.actualMinutes, s.isCompleted, s.priority, s.studyPhase
         FROM schedule_items s
         JOIN subjects sub ON s.subjectId = sub.id
@@ -67,7 +67,7 @@ interface ScheduleDao {
 
     @Query("""
         SELECT 
-            s.id, s.subjectId, sub.name as subjectName, sub.icon as subjectIcon, sub.colorHex as subjectColor,
+            s.id, s.subjectId, sub.name as subjectName, sub.nameEn as subjectNameEn, sub.icon as subjectIcon, sub.colorHex as subjectColor,
             s.scheduledDate, s.allocatedMinutes, s.actualMinutes, s.isCompleted, s.priority, s.studyPhase
         FROM schedule_items s
         JOIN subjects sub ON s.subjectId = sub.id
@@ -78,7 +78,7 @@ interface ScheduleDao {
 
     @Query("""
         SELECT 
-            s.id, s.subjectId, sub.name as subjectName, sub.icon as subjectIcon, sub.colorHex as subjectColor,
+            s.id, s.subjectId, sub.name as subjectName, sub.nameEn as subjectNameEn, sub.icon as subjectIcon, sub.colorHex as subjectColor,
             s.scheduledDate, s.allocatedMinutes, s.actualMinutes, s.isCompleted, s.priority, s.studyPhase
         FROM schedule_items s
         JOIN subjects sub ON s.subjectId = sub.id

@@ -1,6 +1,7 @@
 package com.jadwal.data.preferences
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
@@ -15,34 +16,54 @@ import javax.inject.Singleton
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "jadwal_prefs")
 
+// مفتاح ثابت لـ SharedPreferences المتزامنة (لقراءة اللغة قبل رسم Compose)
+private const val LANG_SYNC_PREFS_NAME = "jadwal_lang_sync"
+private const val LANG_SYNC_KEY = "language_code"
+
 @Singleton
 class UserPreferencesDataStore @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private val dataStore = context.dataStore
 
+    // SharedPreferences متزامنة للقراءة في onCreate (قبل Coroutines)
+    private val langSyncPrefs: SharedPreferences =
+        context.getSharedPreferences(LANG_SYNC_PREFS_NAME, Context.MODE_PRIVATE)
+
     companion object {
-        val KEY_USER_NAME = stringPreferencesKey("user_name")
-        val KEY_ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
-        val KEY_SETUP_DONE = booleanPreferencesKey("setup_done")
-        val KEY_DAILY_HOURS = intPreferencesKey("daily_hours")
-        val KEY_PREFERRED_TIME = stringPreferencesKey("preferred_time")
-        val KEY_STREAK_DAYS = intPreferencesKey("streak_days")
-        val KEY_LAST_STUDY_DATE = longPreferencesKey("last_study_date")
-        val KEY_NOTIFICATION_HOUR = intPreferencesKey("notification_hour")
-        val KEY_NOTIFICATION_MINUTE = intPreferencesKey("notification_minute")
-        val KEY_NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
-        val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
-        val KEY_LANGUAGE_CODE = stringPreferencesKey("language_code")
-        // إصلاح: حفظ حالة طلب إذن الإشعارات حتى لا يتكرر الطلب
+        val KEY_USER_NAME                   = stringPreferencesKey("user_name")
+        val KEY_ONBOARDING_DONE             = booleanPreferencesKey("onboarding_done")
+        val KEY_SETUP_DONE                  = booleanPreferencesKey("setup_done")
+        val KEY_LOGGED_IN                   = booleanPreferencesKey("logged_in")
+        val KEY_DAILY_HOURS                 = intPreferencesKey("daily_hours")
+        val KEY_PREFERRED_TIME              = stringPreferencesKey("preferred_time")
+        val KEY_STREAK_DAYS                 = intPreferencesKey("streak_days")
+        val KEY_LAST_STUDY_DATE             = longPreferencesKey("last_study_date")
+        val KEY_NOTIFICATION_HOUR           = intPreferencesKey("notification_hour")
+        val KEY_NOTIFICATION_MINUTE         = intPreferencesKey("notification_minute")
+        val KEY_NOTIFICATIONS_ENABLED       = booleanPreferencesKey("notifications_enabled")
+        val KEY_THEME_MODE                  = stringPreferencesKey("theme_mode")
+        val KEY_LANGUAGE_CODE               = stringPreferencesKey("language_code")
         val KEY_NOTIFICATION_PERMISSION_ASKED = booleanPreferencesKey("notification_permission_asked")
-        // حفظ مسار صورة الملف الشخصي
-        val KEY_PROFILE_PHOTO_PATH = stringPreferencesKey("profile_photo_path")
-        val KEY_CHAT_MESSAGES_JSON = stringPreferencesKey("chat_messages_json")
+        val KEY_PROFILE_PHOTO_PATH          = stringPreferencesKey("profile_photo_path")
+        val KEY_CHAT_MESSAGES_JSON          = stringPreferencesKey("chat_messages_json")
+        // ─── إصلاح #3: مفتاح Gemini API المُدخَل من المستخدم ───────────
+        val KEY_GEMINI_API_KEY              = stringPreferencesKey("gemini_api_key_user")
     }
 
-    // ===== إذن الإشعارات =====
+    // ===== Gemini API Key (user-entered) =====
+    // يسمح للمستخدم بإدخال مفتاح Gemini مباشرة بدلاً من إعادة بناء التطبيق
+    val geminiApiKey: Flow<String> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_GEMINI_API_KEY] ?: "" }
 
+    suspend fun setGeminiApiKey(key: String) {
+        dataStore.edit { it[KEY_GEMINI_API_KEY] = key.trim() }
+    }
+
+    suspend fun getGeminiApiKey(): String = geminiApiKey.first()
+
+    // ===== إذن الإشعارات =====
     val notificationPermissionAsked: Flow<Boolean> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_NOTIFICATION_PERMISSION_ASKED] ?: false }
@@ -52,7 +73,6 @@ class UserPreferencesDataStore @Inject constructor(
     }
 
     // ===== صورة الملف الشخصي =====
-
     val profilePhotoPath: Flow<String> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_PROFILE_PHOTO_PATH] ?: "" }
@@ -61,8 +81,7 @@ class UserPreferencesDataStore @Inject constructor(
         dataStore.edit { it[KEY_PROFILE_PHOTO_PATH] = path }
     }
 
-    // ===== رسائل الدردشة مع الذكاء الاصطناعي =====
-
+    // ===== رسائل الدردشة =====
     val chatMessagesJson: Flow<String> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_CHAT_MESSAGES_JSON] ?: "" }
@@ -72,17 +91,23 @@ class UserPreferencesDataStore @Inject constructor(
     }
 
     // ===== اللغة =====
-
     val languageCode: Flow<String> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_LANGUAGE_CODE] ?: "" }
 
+    // قراءة متزامنة للغة (لـ MainActivity.onCreate قبل setContent)
+    fun getLanguageSync(): String = langSyncPrefs.getString(LANG_SYNC_KEY, "") ?: ""
+
+    fun saveLanguageSync(code: String) {
+        langSyncPrefs.edit().putString(LANG_SYNC_KEY, code).apply()
+    }
+
     suspend fun setLanguageCode(code: String) {
         dataStore.edit { it[KEY_LANGUAGE_CODE] = code }
+        saveLanguageSync(code)
     }
 
     // ===== الثيم =====
-
     val themeMode: Flow<String> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_THEME_MODE] ?: "SYSTEM" }
@@ -92,7 +117,6 @@ class UserPreferencesDataStore @Inject constructor(
     }
 
     // ===== Onboarding =====
-
     val onboardingDone: Flow<Boolean> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_ONBOARDING_DONE] ?: false }
@@ -102,7 +126,6 @@ class UserPreferencesDataStore @Inject constructor(
     }
 
     // ===== Setup =====
-
     val setupDone: Flow<Boolean> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_SETUP_DONE] ?: false }
@@ -111,8 +134,16 @@ class UserPreferencesDataStore @Inject constructor(
         dataStore.edit { it[KEY_SETUP_DONE] = done }
     }
 
-    // ===== اسم المستخدم =====
+    // ===== حالة تسجيل الدخول =====
+    val isLoggedIn: Flow<Boolean> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_LOGGED_IN] ?: false }
 
+    suspend fun setLoggedIn(value: Boolean) {
+        dataStore.edit { it[KEY_LOGGED_IN] = value }
+    }
+
+    // ===== اسم المستخدم =====
     val userName: Flow<String> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_USER_NAME] ?: "" }
@@ -124,7 +155,6 @@ class UserPreferencesDataStore @Inject constructor(
     suspend fun getUserName(): String = userName.first()
 
     // ===== ساعات الدراسة =====
-
     val dailyHours: Flow<Int> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_DAILY_HOURS] ?: 2 }
@@ -134,7 +164,6 @@ class UserPreferencesDataStore @Inject constructor(
     }
 
     // ===== وقت الدراسة المفضل =====
-
     val preferredTime: Flow<String> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_PREFERRED_TIME] ?: "MORNING" }
@@ -144,7 +173,6 @@ class UserPreferencesDataStore @Inject constructor(
     }
 
     // ===== الإشعارات =====
-
     val notificationsEnabled: Flow<Boolean> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_NOTIFICATIONS_ENABLED] ?: true }
@@ -166,7 +194,6 @@ class UserPreferencesDataStore @Inject constructor(
     }
 
     // ===== Streak =====
-
     val streakDays: Flow<Int> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_STREAK_DAYS] ?: 0 }

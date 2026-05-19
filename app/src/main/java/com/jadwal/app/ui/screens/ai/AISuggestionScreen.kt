@@ -31,8 +31,15 @@ import com.jadwal.domain.model.ScheduleSlot
 import com.jadwal.ui.components.GlassCard
 import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.*
+import androidx.compose.ui.res.stringResource
+import com.jadwal.R
 
-val arabicDayNames = listOf("الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت")
+private val DayNameResIds = listOf(
+    R.string.day_sun, R.string.day_mon,
+    R.string.day_tue, R.string.day_wed,
+    R.string.day_thu, R.string.day_fri,
+    R.string.day_sat
+)
 
 @Composable
 fun AISuggestionScreen(
@@ -65,18 +72,18 @@ fun AISuggestionScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.Rounded.ArrowForward, contentDescription = "رجوع",
+                    Icon(Icons.Rounded.ArrowForward, contentDescription = stringResource(R.string.back),
                         tint = MaterialTheme.colorScheme.onBackground)
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "اقتراح الذكاء الاصطناعي",
+                        text = stringResource(R.string.ai_suggestion_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onBackground,
                     )
                     Text(
-                        text = "مدعوم بـ Gemini 1.5 Flash 🤖",
+                        text = stringResource(R.string.powered_by_gemini),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -88,7 +95,7 @@ fun AISuggestionScreen(
                     IconButton(onClick = viewModel::generate) {
                         Icon(
                             Icons.Rounded.AutoAwesome,
-                            contentDescription = "توليد جديد",
+                            contentDescription = stringResource(R.string.retry),
                             tint = JadwalIndigo,
                         )
                     }
@@ -131,10 +138,10 @@ fun AISuggestionScreen(
 @Composable
 private fun LoadingState() {
     val phrases = listOf(
-        "جارٍ تحليل موادّك ومواعيد امتحاناتك... 🔍",
-        "أحسب أفضل توزيع للوقت... ⚖️",
-        "أُولوية المواد الصعبة أولاً... 📊",
-        "أُنهي الجدول المثالي لك... ✨",
+        stringResource(R.string.ai_loading_1),
+        stringResource(R.string.ai_loading_2),
+        stringResource(R.string.ai_loading_3),
+        stringResource(R.string.ai_loading_4),
     )
     var phraseIndex by remember { mutableIntStateOf(0) }
 
@@ -237,7 +244,7 @@ private fun ErrorState(message: String, onRetry: () -> Unit) {
         ) {
             Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
-            Text("حاول مجدداً", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.retry), fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -286,7 +293,7 @@ private fun SuccessContent(
                         Spacer(Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "جدولك المخصص جاهز!",
+                                text = stringResource(R.string.ai_schedule_ready),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -306,10 +313,10 @@ private fun SuccessContent(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly,
                     ) {
-                        QuickStat("📅", "${suggestion.schedule.distinctBy { it.dayOfWeek }.size}", "أيام")
-                        QuickStat("📚", "${suggestion.schedule.distinctBy { it.subjectId }.size}", "مواد")
-                        QuickStat("⏱️", "${suggestion.totalHours}س", "إجمالي")
-                        QuickStat("🍅", "${suggestion.totalPomodoros}", "دورات")
+                        QuickStat("📅", "${suggestion.schedule.distinctBy { it.dayOfWeek }.size}", stringResource(R.string.days_label))
+                        QuickStat("📚", "${suggestion.schedule.distinctBy { it.subjectId }.size}", stringResource(R.string.manage_subjects))
+                        QuickStat("⏱️", "${suggestion.totalHours}" + stringResource(R.string.hour_short), stringResource(R.string.total_study))
+                        QuickStat("🍅", "${suggestion.totalPomodoros}", stringResource(R.string.pomodoro))
                     }
                 }
             }
@@ -323,17 +330,17 @@ private fun SuccessContent(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "اختر ما تريد إضافته ($totalSelected/$totalSlots)",
+                    text = stringResource(R.string.ai_select_sessions, totalSelected, totalSlots),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Row {
                     TextButton(onClick = onSelectAll, contentPadding = PaddingValues(horizontal = 8.dp)) {
-                        Text("الكل", color = JadwalIndigo, style = MaterialTheme.typography.labelMedium)
+                        Text(stringResource(R.string.select_all), color = JadwalIndigo, style = MaterialTheme.typography.labelMedium)
                     }
                     TextButton(onClick = onDeselectAll, contentPadding = PaddingValues(horizontal = 8.dp)) {
-                        Text("إلغاء", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.labelMedium)
                     }
                 }
@@ -344,8 +351,11 @@ private fun SuccessContent(
         val byDay = suggestion.schedule.groupBy { it.dayOfWeek }.entries.sortedBy { it.key }
 
         items(byDay, key = { it.key }) { (dayIndex, slots) ->
+            val dayName = DayNameResIds.getOrNull(dayIndex)?.let { stringResource(it) }
+                ?: stringResource(R.string.day_fallback, dayIndex)
+
             DayScheduleSection(
-                dayName     = arabicDayNames.getOrElse(dayIndex) { "يوم $dayIndex" },
+                dayName     = dayName,
                 slots       = slots,
                 selectedIds = selectedSlots,
                 onToggle    = onToggleSlot,
@@ -368,7 +378,7 @@ private fun SuccessContent(
                         Text("💡", fontSize = 20.sp)
                         Column {
                             Text(
-                                text = "ملاحظة Gemini",
+                                text = stringResource(R.string.gemini_note),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = JadwalIndigo,
@@ -420,7 +430,7 @@ private fun SuccessContent(
                             color = Color.White,
                             strokeWidth = 2.dp,
                         )
-                        Text("جارٍ الحفظ...", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.saving), color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 } else {
                     Row(
@@ -430,7 +440,7 @@ private fun SuccessContent(
                         Icon(Icons.Rounded.Save, contentDescription = null, tint = Color.White,
                             modifier = Modifier.size(20.dp))
                         Text(
-                            "حفظ $totalSelected جلسة في الجدول",
+                            stringResource(R.string.save_sessions_format, totalSelected),
                             color = Color.White,
                             fontWeight = FontWeight.ExtraBold,
                         )
@@ -555,13 +565,13 @@ private fun ScheduleSlotCard(
                     )
                     // المدة
                     SlotChip(
-                        text = "${slot.durationMinutes} د",
+                        text = "${slot.durationMinutes} " + stringResource(R.string.minute_abbrev),
                         icon = "⏱️",
                     )
                     // الأولوية
                     if (slot.priority > 0) {
                         SlotChip(
-                            text = "أولوية ${slot.priority}",
+                            text = stringResource(R.string.priority_format, slot.priority),
                             icon = "🎯",
                             color = when (slot.priority) {
                                 1 -> JadwalError
@@ -600,7 +610,7 @@ private fun ScheduleSlotCard(
                     if (selected) {
                         Icon(
                             Icons.Rounded.Check,
-                            contentDescription = "مُختار",
+                            contentDescription = stringResource(R.string.selected_label),
                             tint = Color.White,
                             modifier = Modifier.size(16.dp),
                         )
