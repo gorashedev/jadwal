@@ -32,6 +32,7 @@ import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.*
 import androidx.compose.ui.res.stringResource
 import com.jadwal.R
+import com.jadwal.app.util.LocaleHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -153,9 +154,11 @@ private fun SubjectCard(
 ) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
-    // فحص اللغة الحالية
-    val currentLang = java.util.Locale.getDefault().language
-    val displayTitle = if (currentLang == "en" && subject.nameEn.isNotBlank()) subject.nameEn else subject.name
+    val displayTitle = if (LocaleHelper.isEnglish() && subject.nameEn.isNotBlank()) {
+        subject.nameEn
+    } else {
+        subject.name
+    }
 
     if (showDeleteConfirm) {
         AlertDialog(
@@ -205,7 +208,7 @@ private fun SubjectCard(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 // إذا كنا في النسخة العربية والمادة لها اسم إنجليزي نظهره كاسم ثانوي
-                if (currentLang != "en" && subject.nameEn.isNotBlank()) {
+                if (!LocaleHelper.isEnglish() && subject.nameEn.isNotBlank()) {
                     Text(
                         subject.nameEn,
                         style = MaterialTheme.typography.bodySmall,

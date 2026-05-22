@@ -1,14 +1,18 @@
 package com.jadwal.ui.navigation
 
-import androidx.compose.animation.*
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.jadwal.ui.screens.ai.AISuggestionScreen
 import com.jadwal.ui.screens.analytics.AnalyticsScreen
 import com.jadwal.ui.screens.auth.ForgotPasswordScreen
@@ -32,24 +36,37 @@ fun JadwalNavGraph(
     startDestination: String,
     modifier: Modifier = Modifier,
 ) {
+    // Helper: true when both endpoints of a transition are bottom-bar tabs.
+    // Tab-to-tab switches get instant transitions; push/pop flows keep slide+fade.
+    fun isTabSwitch(route: String?): Boolean =
+        Screen.bottomBarScreens.any { it == route }
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier,
         enterTransition = {
-            slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(300)) +
+            if (isTabSwitch(initialState.destination.route) &&
+                isTabSwitch(targetState.destination.route)) EnterTransition.None
+            else slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(300)) +
                     fadeIn(tween(300))
         },
         exitTransition = {
-            slideOutHorizontally(targetOffsetX = { -it / 3 }, animationSpec = tween(300)) +
+            if (isTabSwitch(initialState.destination.route) &&
+                isTabSwitch(targetState.destination.route)) ExitTransition.None
+            else slideOutHorizontally(targetOffsetX = { -it / 3 }, animationSpec = tween(300)) +
                     fadeOut(tween(200))
         },
         popEnterTransition = {
-            slideInHorizontally(initialOffsetX = { -it / 3 }, animationSpec = tween(300)) +
+            if (isTabSwitch(initialState.destination.route) &&
+                isTabSwitch(targetState.destination.route)) EnterTransition.None
+            else slideInHorizontally(initialOffsetX = { -it / 3 }, animationSpec = tween(300)) +
                     fadeIn(tween(300))
         },
         popExitTransition = {
-            slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(300)) +
+            if (isTabSwitch(initialState.destination.route) &&
+                isTabSwitch(targetState.destination.route)) ExitTransition.None
+            else slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(300)) +
                     fadeOut(tween(200))
         },
     ) {
@@ -95,20 +112,15 @@ fun JadwalNavGraph(
             )
         }
 
-        // ─── إصلاح #3: شاشة إعادة تعيين كلمة المرور ─────────────────────
-        // تُفتح عبر Deep Link: com.jadwal.app://reset-password#token...
         composable(
             route = Screen.ResetPassword.route,
-            arguments = listOf(
-                navArgument("fragment") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val encodedFragment = backStackEntry.arguments?.getString("fragment") ?: ""
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "com.jadwal.app://reset-password" },
+            ),
+        ) {
             ResetPasswordScreen(
-                encodedFragment = encodedFragment,
                 onPasswordUpdated = {
-                    // بعد تغيير كلمة المرور، انتقل للـ Home
-                    navController.navigate(Screen.Home.route) {
+                    navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 },

@@ -168,15 +168,7 @@ fun SettingsScreen(
                                     .fillMaxWidth()
                                     .selectable(
                                         selected = uiState.languageCode == code,
-                                        onClick = {
-                                            viewModel.setLanguage(code)
-
-                                            // --- الكود السحري لإعادة تشغيل التطبيق فوراً ---
-                                            val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-                                            intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-                                            context.startActivity(intent)
-                                            // ---------------------------------------------
-                                        },
+                                        onClick = { viewModel.setLanguage(code) },
                                         role = Role.RadioButton,
                                     )
                                     .padding(horizontal = 16.dp, vertical = 10.dp),

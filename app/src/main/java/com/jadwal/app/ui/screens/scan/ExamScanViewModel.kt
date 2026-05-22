@@ -8,8 +8,7 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.content
+import com.jadwal.app.data.ai.GeminiService
 import com.jadwal.data.repository.ExamRepository
 import com.jadwal.data.repository.SubjectRepository
 import com.jadwal.domain.model.Exam
@@ -54,7 +53,7 @@ data class ExamScanUiState(
 
 @HiltViewModel
 class ExamScanViewModel @Inject constructor(
-    private val generativeModel: GenerativeModel,
+    private val geminiService: GeminiService,
     private val examRepository: ExamRepository,
     private val subjectRepository: SubjectRepository,
 ) : ViewModel() {
@@ -108,16 +107,9 @@ class ExamScanViewModel @Inject constructor(
         """.trimIndent()
 
         try {
-            val response = withContext(Dispatchers.IO) {
-                generativeModel.generateContent(
-                    content {
-                        image(bitmap)
-                        text(prompt)
-                    }
-                )
-            }
-
-            val rawText = response.text?.trim() ?: "{\"exams\":[]}"
+            val rawText = withContext(Dispatchers.IO) {
+                geminiService.generateFromBitmap(bitmap, prompt)
+            }.ifBlank { "{\"exams\":[]}" }
             val exams = parseGeminiResponse(rawText)
             val enriched = matchSubjects(exams)
 

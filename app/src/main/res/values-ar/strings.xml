@@ -91,15 +91,28 @@
     <string name="schedule">الجدول</string>
     <string name="weekly_schedule">الجدول الأسبوعي</string>
     <string name="no_tasks_today">لا مذاكرة اليوم — استرح!</string>
-    <string name="manage_subjects">إدارة المواد</string>
-    <string name="scan_exam_schedule">مسح جدول الامتحانات</string>
-    <string name="reset_schedule">إعادة تعيين الجدول</string>
+    <string name="manage_subjects">المواد</string>
+    <string name="scan_exam_schedule">مسح الامتحان</string>
+    <string name="reset_schedule">إعادة تعيين</string>
     <string name="exam_emergency_mode">وضع الطوارئ</string>
     <string name="generate_auto">توليد تلقائياً</string>
     <string name="generating">جارٍ التوليد…</string>
     <string name="schedule_empty">الجدول فارغ</string>
     <string name="completed">منجز</string>
     <string name="upcoming">قادم</string>
+
+    <!-- ===== الإضافات المفقودة للجدول ===== -->
+    <string name="reset_action">إعادة تعيين</string>
+
+    <string-array name="days_short">
+        <item>أحد</item>
+        <item>اثن</item>
+        <item>ثلا</item>
+        <item>أرب</item>
+        <item>خمي</item>
+        <item>جمع</item>
+        <item>سبت</item>
+    </string-array>
 
     <!-- الإحصائيات -->
     <string name="analytics">الإحصائيات</string>
@@ -117,6 +130,14 @@
     <string name="decline">تراجع</string>
     <string name="last_week">الأسبوع الماضي</string>
 
+    <!-- ===== نصوص الإحصائيات التحفيزية (كانت مفقودة تماماً) ===== -->
+    <string name="improve_great">رائع! أنت تُحقق تقدماً استثنائياً 🌟</string>
+    <string name="improve_good">أداء جيد! استمر في هذا المستوى 💪</string>
+    <string name="improve_stable">مستقر، حاول إضافة وقت أكثر الأسبوع القادم</string>
+    <string name="improve_low">لا بأس، عوّض في الأسبوع القادم 🎯</string>
+    <string name="improve_none">تحتاج للمذاكرة أكثر — ابدأ الآن! 📚</string>
+    <string name="refresh">تحديث</string>
+
     <!-- الملف الشخصي -->
     <string name="profile_title">الملف الشخصي</string>
     <string name="edit_name">تعديل الاسم</string>
@@ -131,11 +152,35 @@
     <string name="ai_assistant">المساعد الدراسي</string>
     <string name="powered_by_gemini">مدعوم بـ Google Gemini</string>
     <string name="connected">متصل</string>
+    <string name="not_connected">غير متصل</string>
+    <string name="gemini_api_key_title">ربط Gemini AI</string>
+    <string name="gemini_api_key_message">أدخل مفتاح Google Gemini API لاستخدام المساعد الدراسي. يمكنك الحصول على مفتاح مجاني من aistudio.google.com</string>
+    <string name="gemini_api_key_hint">مفتاح API</string>
+    <string name="gemini_api_key_save">حفظ وربط</string>
+    <string name="error_email_already_registered">هذا البريد الإلكتروني مسجل بالفعل</string>
+    <string name="error_email_confirmation_required">تم إنشاء الحساب! تحقق من بريدك لتأكيد الحساب قبل تسجيل الدخول.</string>
+    <string name="error_invalid_email">صيغة البريد الإلكتروني غير صحيحة</string>
+    <string name="error_reset_link_invalid">رابط إعادة التعيين غير صالح أو انتهت صلاحيته</string>
+    <string name="go_to_login">الانتقال لتسجيل الدخول</string>
+    <string name="error_fill_all_fields">يرجى ملء جميع الحقول</string>
+    <string name="error_invalid_credentials">البريد الإلكتروني أو كلمة المرور غير صحيحة</string>
+    <string name="error_email_not_confirmed">يرجى تأكيد بريدك الإلكتروني أولاً</string>
+    <string name="error_no_internet">تأكد من اتصالك بالإنترنت</string>
+    <string name="error_generic">حدث خطأ، حاول مجدداً</string>
+    <string name="error_passwords_mismatch">كلمتا المرور غير متطابقتان</string>
+    <string name="error_password_too_short">كلمة المرور يجب أن تكون 6 أحرف على الأقل</string>
+    <string name="error_register_generic">حدث خطأ أثناء إنشاء الحساب</string>
+    <string name="error_enter_email">يرجى إدخال بريدك الإلكتروني</string>
+    <string name="error_reset_email_failed">تعذر إرسال البريد، تحقق من العنوان</string>
+    <string name="error_update_password_failed">تعذر تحديث كلمة المرور. حاول طلب رابط جديد.</string>
     <string name="clear_chat">مسح المحادثة</string>
     <string name="clear_chat_confirm">هل تريد حذف جميع الرسائل والبدء من جديد؟</string>
     <string name="clear">مسح</string>
     <string name="ask_anything">اسأل عن أي شيء دراسي…</string>
     <string name="send">إرسال</string>
+
+    <!-- ===== رسالة الترحيب بالذكاء الاصطناعي (كانت مفقودة) ===== -->
+    <string name="ai_welcome_message">مرحباً! أنا مساعدك الدراسي 🎓\nأستطيع مساعدتك في:\n• تنظيم وقت مذاكرتك\n• شرح المواد الصعبة\n• نصائح لتحسين تركيزك\n• خطط مراجعة قبل الامتحانات\n\nاسألني أي شيء عن دراستك! 📚</string>
 
     <!-- الإعدادات -->
     <string name="settings">الإعدادات</string>
@@ -174,7 +219,30 @@
     <string name="cancel">إلغاء</string>
     <string name="confirm">تأكيد</string>
 
-    <!-- المصادقة / إعادة تعيين كلمة المرور -->
+    <!-- المصادقة -->
+    <string name="login_welcome">مرحباً بعودتك 👋</string>
+    <string name="login_subtitle">سجّل دخولك للمتابعة</string>
+    <string name="email">البريد الإلكتروني</string>
+    <string name="password">كلمة المرور</string>
+    <string name="forgot_password">نسيت كلمة المرور؟</string>
+    <string name="sign_in">تسجيل الدخول</string>
+    <string name="no_account">ليس لديك حساب؟</string>
+    <string name="create_account_link">إنشاء حساب</string>
+    <string name="show_password">إظهار</string>
+    <string name="hide_password">إخفاء</string>
+
+    <string name="register_title">إنشاء حساب جديد</string>
+    <string name="register_subtitle">ابدأ رحلتك الدراسية مع جدول</string>
+    <string name="full_name">الاسم الكامل</string>
+    <string name="already_have_account">لديك حساب بالفعل؟</string>
+    <string name="sign_in_link">تسجيل الدخول</string>
+
+    <string name="forgot_password_title">استعادة كلمة المرور</string>
+    <string name="forgot_password_subtitle">سنرسل رابط إعادة التعيين إلى بريدك الإلكتروني</string>
+    <string name="send_reset_link">إرسال رابط الاستعادة</string>
+    <string name="reset_sent_ok">تم الإرسال! ✅</string>
+    <string name="reset_sent_desc">تحقق من بريدك واتبع الرابط لإعادة تعيين كلمة المرور</string>
+
     <string name="reset_password_title">إعادة تعيين كلمة المرور</string>
     <string name="reset_password_subtitle">أدخل كلمة المرور الجديدة لاستعادة الوصول.</string>
     <string name="new_password">كلمة المرور الجديدة</string>
@@ -242,8 +310,6 @@
     <string name="no_study_day">لا مذاكرة يوم %s</string>
     <string name="rest_or_review">استرح أو راجع ما درسته</string>
 
-    <!-- شاشة الجلسة -->
-
     <!-- شاشة اقتراحات الذكاء الاصطناعي -->
     <string name="retry">حاول مجدداً</string>
     <string name="select_all">الكل</string>
@@ -281,9 +347,13 @@
     <string name="achievement_badges">شارات الإنجاز</string>
     <string name="unlocked_badge">مفتوح ✓</string>
 
-    <!-- شاشة مسح الامتحانات -->
+    <!-- ===== شاشة مسح الامتحانات (كانت مفقودة تماماً) ===== -->
     <string name="scan_title">مسح جدول الامتحانات</string>
     <string name="scan_subtitle">بالذكاء الاصطناعي</string>
+    <string name="scan_tip_body">التقط صورة واضحة لجدول امتحاناتك وسيستخرج الذكاء الاصطناعي التواريخ تلقائياً</string>
+    <string name="capture_camera">التقاط بالكاميرا</string>
+    <string name="pick_gallery">اختر من المعرض</string>
+    <string name="scan_quality_tip">نصيحة: تأكد أن الصورة واضحة وغير معتمة للحصول على أفضل النتائج</string>
     <string name="analyzing">جاري التحليل…</string>
     <string name="ai_analyzing_image">✨ يحلل الذكاء الاصطناعي الصورة</string>
     <string name="may_take_seconds">قد يستغرق ذلك بضع ثوانٍ…</string>
@@ -313,6 +383,7 @@
     <string name="send_reset_link_action">إرسال رابط الاستعادة</string>
     <string name="later">لاحقاً</string>
     <string name="open_settings">فتح الإعدادات</string>
+
     <!-- ملف شخصي -->
     <string name="streak_days_format">%d أيام متتالية</string>
     <string name="top_subject_hours_format">%1$d ساعة %2$d دقيقة</string>
@@ -390,4 +461,32 @@
     <!-- حوار وضع التركيز -->
     <string name="dnd_title">تفعيل وضع التركيز</string>
     <string name="dnd_body">للحصول على أفضل تجربة مذاكرة، يمكن لجدول إيقاف المقاطعات تلقائياً أثناء جلسات البومودورو</string>
+
+    <!-- ===== شارات الإنجاز (كانت مفقودة بالكامل) ===== -->
+    <string name="badge_first_step_title">الخطوة الأولى</string>
+    <string name="badge_first_step_desc">أتممت أول جلسة مذاكرة</string>
+    <string name="badge_active_title">متعلم نشيط</string>
+    <string name="badge_active_desc">أتممت 10 جلسات مذاكرة</string>
+    <string name="badge_pro_title">محترف</string>
+    <string name="badge_pro_desc">أتممت 50 جلسة مذاكرة</string>
+    <string name="badge_10h_title">10 ساعات</string>
+    <string name="badge_10h_desc">ذاكرت 10 ساعات إجمالاً</string>
+    <string name="badge_50h_title">50 ساعة</string>
+    <string name="badge_50h_desc">ذاكرت 50 ساعة إجمالاً</string>
+    <string name="badge_100h_title">100 ساعة</string>
+    <string name="badge_100h_desc">ذاكرت 100 ساعة إجمالاً</string>
+    <string name="badge_3d_title">3 أيام 🔥</string>
+    <string name="badge_3d_desc">ذاكرت 3 أيام متتالية</string>
+    <string name="badge_1w_title">أسبوع كامل</string>
+    <string name="badge_1w_desc">ذاكرت أسبوعاً كاملاً بدون انقطاع</string>
+    <string name="badge_1m_title">شهر كامل</string>
+    <string name="badge_1m_desc">ذاكرت شهراً كاملاً بدون انقطاع</string>
+    <string name="badge_multi_title">متعدد المواد</string>
+    <string name="badge_multi_desc">أضفت 5 مواد أو أكثر</string>
+
+    <!-- إضافات عامة -->
+    <string name="days_label">أيام</string>
+    <string name="exam_today_msg">امتحان اليوم! راجع كل شيء الآن</string>
+    <string name="exam_tomorrow_msg">امتحان غداً! خصص وقتك المتبقي له</string>
+    <string name="exam_in_days_msg">امتحان بعد %d أيام — ركّز جهدك الآن</string>
 </resources>

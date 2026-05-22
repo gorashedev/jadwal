@@ -1,7 +1,7 @@
 package com.jadwal.data.repository
 
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.content
+import com.jadwal.app.data.ai.GeminiService
+import com.jadwal.app.util.LocaleHelper
 import com.jadwal.domain.model.StudentSummary
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -12,10 +12,12 @@ interface AIRepository {
 
 @Singleton
 class AIRepositoryImpl @Inject constructor(
-    private val generativeModel: GenerativeModel
+    private val geminiService: GeminiService,
 ) : AIRepository {
+
     override suspend fun getSmartSuggestion(summary: StudentSummary): String {
-        val isEn = java.util.Locale.getDefault().language == "en"
+        val isEn = LocaleHelper.isEnglish()
+
         val prompt = if (isEn) """
             You are an educational expert. Based on the student's summary, provide one short, encouraging tip (max 20 words).
             Summary:
@@ -36,11 +38,13 @@ class AIRepositoryImpl @Inject constructor(
         """.trimIndent()
 
         return try {
-            val response = generativeModel.generateContent(content { text(prompt) })
-            response.text?.trim()
-                ?: if (isEn) "Keep going, you're doing great!" else "استمر في التقدم، أنت تبلي بلاءً حسناً!"
-        } catch (e: Exception) {
-            if (isEn) "Stay focused on your goals; success requires consistency." else "ركز على أهدافك اليوم، النجاح يتطلب الاستمرارية."
+            geminiService.generateText(prompt).ifBlank { fallbackSuggestion() }
+        } catch (_: Exception) {
+            fallbackSuggestion()
         }
     }
+
+    private fun fallbackSuggestion(): String =
+        if (LocaleHelper.isEnglish()) "Stay focused on your goals; success requires consistency."
+        else "ركز على أهدافك اليوم، النجاح يتطلب الاستمرارية."
 }

@@ -10,6 +10,18 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
+    <!--
+        إصلاح صورة الملف الشخصي:
+        READ_MEDIA_IMAGES  → Android 13+ (API 33+) يحتاجها PickVisualMedia للوصول للصور
+        READ_EXTERNAL_STORAGE → Android 12 وما دونه (maxSdkVersion=32)
+    -->
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_IMAGES"
+        android:minSdkVersion="33" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
     <application
         android:name=".JadwalApplication"
         android:allowBackup="true"
@@ -36,13 +48,8 @@
             </intent-filter>
 
             <!--
-                إصلاح #3: Deep Link لاستقبال روابط Supabase Auth
-                ─────────────────────────────────────────────────
-                Supabase يُرسل ريدايركت لهذا العنوان:
+                Deep Link لاستقبال روابط Supabase Auth
                 com.jadwal.app://reset-password#access_token=xxx&type=recovery
-
-                تأكد أن redirectTo في Supabase Dashboard (Authentication > URL Configuration)
-                يتضمن: com.jadwal.app://reset-password
             -->
             <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW" />
@@ -53,7 +60,7 @@
                     android:host="reset-password" />
             </intent-filter>
 
-            <!-- Deep Link عام للـ Auth callbacks الأخرى (تسجيل الدخول، تأكيد البريد) -->
+            <!-- Deep Link عام للـ Auth callbacks الأخرى -->
             <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

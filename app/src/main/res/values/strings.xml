@@ -62,11 +62,19 @@
     <string name="error_passwords_mismatch">Passwords do not match</string>
     <string name="error_password_too_short">Password must be at least 6 characters</string>
     <string name="error_email_already_registered">This email is already registered</string>
+    <string name="error_email_confirmation_required">Account created! Please check your email to confirm before signing in.</string>
     <string name="error_invalid_email">Invalid email format</string>
     <string name="error_register_generic">An error occurred while creating the account</string>
     <string name="error_enter_email">Please enter your email address</string>
     <string name="error_reset_email_failed">Failed to send reset email, check the address</string>
     <string name="error_update_password_failed">Failed to update password, please try again</string>
+    <string name="error_reset_link_invalid">This reset link is invalid or has expired</string>
+
+    <string name="not_connected">Offline</string>
+    <string name="gemini_api_key_title">Connect Gemini AI</string>
+    <string name="gemini_api_key_message">Enter your Google Gemini API key to use the study assistant. Get one free at aistudio.google.com</string>
+    <string name="gemini_api_key_hint">API Key</string>
+    <string name="gemini_api_key_save">Save &amp; Connect</string>
 
     <string name="setup_title">Let\'s Set Up Your Schedule</string>
     <string name="add_subject">Add Subject</string>

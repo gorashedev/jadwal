@@ -1,6 +1,7 @@
 package com.jadwal
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatDelegate
@@ -28,7 +29,7 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var prefs: UserPreferencesDataStore
 
-    // ─── إصلاح #3: حقن DeepLinkManager لمعالجة روابط إعادة تعيين كلمة المرور ───
+    // وسيط معالجة الـ Deep Link
     @Inject
     lateinit var deepLinkManager: DeepLinkManager
 
@@ -36,26 +37,21 @@ class MainActivity : AppCompatActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        // إصلاح #4: تطبيق اللغة المحفوظة قبل رسم أي محتوى
-        // نقرأ من SharedPreferences بشكل متزامن لأن DataStore لا يدعم القراءة المتزامنة
+        // Capture password-reset deep links before locale recreation can skip the rest of onCreate
+        handleDeepLinkIntent(intent)
+
+        // تطبيق اللغة المحفوظة قبل رسم أي محتوى
         val savedLang = prefs.getLanguageSync()
         if (savedLang.isNotBlank()) {
             val desired = LocaleListCompat.forLanguageTags(savedLang)
             val current = AppCompatDelegate.getApplicationLocales()
             if (current.toLanguageTags() != desired.toLanguageTags()) {
                 AppCompatDelegate.setApplicationLocales(desired)
-                return // ستُعاد بناء الـ Activity فوراً بالـ locale الصحيح
+                return
             }
         }
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        // معالجة الـ Deep Link إذا جاء التطبيق مفتوحاً عبره
-        intent?.data?.let { uri ->
-            if (uri.scheme == "com.jadwal.app") {
-                deepLinkManager.handleUri(uri)
-            }
-        }
 
         setContent {
             val settingsViewModel: SettingsViewModel = hiltViewModel()
@@ -78,16 +74,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ─── إصلاح #3: معالجة الـ Deep Link عند فتح التطبيق وهو يعمل بالفعل ───
-    // هذا يحدث عندما يضغط المستخدم على رابط البريد الإلكتروني والتطبيق في الخلفية
+    // معالجة الـ Deep Link عند فتح التطبيق وهو يعمل بالفعل في الخلفية
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent) // ضروري لـ Compose لاستقبال الـ Intent الجديد
 
-        intent.data?.let { uri ->
-            if (uri.scheme == "com.jadwal.app") {
-                deepLinkManager.handleUri(uri)
-            }
+        // إصلاح #1: التقاط الرابط الخام بالكامل هنا أيضاً لضمان الحفاظ على الـ Fragment
+        handleDeepLinkIntent(intent)
+    }
+
+    /**
+     * دالة مساعدة لاستخراج الرابط الكامل كنص (DataString) وتحويله يدوياً إلى Uri
+     * ليتخطى قيام أندرويد بحذف الجزء الذي يلي علامة #
+     */
+    private fun handleDeepLinkIntent(intent: Intent?) {
+        val dataString = intent?.dataString ?: return
+        val parsedUri = Uri.parse(dataString)
+        if (parsedUri.scheme == "com.jadwal.app") {
+            deepLinkManager.handleUri(parsedUri)
         }
     }
 }

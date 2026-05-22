@@ -17,6 +17,7 @@ import com.jadwal.R
 data class DayBar(
     val labelRes: Int, // بدلاً من val label: String
     val minutes: Int,
+    val colorHex: String = "#5C6BC0",
     val isToday: Boolean = false,
 )
 
@@ -165,7 +166,12 @@ class AnalyticsViewModel @Inject constructor(
                 val dayMins = sessions
                     .filter { it.dayOfWeek == index }
                     .sumOf { it.completedMinutes }
-                DayBar(labelRes = labelRes, minutes = dayMins, isToday = index == todayDow)
+                DayBar(
+                    labelRes = labelRes,
+                    minutes = dayMins,
+                    colorHex = if (index == todayDow) "#7E57C2" else "#5C6BC0",
+                    isToday = index == todayDow
+                )
             }
         } catch (e: Exception) {
             getFallbackWeekBars()
@@ -199,7 +205,12 @@ class AnalyticsViewModel @Inject constructor(
         val minutes = listOf(45, 90, 30, 120, 60, 20, 40)
         val daysLabelsRes = listOf(R.string.day_sun, R.string.day_mon, R.string.day_tue, R.string.day_wed, R.string.day_thu, R.string.day_fri, R.string.day_sat)
         return daysLabelsRes.mapIndexed { i, labelRes ->
-            DayBar(labelRes = labelRes, minutes = minutes[i], isToday = i == todayDow)
+            DayBar(
+                labelRes = labelRes,
+                minutes = minutes[i],
+                colorHex = if (i == todayDow) "#7E57C2" else "#5C6BC0",
+                isToday = i == todayDow
+            )
         }
     }
 

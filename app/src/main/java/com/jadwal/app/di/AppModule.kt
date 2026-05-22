@@ -1,7 +1,6 @@
 package com.jadwal.app.di
 
 import android.content.Context
-import com.google.ai.client.generativeai.GenerativeModel
 import com.jadwal.BuildConfig
 import com.jadwal.data.preferences.UserPreferencesDataStore
 import com.jadwal.data.repository.AIRepository
@@ -26,21 +25,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideUserPreferences(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
     ): UserPreferencesDataStore = UserPreferencesDataStore(context)
 
     @Provides
     @Singleton
-    fun provideGenerativeModel(): GenerativeModel =
-        GenerativeModel(
-                modelName = "gemini-2.0-flash",
-            apiKey = BuildConfig.GEMINI_API_KEY,
-        )
-
-    @Provides
-    @Singleton
-    fun provideAIRepository(generativeModel: GenerativeModel): AIRepository =
-        AIRepositoryImpl(generativeModel)
+    fun provideAIRepository(impl: AIRepositoryImpl): AIRepository = impl
 
     @Provides
     @Singleton
@@ -51,7 +41,7 @@ object AppModule {
     fun provideSupabaseClient(): SupabaseClient {
         return createSupabaseClient(
             supabaseUrl = BuildConfig.SUPABASE_URL,
-            supabaseKey = BuildConfig.SUPABASE_KEY
+            supabaseKey = BuildConfig.SUPABASE_KEY,
         ) {
             install(Postgrest)
             install(Auth)

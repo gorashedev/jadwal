@@ -37,8 +37,6 @@ class AISuggestionViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AISuggestionUiState())
     val uiState = _uiState.asStateFlow()
 
-    init { generate() }
-
     fun generate() {
         viewModelScope.launch {
             _uiState.update { it.copy(state = AISuggestionState.Loading, selectedSlots = emptySet()) }
@@ -93,7 +91,13 @@ class AISuggestionViewModel @Inject constructor(
             _uiState.update { it.copy(isSaving = true) }
             try {
                 scheduleRepository.saveScheduleSlots(selectedItems)
-                _uiState.update { it.copy(isSaving = false, showSaveSuccess = true) }
+                _uiState.update {
+                    it.copy(
+                        state = AISuggestionState.Saved,
+                        isSaving = false,
+                        showSaveSuccess = true
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isSaving = false) }
             }

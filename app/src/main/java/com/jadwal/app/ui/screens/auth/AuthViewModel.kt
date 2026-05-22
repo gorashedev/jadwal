@@ -1,10 +1,16 @@
 package com.jadwal.ui.screens.auth
 
+import android.content.Context
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jadwal.data.preferences.UserPreferencesDataStore
+import com.jadwal.R
+import com.jadwal.DeepLinkManager
 import com.jadwal.app.data.repository.AuthRepository
+import com.jadwal.app.data.repository.SignUpOutcome
+import com.jadwal.data.preferences.UserPreferencesDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -18,25 +24,32 @@ data class AuthUiState(
     val error: String? = null,
     val isSuccess: Boolean = false,
     val emailSent: Boolean = false,
+    val emailAlreadyExists: Boolean = false,
+    val pendingEmailConfirmation: Boolean = false,
 )
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val prefs: UserPreferencesDataStore,
+    private val deepLinkManager: DeepLinkManager,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
+
+    fun consumeRecoveryFragment(): String? = deepLinkManager.consumeAuthFragment()
 
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState = _uiState.asStateFlow()
 
-    // ===== تسجيل الدخول =====
     fun login(email: String, password: String) {
         if (email.isBlank() || password.isBlank()) {
-            _uiState.update { it.copy(error = "يرجى ملء جميع الحقول") }
+            _uiState.update { it.copy(error = context.getString(R.string.error_fill_all_fields)) }
             return
         }
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+            _uiState.update {
+                it.copy(isLoading = true, error = null, emailAlreadyExists = false, pendingEmailConfirmation = false)
+            }
             try {
                 authRepository.login(email.trim(), password)
                 prefs.setLoggedIn(true)
@@ -47,40 +60,107 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    // ===== إنشاء حساب جديد =====
     fun register(name: String, email: String, password: String, confirmPassword: String) {
         when {
             name.isBlank() || email.isBlank() || password.isBlank() -> {
-                _uiState.update { it.copy(error = "يرجى ملء جميع الحقول") }
+                _uiState.update {
+                    it.copy(
+                        error = context.getString(R.string.error_fill_all_fields),
+                        emailAlreadyExists = false,
+                        pendingEmailConfirmation = false,
+                    )
+                }
+                return
+            }
+            !Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() -> {
+                _uiState.update {
+                    it.copy(
+                        error = context.getString(R.string.error_invalid_email),
+                        emailAlreadyExists = false,
+                        pendingEmailConfirmation = false,
+                    )
+                }
                 return
             }
             password != confirmPassword -> {
-                _uiState.update { it.copy(error = "كلمتا المرور غير متطابقتان") }
+                _uiState.update {
+                    it.copy(
+                        error = context.getString(R.string.error_passwords_mismatch),
+                        emailAlreadyExists = false,
+                        pendingEmailConfirmation = false,
+                    )
+                }
                 return
             }
             password.length < 6 -> {
-                _uiState.update { it.copy(error = "كلمة المرور يجب أن تكون 6 أحرف على الأقل") }
+                _uiState.update {
+                    it.copy(
+                        error = context.getString(R.string.error_password_too_short),
+                        emailAlreadyExists = false,
+                        pendingEmailConfirmation = false,
+                    )
+                }
                 return
             }
         }
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    error = null,
+                    isSuccess = false,
+                    emailAlreadyExists = false,
+                    pendingEmailConfirmation = false,
+                )
+            }
             try {
                 val userData = buildJsonObject { put("full_name", JsonPrimitive(name.trim())) }
-                authRepository.signUp(email.trim(), password, userData)
-                prefs.setUserName(name.trim())
-                prefs.setLoggedIn(true)
-                _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+                when (authRepository.signUp(email.trim(), password, userData)) {
+                    SignUpOutcome.SuccessWithSession -> {
+                        prefs.setUserName(name.trim())
+                        prefs.setLoggedIn(true)
+                        _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+                    }
+                    SignUpOutcome.EmailConfirmationRequired -> {
+                        prefs.setUserName(name.trim())
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                pendingEmailConfirmation = true,
+                                error = context.getString(R.string.error_email_confirmation_required),
+                            )
+                        }
+                    }
+                    SignUpOutcome.EmailAlreadyRegistered -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = context.getString(R.string.error_email_already_registered),
+                                emailAlreadyExists = true,
+                            )
+                        }
+                    }
+                }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = mapRegisterError(e)) }
+                val isDuplicate = isDuplicateRegisterError(e)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = if (isDuplicate) {
+                            context.getString(R.string.error_email_already_registered)
+                        } else {
+                            mapRegisterError(e)
+                        },
+                        emailAlreadyExists = isDuplicate,
+                    )
+                }
             }
         }
     }
 
-    // ===== استعادة كلمة المرور =====
     fun sendPasswordReset(email: String) {
         if (email.isBlank()) {
-            _uiState.update { it.copy(error = "يرجى إدخال بريدك الإلكتروني") }
+            _uiState.update { it.copy(error = context.getString(R.string.error_enter_email)) }
             return
         }
         viewModelScope.launch {
@@ -88,68 +168,73 @@ class AuthViewModel @Inject constructor(
             try {
                 authRepository.resetPassword(email.trim())
                 _uiState.update { it.copy(isLoading = false, emailSent = true) }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _uiState.update {
-                    it.copy(isLoading = false, error = "تعذر إرسال البريد، تحقق من العنوان")
+                    it.copy(isLoading = false, error = context.getString(R.string.error_reset_email_failed))
                 }
             }
         }
     }
 
-    // ─── إصلاح #3: استيراد جلسة Supabase من الـ Deep Link ───────────────
     fun importSessionFromDeepLink(fragment: String) {
         viewModelScope.launch {
             try {
                 authRepository.importSessionFromFragment(fragment)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _uiState.update {
-                    it.copy(error = "رابط إعادة التعيين غير صالح أو انتهت صلاحيته")
+                    it.copy(error = context.getString(R.string.error_reset_link_invalid))
                 }
             }
         }
     }
 
-    // ─── إصلاح #3: تحديث كلمة المرور ─────────────────────────────────────
     fun updatePassword(newPassword: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 authRepository.updatePassword(newPassword)
                 _uiState.update { it.copy(isLoading = false, isSuccess = true) }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = "تعذر تحديث كلمة المرور. حاول طلب رابط جديد."
-                    )
+                    it.copy(isLoading = false, error = context.getString(R.string.error_update_password_failed))
                 }
             }
         }
     }
 
     fun clearError() {
-        _uiState.update { it.copy(error = null) }
+        _uiState.update { it.copy(error = null, emailAlreadyExists = false, pendingEmailConfirmation = false) }
     }
-
-    // ─── دوال مساعدة لرسائل الخطأ ────────────────────────────────────────
 
     private fun mapLoginError(e: Exception): String {
         val msg = e.message ?: ""
         return when {
-            msg.contains("Invalid login credentials") -> "البريد الإلكتروني أو كلمة المرور غير صحيحة"
-            msg.contains("Email not confirmed")       -> "يرجى تأكيد بريدك الإلكتروني أولاً"
-            msg.contains("network")                   -> "تأكد من اتصالك بالإنترنت"
-            else                                      -> "حدث خطأ، حاول مجدداً"
+            msg.contains("Invalid login credentials") ->
+                context.getString(R.string.error_invalid_credentials)
+            msg.contains("Email not confirmed") ->
+                context.getString(R.string.error_email_not_confirmed)
+            msg.contains("network", ignoreCase = true) ->
+                context.getString(R.string.error_no_internet)
+            else -> context.getString(R.string.error_generic)
         }
     }
 
     private fun mapRegisterError(e: Exception): String {
         val msg = e.message ?: ""
         return when {
-            msg.contains("already registered") -> "هذا البريد الإلكتروني مسجل بالفعل"
-            msg.contains("invalid email")      -> "صيغة البريد الإلكتروني غير صحيحة"
-            else                               -> "حدث خطأ أثناء إنشاء الحساب"
+            msg.contains("invalid email", ignoreCase = true) ->
+                context.getString(R.string.error_invalid_email)
+            else -> context.getString(R.string.error_register_generic)
         }
+    }
+
+    private fun isDuplicateRegisterError(e: Exception): Boolean {
+        val msg = e.message.orEmpty()
+        return msg.contains("already registered", ignoreCase = true) ||
+            msg.contains("already exists", ignoreCase = true) ||
+            msg.contains("duplicate", ignoreCase = true) ||
+            msg.contains("email address is already", ignoreCase = true) ||
+            msg.contains("user_already_exists", ignoreCase = true)
     }
 }
 

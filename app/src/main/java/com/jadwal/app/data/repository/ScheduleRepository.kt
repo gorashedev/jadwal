@@ -38,6 +38,13 @@ class ScheduleRepository @Inject constructor(
         return scheduleDao.getScheduleWithSubjectsSync(start, end).map { it.toDomain() }
     }
 
+    /** Reactive stream for today's schedule — updates when subjects or schedule items change. */
+    fun observeTodayScheduleWithSubjects(): Flow<List<ScheduleWithSubject>> {
+        val (start, end) = dayRange(System.currentTimeMillis())
+        return scheduleDao.getScheduleWithSubjects(start, end)
+            .map { list -> list.map { it.toDomain() } }
+    }
+
     suspend fun getWeekScheduleWithSubjects(): List<ScheduleWithSubject> {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)

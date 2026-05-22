@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.DeleteSweep
+import androidx.compose.material.icons.rounded.Key
 import androidx.compose.material.icons.rounded.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,12 +21,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.widget.Toast
 import com.jadwal.R
 import com.jadwal.ui.components.GlassCard
 import com.jadwal.ui.components.JadwalBackground
@@ -40,15 +43,58 @@ fun AIChatScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var showClearDialog by remember { mutableStateOf(false) }
 
-    // التمرير التلقائي إلى آخر رسالة
+    // Auto-scroll to the newest message.
     LaunchedEffect(uiState.messages.size) {
         if (uiState.messages.isNotEmpty()) {
             scope.launch {
                 listState.animateScrollToItem(uiState.messages.lastIndex)
             }
         }
+    }
+
+    // Show a Toast whenever the ViewModel emits one, then clear it.
+    LaunchedEffect(uiState.toastMessage) {
+        val msg = uiState.toastMessage
+        if (!msg.isNullOrBlank()) {
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            viewModel.clearToast()
+        }
+    }
+
+    if (uiState.showApiKeySetup) {
+        AlertDialog(
+            onDismissRequest = { if (uiState.hasApiKey) viewModel.hideApiKeySetup() },
+            icon = { Icon(Icons.Rounded.Key, null, tint = JadwalIndigo) },
+            title = { Text(stringResource(R.string.gemini_api_key_title), fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(stringResource(R.string.gemini_api_key_message))
+                    OutlinedTextField(
+                        value = uiState.apiKeyInput,
+                        onValueChange = viewModel::onApiKeyInputChange,
+                        label = { Text(stringResource(R.string.gemini_api_key_hint)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = viewModel::saveApiKey,
+                    enabled = uiState.apiKeyInput.isNotBlank(),
+                ) { Text(stringResource(R.string.gemini_api_key_save)) }
+            },
+            dismissButton = {
+                if (uiState.hasApiKey) {
+                    TextButton(onClick = viewModel::hideApiKeySetup) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            },
+        )
     }
 
     // حوار تأكيد مسح المحادثة
@@ -70,16 +116,35 @@ fun AIChatScreen(
         )
     }
 
+    // Height the floating pill occupies at the bottom of the screen:
+    //   system nav-bar inset  +  24 dp float gap (matches JadwalApp)  +  pill content height.
+    // Pill content = vertical padding 10 dp * 2 + icon 22 dp + label ~14 dp + spacedBy 2 dp ≈ 58 dp.
+    // Total ≈ navBarInset + 24 + 58 = navBarInset + 82 dp. Use 80 dp as a round number.
+    val navBarInset       = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val floatingBarHeight = navBarInset + 80.dp
+
     JadwalBackground {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                // 1. imePadding() is outermost: it handles the soft-keyboard inset
+                //    BEFORE fixed paddings are applied, so opening the keyboard
+                //    simply shrinks the available height rather than stacking gaps.
+                .imePadding()
+                // 2. Status bar inset so the header doesn't go under the notch.
                 .statusBarsPadding()
-                .navigationBarsPadding()
-                .imePadding(),
+                // 3. Bottom padding reserves space for the floating pill so the
+                //    input field is never hidden underneath it.
+                .padding(bottom = floatingBarHeight),
         ) {
-            ChatHeader(onClearHistory = { showClearDialog = true })
+            ChatHeader(
+                hasApiKey = uiState.hasApiKey,
+                onApiKeyClick = viewModel::showApiKeySetup,
+                onClearHistory = { showClearDialog = true },
+            )
 
+            // weight(1f) — fills all remaining vertical space, naturally
+            // pushing ChatInputBar to the bottom of the Column.
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f),
@@ -112,7 +177,11 @@ fun AIChatScreen(
 }
 
 @Composable
-private fun ChatHeader(onClearHistory: () -> Unit) {
+private fun ChatHeader(
+    hasApiKey: Boolean,
+    onApiKeyClick: () -> Unit,
+    onClearHistory: () -> Unit,
+) {
     GlassCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -157,20 +226,30 @@ private fun ChatHeader(onClearHistory: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            // مؤشر الاتصال
+            val statusColor = if (hasApiKey) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
             Box(
                 modifier = Modifier
                     .size(8.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF4CAF50))
+                    .background(statusColor)
             )
             Text(
-                stringResource(R.string.connected),
+                stringResource(if (hasApiKey) R.string.connected else R.string.not_connected),
                 style = MaterialTheme.typography.labelSmall,
-                color = Color(0xFF4CAF50),
+                color = statusColor,
                 fontWeight = FontWeight.Medium,
             )
-            // زر مسح المحادثة
+            IconButton(
+                onClick = onApiKeyClick,
+                modifier = Modifier.size(36.dp),
+            ) {
+                Icon(
+                    Icons.Rounded.Key,
+                    contentDescription = stringResource(R.string.gemini_api_key_title),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
             IconButton(
                 onClick = onClearHistory,
                 modifier = Modifier.size(36.dp),

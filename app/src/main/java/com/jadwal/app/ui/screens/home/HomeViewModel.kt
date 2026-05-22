@@ -2,6 +2,7 @@ package com.jadwal.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jadwal.app.util.LocaleHelper
 import com.jadwal.data.preferences.UserPreferencesDataStore
 import com.jadwal.data.repository.AIRepository
 import com.jadwal.data.repository.ScheduleRepository
@@ -11,9 +12,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import androidx.compose.ui.graphics.Color  // ← هذا كان مفقوداً
+import androidx.compose.ui.graphics.Color
 
-// ===== نموذج المهمة اليومية =====
 data class TodayTask(
     val scheduleItemId: String,
     val subjectName: String,
@@ -27,7 +27,6 @@ data class TodayTask(
     val startMinute: Int = -1,
 )
 
-// ===== نموذج الامتحان القادم =====
 data class UpcomingExam(
     val subjectName: String,
     val subjectIcon: String,
@@ -43,7 +42,7 @@ data class HomeUiState(
     val upcomingExam: UpcomingExam? = null,
     val weeklyCompletedSessions: Int = 0,
     val weeklyTotalHours: Float = 0f,
-    val isAiLoading: Boolean = true,
+    val isAiLoading: Boolean = false,
 )
 
 @HiltViewModel
@@ -59,12 +58,9 @@ class HomeViewModel @Inject constructor(
     private val _aiSuggestion = MutableStateFlow<String?>(null)
     val aiSuggestion = _aiSuggestion.asStateFlow()
 
-    init {
-        loadHomeData()
-        loadAiSuggestion()
-    }
+    private var latestScheduleItems: List<ScheduleWithSubject> = emptyList()
 
-    private fun loadHomeData() {
+    init {
         viewModelScope.launch {
             prefs.userName.collect { name ->
                 _uiState.update { it.copy(userName = name) }
@@ -73,50 +69,68 @@ class HomeViewModel @Inject constructor(
 
         viewModelScope.launch {
             prefs.streakDays.collect { streak ->
-                _uiState.update { state -> state.copy(streakDays = streak) }
+                _uiState.update { it.copy(streakDays = streak) }
             }
         }
 
         viewModelScope.launch {
-            // التحقق من لغة النظام الحالية
-            val isEn = java.util.Locale.getDefault().language == "en"
-
-            try {
-                val todayItems = scheduleRepository.getTodayScheduleWithSubjects().map { item ->
-                    TodayTask(
-                        scheduleItemId = item.id,
-                        // هنا التعديل: اختيار الاسم الإنجليزي إذا كان متاحاً وكانت اللغة إنجليزية
-                        subjectName = if (isEn && item.subjectNameEn.isNotBlank()) item.subjectNameEn else item.subjectName,
-                        subjectIcon = item.subjectIcon,
-                        subjectColor = try {
-                            Color(android.graphics.Color.parseColor(item.subjectColor))
-                        } catch (e: Exception) {
-                            Color.Gray
-                        },
-                        allocatedMinutes = item.allocatedMinutes,
-                        isCompleted = item.isCompleted,
-                        startHour = item.startHour,
-                        startMinute = item.startMinute,
-                    )
+            scheduleRepository.observeTodayScheduleWithSubjects()
+                .distinctUntilChanged()
+                .collect { items ->
+                    latestScheduleItems = items
+                    applyTodayTasks(items)
                 }
+        }
 
-                val completedMins = todayItems.filter { it.isCompleted }.sumOf { it.allocatedMinutes }
-                val totalMins = todayItems.sumOf { it.allocatedMinutes }
-
-                _uiState.update { state ->
-                    state.copy(
-                        todayTasks = todayItems,
-                        completedMinutes = completedMins,
-                        totalPlannedMinutes = totalMins,
-                    )
-                }
-            } catch (e: Exception) {
-                // تجاهل الخطأ
-            }
+        viewModelScope.launch {
+            prefs.languageCode
+                .distinctUntilChanged()
+                .collect { applyTodayTasks(latestScheduleItems) }
         }
     }
 
-    // ===== تحميل اقتراح الذكاء الاصطناعي =====
+    fun refresh() {
+        viewModelScope.launch {
+            try {
+                latestScheduleItems = scheduleRepository.getTodayScheduleWithSubjects()
+                applyTodayTasks(latestScheduleItems)
+            } catch (_: Exception) { }
+        }
+    }
+
+    private fun resolveSubjectName(arabicName: String, englishName: String): String =
+        if (LocaleHelper.isEnglish() && englishName.isNotBlank()) englishName else arabicName
+
+    private fun applyTodayTasks(items: List<ScheduleWithSubject>) {
+        val todayItems = items.map { item ->
+            TodayTask(
+                scheduleItemId = item.id,
+                subjectName = resolveSubjectName(item.subjectName, item.subjectNameEn),
+                subjectIcon = item.subjectIcon,
+                subjectColor = try {
+                    Color(android.graphics.Color.parseColor(item.subjectColor))
+                } catch (_: Exception) {
+                    Color.Gray
+                },
+                allocatedMinutes = item.allocatedMinutes,
+                isCompleted = item.isCompleted,
+                startHour = item.startHour,
+                startMinute = item.startMinute,
+            )
+        }
+
+        val completedMins = todayItems.filter { it.isCompleted }.sumOf { it.allocatedMinutes }
+        val totalMins = todayItems.sumOf { it.allocatedMinutes }
+
+        _uiState.update { state ->
+            state.copy(
+                todayTasks = todayItems,
+                completedMinutes = completedMins,
+                totalPlannedMinutes = totalMins,
+            )
+        }
+    }
+
     private fun loadAiSuggestion() {
         viewModelScope.launch {
             _uiState.update { it.copy(isAiLoading = true) }
@@ -129,19 +143,14 @@ class HomeViewModel @Inject constructor(
                     daysUntilNextExam = state.upcomingExam?.daysUntil ?: -1,
                     averageUnderstanding = 2.5f,
                 )
-                val suggestion = aiRepository.getSmartSuggestion(summary)
-                _aiSuggestion.value = suggestion
-            } catch (e: Exception) {
-                // اقتراح افتراضي عند فشل الاتصال
-                _aiSuggestion.value = "استمر في مذاكرتك، كل خطوة تقربك من النجاح!"
+                _aiSuggestion.value = aiRepository.getSmartSuggestion(summary)
+            } catch (_: Exception) {
+                _aiSuggestion.value = null
             } finally {
                 _uiState.update { it.copy(isAiLoading = false) }
             }
         }
     }
 
-    // ===== تحديث الاقتراح يدوياً =====
-    fun refreshAiSuggestion() {
-        loadAiSuggestion()
-    }
+    fun refreshAiSuggestion() = loadAiSuggestion()
 }

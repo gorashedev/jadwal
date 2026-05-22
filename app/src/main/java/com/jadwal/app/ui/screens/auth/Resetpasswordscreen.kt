@@ -1,17 +1,18 @@
 package com.jadwal.ui.screens.auth
 
-import android.net.Uri
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,13 +43,16 @@ import com.jadwal.ui.theme.*
  */
 @Composable
 fun ResetPasswordScreen(
-    encodedFragment: String,
     viewModel: AuthViewModel = hiltViewModel(),
     onPasswordUpdated: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
+
+    val passwordTooShort = remember(context) { context.getString(R.string.error_password_too_short) }
+    val passwordsMismatch = remember(context) { context.getString(R.string.error_passwords_mismatch) }
 
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -56,10 +60,8 @@ fun ResetPasswordScreen(
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var localError by remember { mutableStateOf<String?>(null) }
 
-    // ─── استيراد جلسة Supabase من الـ Deep Link fragment ───
-    LaunchedEffect(encodedFragment) {
-        val fragment = Uri.decode(encodedFragment)
-        if (fragment.isNotBlank()) {
+    LaunchedEffect(Unit) {
+        viewModel.consumeRecoveryFragment()?.let { fragment ->
             viewModel.importSessionFromDeepLink(fragment)
         }
     }
@@ -83,7 +85,10 @@ fun ResetPasswordScreen(
             // ─── زر الرجوع ───
             Row(modifier = Modifier.fillMaxWidth()) {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                        contentDescription = stringResource(R.string.back)
+                    )
                 }
             }
 
@@ -194,9 +199,12 @@ fun ResetPasswordScreen(
                             onDone = {
                                 focusManager.clearFocus()
                                 submitPasswordReset(
-                                    newPassword, confirmPassword,
+                                    newPassword = newPassword,
+                                    confirmPassword = confirmPassword,
+                                    passwordTooShort = passwordTooShort,
+                                    passwordsMismatch = passwordsMismatch,
                                     onError = { localError = it },
-                                    onSubmit = { viewModel.updatePassword(newPassword) }
+                                    onSubmit = { viewModel.updatePassword(newPassword) },
                                 )
                             }
                         ),
@@ -226,9 +234,12 @@ fun ResetPasswordScreen(
                 onClick = {
                     focusManager.clearFocus()
                     submitPasswordReset(
-                        newPassword, confirmPassword,
+                        newPassword = newPassword,
+                        confirmPassword = confirmPassword,
+                        passwordTooShort = passwordTooShort,
+                        passwordsMismatch = passwordsMismatch,
                         onError = { localError = it },
-                        onSubmit = { viewModel.updatePassword(newPassword) }
+                        onSubmit = { viewModel.updatePassword(newPassword) },
                     )
                 },
                 modifier = Modifier
@@ -258,12 +269,14 @@ fun ResetPasswordScreen(
 private fun submitPasswordReset(
     newPassword: String,
     confirmPassword: String,
+    passwordTooShort: String,
+    passwordsMismatch: String,
     onError: (String) -> Unit,
     onSubmit: () -> Unit,
 ) {
     when {
-        newPassword.length < 6 -> onError("كلمة المرور يجب أن تكون 6 أحرف على الأقل")
-        newPassword != confirmPassword -> onError("كلمتا المرور غير متطابقتان")
+        newPassword.length < 6 -> onError(passwordTooShort)
+        newPassword != confirmPassword -> onError(passwordsMismatch)
         else -> onSubmit()
     }
 }

@@ -23,11 +23,12 @@ android {
             useSupportLibrary = true
         }
 
-        // قراءة المفاتيح من local.properties بأمان
+        // قراءة المفاتيح من local.properties بأمان (trim لتفادي مفاتيح فارغة بسبب مسافات/أسطر جديدة)
         val localProperties = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
-        buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
-        buildConfigField("String", "SUPABASE_URL", "\"${localProperties.getProperty("SUPABASE_URL", "")}\"")
-        buildConfigField("String", "SUPABASE_KEY", "\"${localProperties.getProperty("SUPABASE_KEY", "")}\"")
+        fun prop(name: String) = localProperties.getProperty(name, "").trim()
+        buildConfigField("String", "GEMINI_API_KEY", "\"${prop("GEMINI_API_KEY")}\"")
+        buildConfigField("String", "SUPABASE_URL", "\"${prop("SUPABASE_URL")}\"")
+        buildConfigField("String", "SUPABASE_KEY", "\"${prop("SUPABASE_KEY")}\"")
     }
 
     buildTypes {
@@ -156,8 +157,10 @@ dependencies {
     // ===== DateTime =====
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
 
-    // ===== Gemini AI =====
-    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+    // ===== Gemini AI — uses direct REST v1 endpoint via OkHttp (no SDK) =====
+    // The deprecated com.google.ai.client.generativeai:0.9.0 was removed:
+    //   • it only targeted the v1beta endpoint (rejected for 1.5 models)
+    //   • it had a MissingFieldException serialization bug on error bodies
 
     // ===== Glass Morphism (Haze) =====
     implementation("dev.chrisbanes.haze:haze:1.0.1")

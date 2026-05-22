@@ -1,10 +1,8 @@
 package com.jadwal.ui.screens.profile
 
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,6 +24,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -33,12 +33,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.jadwal.R
 import com.jadwal.ui.components.GlassCard
 import com.jadwal.ui.components.JadwalBackground
 import com.jadwal.ui.theme.*
-import androidx.compose.ui.res.stringResource
-import com.jadwal.R
-
+import java.io.File
 
 // ===== الشاشة الكاملة مع عنوان ورجوع =====
 @Composable
@@ -47,25 +46,53 @@ fun ProfileScreen(
     onBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // إصلاح: نقرأ البايتات فوراً في الـ callback (على الـ main thread)
+    // قبل انتهاء التصريح المؤقت للـ URI
+    val context = LocalContext.current
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri: Uri? -> if (uri != null) viewModel.onPhotoSelected(uri) }
+    ) { uri ->
+        if (uri != null) {
+            val bytes = try {
+                context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+            } catch (_: Exception) {
+                null
+            }
+            if (bytes != null && bytes.isNotEmpty()) {
+                viewModel.onPhotoSelected(bytes)
+            }
+        }
+    }
 
     if (uiState.showEditNameDialog) {
+        // إصلاح: استخدام state محلي للـ TextField لتحسين الاستجابة
+        var localName by remember(uiState.editNameText) { mutableStateOf(uiState.editNameText) }
         AlertDialog(
             onDismissRequest = viewModel::dismissEditNameDialog,
             title = { Text(stringResource(R.string.edit_name_dialog_title)) },
             text = {
                 OutlinedTextField(
-                    value = uiState.editNameText,
-                    onValueChange = viewModel::onEditNameChange,
+                    value = localName,
+                    onValueChange = { localName = it },
                     label = { Text(stringResource(R.string.name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
             },
-            confirmButton = { Button(onClick = viewModel::saveNewName) { Text(stringResource(R.string.save)) } },
-            dismissButton = { TextButton(onClick = viewModel::dismissEditNameDialog) { Text(stringResource(R.string.cancel)) } },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.onEditNameChange(localName)
+                    viewModel.saveNewName()
+                }) {
+                    Text(stringResource(R.string.save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissEditNameDialog) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
         )
     }
 
@@ -140,11 +167,15 @@ fun ProfileContent(
             contentAlignment = Alignment.Center,
         ) {
             if (uiState.profilePhotoPath.isNotBlank()) {
+                // إصلاح: استخدام File(path) بدلاً من String الخام
+                // Coil يحتاج File object لتحميل صور من التخزين الداخلي
                 AsyncImage(
-                    model = uiState.profilePhotoPath,
+                    model = File(uiState.profilePhotoPath),
                     contentDescription = stringResource(R.string.profile_title),
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape),
                 )
             } else {
                 Text(
@@ -168,8 +199,12 @@ fun ProfileContent(
                     onClick = onPickPhoto,
                 ),
         ) {
-            Icon(Icons.Rounded.CameraAlt, stringResource(R.string.edit),
-                tint = Color.White, modifier = Modifier.size(16.dp))
+            Icon(
+                Icons.Rounded.CameraAlt,
+                contentDescription = stringResource(R.string.edit),
+                tint = Color.White,
+                modifier = Modifier.size(16.dp),
+            )
         }
     }
 
@@ -181,14 +216,19 @@ fun ProfileContent(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
-            text = if (uiState.userName.isNotBlank()) uiState.userName else stringResource(R.string.student),
+            text = if (uiState.userName.isNotBlank()) uiState.userName
+            else stringResource(R.string.student),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
         )
         IconButton(onClick = onShowEditName, modifier = Modifier.size(32.dp)) {
-            Icon(Icons.Rounded.Edit, stringResource(R.string.edit_name),
-                tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+            Icon(
+                Icons.Rounded.Edit,
+                contentDescription = stringResource(R.string.edit_name),
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp),
+            )
         }
     }
 
@@ -229,7 +269,8 @@ fun ProfileContent(
             value = if (uiState.totalStudyHours >= 1f)
                 "%.1f".format(uiState.totalStudyHours)
             else "${uiState.totalStudyMinutes}",
-            unit = if (uiState.totalStudyHours >= 1f) stringResource(R.string.hour_short) else stringResource(R.string.minute_short),
+            unit = if (uiState.totalStudyHours >= 1f)
+                stringResource(R.string.hour_short) else stringResource(R.string.minute_short),
             label = stringResource(R.string.total_study),
             color = JadwalIndigo,
         )
@@ -256,11 +297,15 @@ fun ProfileContent(
     // ===== أعلى مادة =====
     if (uiState.topSubjectName.isNotBlank()) {
         GlassCard(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             cornerRadius = JadwalRadius.lg,
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
@@ -273,20 +318,32 @@ fun ProfileContent(
                     Text(uiState.topSubjectIcon, fontSize = 26.sp)
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.top_subject_label),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(uiState.topSubjectName,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold)
                     Text(
-                        stringResource(R.string.top_subject_hours_format, uiState.topSubjectMinutes / 60, uiState.topSubjectMinutes % 60),
+                        stringResource(R.string.top_subject_label),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        uiState.topSubjectName,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        stringResource(
+                            R.string.top_subject_hours_format,
+                            uiState.topSubjectMinutes / 60,
+                            uiState.topSubjectMinutes % 60,
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Icon(Icons.Rounded.EmojiEvents, null, tint = JadwalWarning,
-                    modifier = Modifier.size(28.dp))
+                Icon(
+                    Icons.Rounded.EmojiEvents,
+                    contentDescription = null,
+                    tint = JadwalWarning,
+                    modifier = Modifier.size(28.dp),
+                )
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -294,24 +351,36 @@ fun ProfileContent(
 
     // ===== شارات الإنجاز =====
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = 24.dp, bottom = 10.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 24.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Icon(Icons.Rounded.MilitaryTech, null,
-            tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-        Text(stringResource(R.string.achievement_badges),
+        Icon(
+            Icons.Rounded.MilitaryTech,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(18.dp),
+        )
+        Text(
+            stringResource(R.string.achievement_badges),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 
     GlassCard(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
         cornerRadius = JadwalRadius.lg,
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             uiState.badges.chunked(2).forEach { row ->
@@ -329,7 +398,7 @@ fun ProfileContent(
     }
 }
 
-// ===== بطاقة إحصاء — ثابتة الارتفاع بغض النظر عن طول النص =====
+// ===== بطاقة إحصاء =====
 @Composable
 private fun ProfileStatCard(
     modifier: Modifier = Modifier,
@@ -391,12 +460,17 @@ private fun BadgeItem(
         shape = RoundedCornerShape(14.dp),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Text(badge.emoji, fontSize = 28.sp,
-                modifier = Modifier.graphicsLayer(alpha = alpha))
+            Text(
+                badge.emoji,
+                fontSize = 28.sp,
+                modifier = Modifier.graphicsLayer(alpha = alpha),
+            )
             Text(
                 text = stringResource(id = badge.titleRes),
                 style = MaterialTheme.typography.labelLarge,
@@ -413,11 +487,16 @@ private fun BadgeItem(
                 lineHeight = 13.sp,
             )
             if (badge.isUnlocked) {
-                Surface(color = JadwalSuccess.copy(alpha = 0.15f), shape = RoundedCornerShape(4.dp)) {
-                    Text(stringResource(R.string.unlocked_badge),
+                Surface(
+                    color = JadwalSuccess.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(4.dp),
+                ) {
+                    Text(
+                        stringResource(R.string.unlocked_badge),
                         style = MaterialTheme.typography.labelSmall,
                         color = JadwalSuccess,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                    )
                 }
             }
         }

@@ -1,12 +1,11 @@
 package com.jadwal.ui.screens.home
 
-import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
@@ -20,6 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jadwal.R
 import com.jadwal.ui.components.GlassCard
@@ -42,6 +43,10 @@ fun HomeScreen(
     val aiSuggestion by viewModel.aiSuggestion.collectAsStateWithLifecycle()
     val permissionHandled by permissionViewModel.permissionHandled.collectAsStateWithLifecycle()
 
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.refresh()
+    }
+
     if (!permissionHandled) {
         NotificationPermissionHandler(
             onGranted = permissionViewModel::onPermissionGranted,
@@ -50,66 +55,73 @@ fun HomeScreen(
     }
 
     JadwalBackground {
-        Column(
+        val greetingHour = remember { Calendar.getInstance().get(Calendar.HOUR_OF_DAY) }
+        val greeting = when {
+            greetingHour in 5..11  -> "${stringResource(R.string.good_morning)} 🌅"
+            greetingHour in 12..16 -> "${stringResource(R.string.good_afternoon)} ☀️"
+            greetingHour in 17..20 -> "${stringResource(R.string.good_evening)} 🌆"
+            else                   -> "${stringResource(R.string.good_night)} 🌙"
+        }
+
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .statusBarsPadding()
-                .padding(bottom = 100.dp)
+                .statusBarsPadding(),
+            contentPadding = PaddingValues(bottom = 100.dp),
         ) {
-            val greetingHour = remember { Calendar.getInstance().get(Calendar.HOUR_OF_DAY) }
-            val greeting = when {
-                greetingHour in 5..11  -> "${stringResource(R.string.good_morning)} 🌅"
-                greetingHour in 12..16 -> "${stringResource(R.string.good_afternoon)} ☀️"
-                greetingHour in 17..20 -> "${stringResource(R.string.good_evening)} 🌆"
-                else                   -> "${stringResource(R.string.good_night)} 🌙"
-            }
-            HomeHeader(
-                greeting = greeting,
-                userName = uiState.userName,
-                streakDays = uiState.streakDays,
-                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 8.dp),
-            )
-
-            AISuggestionCard(
-                suggestion = aiSuggestion,
-                isLoading = uiState.isAiLoading,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-
-            DailyProgressCard(
-                completedMinutes = uiState.completedMinutes,
-                totalMinutes = uiState.totalPlannedMinutes,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-            )
-
-            // ─── عنوان مهام اليوم ────────────────────────────────────────
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    // إصلاح #4: كان "مهام اليوم" — الآن stringResource
-                    text = stringResource(R.string.today_tasks),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
+            item {
+                HomeHeader(
+                    greeting = greeting,
+                    userName = uiState.userName,
+                    streakDays = uiState.streakDays,
+                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 8.dp),
                 )
-                TextButton(onClick = onViewSchedule) {
-                    // إصلاح #4: كان "الجدول الكامل" — الآن stringResource
-                    Text(stringResource(R.string.view_full_schedule))
+            }
+
+            item {
+                AISuggestionCard(
+                    suggestion = aiSuggestion,
+                    isLoading = uiState.isAiLoading,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
+
+            item {
+                DailyProgressCard(
+                    completedMinutes = uiState.completedMinutes,
+                    totalMinutes = uiState.totalPlannedMinutes,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                )
+            }
+
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.today_tasks),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                    TextButton(onClick = onViewSchedule) {
+                        Text(stringResource(R.string.view_full_schedule))
+                    }
                 }
             }
 
             if (uiState.todayTasks.isEmpty()) {
-                EmptyTasksCard(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                )
+                item {
+                    EmptyTasksCard(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    )
+                }
             } else {
-                uiState.todayTasks.forEach { task ->
+                items(uiState.todayTasks, key = { it.scheduleItemId }) { task ->
                     TaskCard(
                         task = task,
                         onStartSession = { onStartSession(task.scheduleItemId) },
@@ -120,20 +132,24 @@ fun HomeScreen(
 
             uiState.upcomingExam?.let { exam ->
                 if (exam.daysUntil <= 7) {
-                    ExamAlertCard(
-                        subjectName = exam.subjectName,
-                        daysUntil = exam.daysUntil,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                    )
+                    item {
+                        ExamAlertCard(
+                            subjectName = exam.subjectName,
+                            daysUntil = exam.daysUntil,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                        )
+                    }
                 }
             }
 
-            WeeklySnapshotCard(
-                completedSessions = uiState.weeklyCompletedSessions,
-                totalHours = uiState.weeklyTotalHours,
-                onViewReport = onViewReport,
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-            )
+            item {
+                WeeklySnapshotCard(
+                    completedSessions = uiState.weeklyCompletedSessions,
+                    totalHours = uiState.weeklyTotalHours,
+                    onViewReport = onViewReport,
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                )
+            }
         }
     }
 }
@@ -181,7 +197,6 @@ fun AISuggestionCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    // إصلاح #4: كان "جدول يقول..." — الآن stringResource
                     text = stringResource(R.string.ai_says),
                     style = MaterialTheme.typography.labelMedium,
                     color = JadwalViolet,
@@ -201,7 +216,6 @@ fun AISuggestionCard(
                     }
                 } else {
                     Text(
-                        // إصلاح #4: كانت رسالة تشجيع ثابتة بالعربية — الآن stringResource
                         text = suggestion ?: stringResource(R.string.ai_default_tip),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -236,13 +250,11 @@ fun DailyProgressCard(
         ) {
             Column {
                 Text(
-                    // إصلاح #4: كان "تقدم اليوم" — الآن stringResource
                     text = stringResource(R.string.today_progress),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    // إصلاح #4: كان "$completedMinutes / $totalMinutes دقيقة"
                     text = stringResource(R.string.from_minutes_format, completedMinutes, totalMinutes),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
@@ -274,7 +286,6 @@ fun DailyProgressCard(
                         color = JadwalIndigo,
                     )
                     Text(
-                        // إصلاح #4: كان "منجز" — الآن stringResource
                         text = stringResource(R.string.completed),
                         style = MaterialTheme.typography.labelSmall,
                         color = JadwalIndigo.copy(alpha = 0.7f),
@@ -305,7 +316,6 @@ fun HomeHeader(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                // إصلاح #4: كان "طالب" hardcoded — الآن stringResource
                 text = if (userName.isNotBlank()) userName else stringResource(R.string.student),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
@@ -327,7 +337,6 @@ fun HomeHeader(
                         color = JadwalWarning,
                     )
                     Text(
-                        // إصلاح #4: كان "يوم" — الآن stringResource
                         text = stringResource(R.string.day_label),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -374,7 +383,6 @@ fun TaskCard(
                     "${String.format("%02d:%02d", task.startHour, task.startMinute)} • "
                 } else ""
                 Text(
-                    // إصلاح #4: كان "${task.allocatedMinutes} دقيقة"
                     text = "$timePrefix${task.allocatedMinutes} ${stringResource(R.string.minutes)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -384,7 +392,6 @@ fun TaskCard(
             when {
                 task.isCompleted -> Icon(
                     Icons.Rounded.CheckCircle,
-                    // إصلاح #4: كان "منجزة" hardcoded
                     contentDescription = stringResource(R.string.completed),
                     tint = JadwalSuccess,
                     modifier = Modifier.size(32.dp),
@@ -394,7 +401,6 @@ fun TaskCard(
                     shape = RoundedCornerShape(10.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                 ) {
-                    // إصلاح #4: كان "ابدأ" hardcoded
                     Text(stringResource(R.string.start), style = MaterialTheme.typography.labelMedium)
                 }
             }
@@ -413,14 +419,12 @@ fun EmptyTasksCard(modifier: Modifier = Modifier) {
         ) {
             Text("🎉", fontSize = 48.sp)
             Text(
-                // إصلاح #4: كان "لا توجد مهام لليوم" hardcoded
                 text = stringResource(R.string.no_tasks_today),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                // إصلاح #4: كان "أنجزت كل شيء!..." hardcoded
                 text = stringResource(R.string.all_done_rest),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -446,14 +450,12 @@ fun ExamAlertCard(
             Text("⚠️", fontSize = 28.sp)
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    // إصلاح #4: كان "امتحان قريب!" hardcoded
                     text = stringResource(R.string.exam_alert_title),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = JadwalWarning,
                 )
                 Text(
-                    // إصلاح #4: كان نص عربي مع plurals hardcoded
                     text = if (daysUntil <= 1)
                         stringResource(R.string.exam_day_away, subjectName)
                     else
@@ -482,14 +484,12 @@ fun WeeklySnapshotCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    // إصلاح #4: كان "ملخص الأسبوع" hardcoded
                     text = stringResource(R.string.weekly_summary),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 TextButton(onClick = onViewReport) {
-                    // إصلاح #4: كان "التفاصيل" hardcoded
                     Text(stringResource(R.string.details), style = MaterialTheme.typography.labelMedium)
                 }
             }
@@ -498,7 +498,6 @@ fun WeeklySnapshotCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                // إصلاح #4: كانت labels بالعربية hardcoded
                 WeeklyStatItem(
                     value = "$completedSessions",
                     label = stringResource(R.string.sessions_label),

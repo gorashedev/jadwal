@@ -1,5 +1,6 @@
 package com.jadwal.ui.screens.schedule
 
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jadwal.data.repository.ScheduleRepository
@@ -29,7 +30,7 @@ data class ScheduleUiState(
     val selectedDayIndex: Int = 0,
     val weekItems: Map<Int, List<ScheduleItem>> = emptyMap(),
     val upcomingExams: List<ExamBadge> = emptyList(),
-    val examNightExams: List<ExamBadge> = emptyList(), // امتحانات خلال 48 ساعة (وضع الطوارئ)
+    val examNightExams: List<ExamBadge> = emptyList(),
     val isGenerating: Boolean = false,
 )
 
@@ -61,6 +62,19 @@ class ScheduleViewModel @Inject constructor(
         _uiState.update { it.copy(selectedDayIndex = index) }
     }
 
+    /**
+     * إصلاح: AppCompatDelegate.getApplicationLocales() يعكس لغة التطبيق الفعلية
+     * فور تغييرها، بعكس Locale.getDefault() الذي يعكس locale النظام.
+     */
+    private fun isEnglish(): Boolean {
+        val locales = AppCompatDelegate.getApplicationLocales()
+        return if (!locales.isEmpty) locales[0]?.language == "en"
+        else java.util.Locale.getDefault().language == "en"
+    }
+
+    private fun resolveSubjectName(arabicName: String, englishName: String): String =
+        if (isEnglish() && englishName.isNotBlank()) englishName else arabicName
+
     private fun loadSchedule() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -68,20 +82,18 @@ class ScheduleViewModel @Inject constructor(
                 val items = scheduleRepository.getWeekScheduleWithSubjects().map { item ->
                     ScheduleItem(
                         id = item.id,
-                        subjectName = item.subjectName,
+                        subjectName = resolveSubjectName(item.subjectName, item.subjectNameEn),
                         subjectIcon = item.subjectIcon,
                         colorHex = item.subjectColor,
                         dayOfWeek = item.dayOfWeek,
                         startHour = item.startHour,
                         startMinute = item.startMinute,
                         durationMinutes = item.allocatedMinutes,
-                        isCompleted = item.isCompleted
+                        isCompleted = item.isCompleted,
                     )
                 }
                 val grouped = items.groupBy { it.dayOfWeek }
                 val exams = scheduleRepository.getUpcomingExamBadges()
-
-                // وضع الطوارئ: امتحانات خلال 48 ساعة (daysUntil <= 2)
                 val nightExams = exams.filter { it.daysUntil <= 2 }
 
                 _uiState.update {
@@ -92,15 +104,17 @@ class ScheduleViewModel @Inject constructor(
                         examNightExams = nightExams,
                     )
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
 
     fun generateSchedule() {
+        if (_uiState.value.isGenerating) return
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isGenerating = true) }
+            _uiState.update { it.copy(isGenerating = true, isLoading = true) }
             try {
                 val subjects = subjectRepository.getAllSubjects().first()
                 if (subjects.isNotEmpty()) {
@@ -112,11 +126,35 @@ class ScheduleViewModel @Inject constructor(
                     )
                     scheduleRepository.saveScheduleSlots(slots)
                 }
-                _uiState.update { it.copy(isGenerating = false) }
-                loadSchedule()
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isGenerating = false) }
-                loadSchedule()
+
+                val items = scheduleRepository.getWeekScheduleWithSubjects().map { item ->
+                    ScheduleItem(
+                        id = item.id,
+                        subjectName = resolveSubjectName(item.subjectName, item.subjectNameEn),
+                        subjectIcon = item.subjectIcon,
+                        colorHex = item.subjectColor,
+                        dayOfWeek = item.dayOfWeek,
+                        startHour = item.startHour,
+                        startMinute = item.startMinute,
+                        durationMinutes = item.allocatedMinutes,
+                        isCompleted = item.isCompleted,
+                    )
+                }
+                val grouped = items.groupBy { it.dayOfWeek }
+                val exams = scheduleRepository.getUpcomingExamBadges()
+                val nightExams = exams.filter { it.daysUntil <= 2 }
+
+                _uiState.update {
+                    it.copy(
+                        isGenerating = false,
+                        isLoading = false,
+                        weekItems = grouped,
+                        upcomingExams = exams,
+                        examNightExams = nightExams,
+                    )
+                }
+            } catch (_: Exception) {
+                _uiState.update { it.copy(isGenerating = false, isLoading = false) }
             }
         }
     }
@@ -124,15 +162,23 @@ class ScheduleViewModel @Inject constructor(
     fun refresh() = loadSchedule()
 
     fun resetSchedule() {
+        if (_uiState.value.isGenerating || _uiState.value.isLoading) return
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isGenerating = true) }
+            _uiState.update { it.copy(isGenerating = true, isLoading = true) }
             try {
                 scheduleRepository.deleteAllItems()
-            } catch (e: Exception) {
-                // تجاهل الخطأ
-            } finally {
-                _uiState.update { it.copy(isGenerating = false) }
-                loadSchedule()
+            } catch (_: Exception) { }
+            finally {
+                _uiState.update {
+                    it.copy(
+                        isGenerating = false,
+                        isLoading = false,
+                        weekItems = emptyMap(),
+                        upcomingExams = emptyList(),
+                        examNightExams = emptyList(),
+                    )
+                }
             }
         }
     }

@@ -1,7 +1,6 @@
 package com.jadwal.ui.screens.profile
 
 import android.content.Context
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jadwal.R
@@ -68,6 +67,7 @@ class ProfileViewModel @Inject constructor(
                     it.copy(
                         userName = userName,
                         streakDays = streak,
+                        // إصلاح: التحقق من وجود الملف فعلاً
                         profilePhotoPath = if (photoPath.isNotBlank() && File(photoPath).exists())
                             photoPath else "",
                     )
@@ -109,23 +109,32 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun onPhotoSelected(uri: Uri) {
+    /**
+     * إصلاح الصورة: نستقبل البايتات مباشرةً بدلاً من الـ URI.
+     *
+     * السبب: عند استخدام PickVisualMedia، الـ URI يملك تصريح مؤقت صالح فقط
+     * داخل الـ callback. لو فتحنا الـ InputStream داخل coroutine (بشكل غير متزامن)
+     * ممكن يكون التصريح انتهى ويرجع SecurityException صامت.
+     *
+     * الحل الصحيح: نقرأ البايتات مباشرةً في الـ callback (على الـ main thread)
+     * ونبعتها للـ ViewModel كـ ByteArray.
+     */
+    fun onPhotoSelected(imageBytes: ByteArray) {
+        if (imageBytes.isEmpty()) return
         viewModelScope.launch {
             try {
                 val profileDir = File(context.filesDir, "profile").also { it.mkdirs() }
                 val destFile = File(profileDir, "avatar.jpg")
-
-                context.contentResolver.openInputStream(uri)?.use { input ->
-                    destFile.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
-                }
+                destFile.writeBytes(imageBytes)
 
                 val permanentPath = destFile.absolutePath
                 prefs.setProfilePhotoPath(permanentPath)
-                _uiState.update { it.copy(profilePhotoPath = permanentPath) }
 
-            } catch (e: Exception) { }
+                // تحديث فوري للـ UI بدون انتظار DataStore
+                _uiState.update { it.copy(profilePhotoPath = permanentPath) }
+            } catch (_: Exception) {
+                // الملف مش اتكتب — نتجاهل بصمت
+            }
         }
     }
 

@@ -1,24 +1,27 @@
 package com.jadwal.ui.screens.chat
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.content
+import com.jadwal.R
+import com.jadwal.app.data.ai.GeminiError
+import com.jadwal.app.data.ai.GeminiException
+import com.jadwal.app.data.ai.GeminiService
+import com.jadwal.app.util.LocaleHelper
+import com.jadwal.data.preferences.UserPreferencesDataStore
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.jadwal.BuildConfig
-import com.jadwal.R
-import com.jadwal.data.preferences.UserPreferencesDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 enum class MessageRole { USER, ASSISTANT }
@@ -42,7 +45,6 @@ private data class ChatMessageDto(
 }
 
 data class AIChatUiState(
-    // تم حذف الرسالة الثابتة من هنا وتمريرها ديناميكياً
     val messages: List<ChatMessage> = emptyList(),
     val inputText: String = "",
     val isTyping: Boolean = false,
@@ -51,12 +53,14 @@ data class AIChatUiState(
     val apiKeyInput: String = "",
     val apiKeySaved: Boolean = false,
     val hasApiKey: Boolean = false,
+    /** One-shot Toast text; consumed by the UI and cleared via clearToast(). */
+    val toastMessage: String? = null,
 )
 
 @HiltViewModel
 class AIChatViewModel @Inject constructor(
     private val prefs: UserPreferencesDataStore,
-    // جلب Context للوصول إلى strings.xml المترجمة
+    private val geminiService: GeminiService,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -65,99 +69,101 @@ class AIChatViewModel @Inject constructor(
 
     private val conversationHistory = mutableListOf<Pair<String, String>>()
     private val gson = Gson()
-    private var generativeModel: GenerativeModel? = null
+    private val requestInFlight = AtomicBoolean(false)
 
     init {
-        // تعيين رسالة الترحيب حسب لغة التطبيق
         _uiState.update { it.copy(messages = listOf(getWelcomeMessage())) }
         initializeApiKey()
         loadSavedMessages()
+        viewModelScope.launch {
+            prefs.languageCode
+                .distinctUntilChanged()
+                .collect { refreshWelcomeForLocale() }
+        }
     }
 
-    private fun getWelcomeMessage(): ChatMessage {
-        return ChatMessage(
+    private fun isEnglish(): Boolean = LocaleHelper.isEnglish()
+
+    private fun getWelcomeMessage(): ChatMessage =
+        ChatMessage(
             role = MessageRole.ASSISTANT,
-            content = context.getString(R.string.ai_welcome_message)
+            content = context.getString(R.string.ai_welcome_message),
         )
+
+    private fun refreshWelcomeForLocale() {
+        val welcome = getWelcomeMessage()
+        val current = _uiState.value.messages
+        val updated = if (current.isEmpty()) {
+            listOf(welcome)
+        } else {
+            current.toMutableList().also { it[0] = welcome }
+        }
+        _uiState.update { it.copy(messages = updated) }
+        persistMessages(updated)
     }
 
     private fun initializeApiKey() {
         viewModelScope.launch {
-            val storedKey = prefs.getGeminiApiKey()
-            val buildKey = try { BuildConfig.GEMINI_API_KEY } catch (_: Throwable) { "" }
-
-            val effectiveKey = when {
-                storedKey.isNotBlank() -> storedKey
-                buildKey.isNotBlank()  -> buildKey
-                else                   -> ""
-            }
-
-            if (effectiveKey.isNotBlank()) {
-                generativeModel = buildModel(effectiveKey)
-                _uiState.update { it.copy(hasApiKey = true, showApiKeySetup = false) }
-            } else {
-                _uiState.update { it.copy(hasApiKey = false, showApiKeySetup = true) }
+            val hasKey = geminiService.resolveApiKey() != null
+            _uiState.update {
+                it.copy(hasApiKey = hasKey, showApiKeySetup = !hasKey)
             }
         }
     }
 
-    private fun buildModel(apiKey: String): GenerativeModel = GenerativeModel(
-        modelName = "gemini-2.0-flash",
-        apiKey = apiKey,
-    )
-
     fun saveApiKey() {
         val key = _uiState.value.apiKeyInput.trim()
         if (key.isBlank()) return
-
         viewModelScope.launch {
+            // 1. Persist to DataStore — await completion before anything else.
             prefs.setGeminiApiKey(key)
-            generativeModel = buildModel(key)
+
+            // 2. Force GeminiService to forget its cached key/model so the very
+            //    next call picks up the freshly-stored key.
+            geminiService.forceKeyRefresh()
+
+            // 3. Verify the key was actually stored.
+            val hasKey = geminiService.resolveApiKey() != null
+            Log.d("JadwalChat", "saveApiKey: written=${key.length} chars, hasKey=$hasKey")
+
+            // 4. Update UI state and show a Toast confirmation.
             _uiState.update {
                 it.copy(
-                    hasApiKey = true,
+                    hasApiKey = hasKey,
                     showApiKeySetup = false,
                     apiKeySaved = true,
                     apiKeyInput = "",
+                    toastMessage = if (hasKey) "API Key saved successfully ✓" else "Failed to save key — please try again",
                 )
             }
         }
     }
 
+    /** Call from the UI after the Toast has been shown to avoid re-showing it. */
+    fun clearToast() { _uiState.update { it.copy(toastMessage = null) } }
+
     fun onApiKeyInputChange(text: String) {
         _uiState.update { it.copy(apiKeyInput = text, apiKeySaved = false) }
     }
 
-    fun showApiKeySetup() {
-        _uiState.update { it.copy(showApiKeySetup = true) }
-    }
-
-    fun hideApiKeySetup() {
-        _uiState.update { it.copy(showApiKeySetup = false) }
-    }
+    fun showApiKeySetup() { _uiState.update { it.copy(showApiKeySetup = true) } }
+    fun hideApiKeySetup() { _uiState.update { it.copy(showApiKeySetup = false) } }
 
     private fun loadSavedMessages() {
         viewModelScope.launch {
             try {
                 val json = prefs.chatMessagesJson.first()
-                val welcome = getWelcomeMessage() // جلب الرسالة المترجمة حالياً
+                val freshWelcome = getWelcomeMessage()
 
                 if (json.isNotBlank()) {
                     val type = object : TypeToken<List<ChatMessageDto>>() {}.type
                     val dtos: List<ChatMessageDto> = gson.fromJson(json, type)
-
-                    // استبدال أول رسالة (الترحيب) بالرسالة المترجمة فوراً
                     val messages = dtos.map { it.toChatMessage() }.toMutableList()
-                    if (messages.isNotEmpty()) {
-                        messages[0] = welcome
-                    } else {
-                        messages.add(welcome)
-                    }
-
+                    if (messages.isNotEmpty()) messages[0] = freshWelcome
+                    else messages.add(freshWelcome)
                     _uiState.update { it.copy(messages = messages) }
-                    // ... بقية كود تحميل المحادثة
                 } else {
-                    _uiState.update { it.copy(messages = listOf(welcome)) }
+                    _uiState.update { it.copy(messages = listOf(freshWelcome)) }
                 }
             } catch (_: Exception) { }
         }
@@ -172,13 +178,8 @@ class AIChatViewModel @Inject constructor(
         }
     }
 
-    fun onInputChange(text: String) {
-        _uiState.update { it.copy(inputText = text) }
-    }
-
-    fun clearError() {
-        _uiState.update { it.copy(errorMessage = null) }
-    }
+    fun onInputChange(text: String) { _uiState.update { it.copy(inputText = text) } }
+    fun clearError() { _uiState.update { it.copy(errorMessage = null) } }
 
     fun clearHistory() {
         val welcome = getWelcomeMessage()
@@ -189,13 +190,12 @@ class AIChatViewModel @Inject constructor(
 
     fun sendMessage() {
         val text = _uiState.value.inputText.trim()
-        if (text.isBlank() || _uiState.value.isTyping) return
-
-        val model = generativeModel
-        if (model == null || !_uiState.value.hasApiKey) {
+        if (text.isBlank()) return
+        if (!_uiState.value.hasApiKey) {
             _uiState.update { it.copy(showApiKeySetup = true) }
             return
         }
+        if (!requestInFlight.compareAndSet(false, true)) return
 
         val userMessage = ChatMessage(role = MessageRole.USER, content = text)
         val loadingMessage = ChatMessage(role = MessageRole.ASSISTANT, content = "...", isLoading = true)
@@ -204,37 +204,34 @@ class AIChatViewModel @Inject constructor(
             state.copy(
                 messages = state.messages + userMessage + loadingMessage,
                 inputText = "",
-                isTyping = true,
+                isTyping = false,
                 errorMessage = null,
             )
         }
 
         viewModelScope.launch {
             try {
-                val reply = callGemini(model, text)
+                val reply = callGemini(text)
                 conversationHistory.add(text to reply)
                 if (conversationHistory.size > 6) conversationHistory.removeAt(0)
 
                 val newMessages = _uiState.value.messages.dropLast(1) +
-                        ChatMessage(role = MessageRole.ASSISTANT, content = reply)
-
-                _uiState.update { state -> state.copy(messages = newMessages, isTyping = false) }
+                    ChatMessage(role = MessageRole.ASSISTANT, content = reply)
+                _uiState.update { it.copy(messages = newMessages) }
                 persistMessages(newMessages)
-
             } catch (e: Exception) {
                 val errorMsg = buildErrorMessage(e)
                 val newMessages = _uiState.value.messages.dropLast(1) +
-                        ChatMessage(role = MessageRole.ASSISTANT, content = errorMsg)
-                _uiState.update { state ->
-                    state.copy(messages = newMessages, isTyping = false, errorMessage = errorMsg)
-                }
+                    ChatMessage(role = MessageRole.ASSISTANT, content = errorMsg)
+                _uiState.update { it.copy(messages = newMessages, errorMessage = errorMsg) }
+            } finally {
+                requestInFlight.set(false)
             }
         }
     }
 
-    private suspend fun callGemini(model: GenerativeModel, userInput: String): String {
-        // فحص لغة التطبيق الحالية
-        val isEn = Locale.getDefault().language == "en"
+    private suspend fun callGemini(userInput: String): String {
+        val isEn = isEnglish()
 
         val historyContext = if (conversationHistory.isNotEmpty()) {
             conversationHistory.takeLast(4).joinToString("\n") { (q, a) ->
@@ -247,7 +244,6 @@ class AIChatViewModel @Inject constructor(
             if (isEn) "Student Name: $userName\n" else "اسم الطالب: $userName\n"
         } else ""
 
-        // تحديد لغة الأوامر التي نعطيها لـ Gemini
         val prompt = if (isEn) {
             """
             You are a smart specialized study assistant. Your name is "Jadwal AI".
@@ -270,37 +266,49 @@ class AIChatViewModel @Inject constructor(
             """.trimIndent()
         }
 
-        val response = model.generateContent(content { text(prompt) })
-        return response.text?.trim() ?: if (isEn) "Sorry, I didn't understand your question. Can you rephrase?" else "آسف، لم أفهم سؤالك. هل يمكنك إعادة صياغته؟"
+        // Log a masked version of the key actually being used so it's visible in Logcat.
+        val activeKey = geminiService.resolveApiKey()
+        if (activeKey != null) {
+            val masked = activeKey.take(8) + "***" + activeKey.takeLast(4)
+            Log.d("JadwalChat", "Using API key: $masked (len=${activeKey.length})")
+        } else {
+            Log.w("JadwalChat", "No API key resolved — request will fail.")
+        }
+
+        val reply = geminiService.generateText(prompt)
+        return reply.ifBlank {
+            if (isEn) "Sorry, I didn't understand. Can you rephrase?"
+            else "آسف، لم أفهم سؤالك. هل يمكنك إعادة صياغته؟"
+        }
     }
 
     private fun buildErrorMessage(e: Exception): String {
-        val msg = e.message ?: ""
-        val isEn = Locale.getDefault().language == "en"
-        return when {
-            msg.contains("API_KEY", ignoreCase = true) ||
-                    msg.contains("API key", ignoreCase = true) ||
-                    msg.contains("invalid key", ignoreCase = true) ->
+        val geminiEx = when (e) {
+            is GeminiException -> e
+            else -> geminiService.classifyError(e) as? GeminiException
+        }
+        val error = geminiEx?.error ?: GeminiError.Unknown(e.message.orEmpty())
+        val isEn = isEnglish()
+        return when (error) {
+            GeminiError.ApiKeyInvalid ->
                 if (isEn) "⚠️ Invalid Gemini API Key.\nTap the 🔑 icon to update it."
                 else "⚠️ مفتاح Gemini API غير صحيح.\nاضغط على أيقونة المفتاح 🔑 لتحديثه."
 
-            msg.contains("quota", ignoreCase = true) ||
-                    msg.contains("rate limit", ignoreCase = true) ||
-                    msg.contains("429") ->
-                if (isEn) "⏳ Rate limit exceeded.\nWait a minute and try again."
-                else "⏳ تجاوزت عدد الطلبات المسموح.\nانتظر دقيقة وحاول مجدداً."
+            GeminiError.QuotaExceeded ->
+                if (isEn) "⏳ API quota reached.\nWait a few minutes or visit Google AI Studio."
+                else "⏳ تم استنفاد حصة الـ API مؤقتاً.\nانتظر بضع دقائق، أو زُر Google AI Studio."
 
-            msg.contains("network", ignoreCase = true) ||
-                    msg.contains("UnknownHostException", ignoreCase = true) ->
+            GeminiError.Network ->
                 if (isEn) "📵 No internet connection.\nCheck your connection and try again."
                 else "📵 لا يوجد اتصال بالإنترنت.\nتحقق من اتصالك وحاول مجدداً."
 
-            msg.contains("model", ignoreCase = true) ||
-                    msg.contains("not found", ignoreCase = true) ->
-                if (isEn) "⚠️ Model currently unavailable. Try again later."
-                else "⚠️ النموذج غير متاح. حاول مجدداً لاحقاً."
+            GeminiError.ModelUnavailable ->
+                if (isEn) "⚠️ Model unavailable. Try again later."
+                else "⚠️ النموذج غير متاح حالياً. حاول مجدداً لاحقاً."
 
-            else -> if (isEn) "❌ Error: ${msg.take(80)}" else "❌ حدث خطأ: ${msg.take(80)}"
+            is GeminiError.Unknown ->
+                if (isEn) "❌ Error: ${error.detail.take(100)}"
+                else "❌ حدث خطأ: ${error.detail.take(100)}"
         }
     }
 }

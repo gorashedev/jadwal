@@ -8,11 +8,8 @@ sealed class Screen(val route: String) {
     data object ForgotPassword : Screen("forgot_password")
     data object Setup          : Screen("setup")
 
-    // ─── إصلاح #3: إضافة شاشة إعادة تعيين كلمة المرور ───────────────────
-    // تستقبل الـ fragment من Deep Link كـ argument
-    data object ResetPassword  : Screen("reset_password/{fragment}") {
-        fun createRoute(encodedFragment: String) = "reset_password/$encodedFragment"
-    }
+    /** Auth fragment is stored in [com.jadwal.DeepLinkManager], not in the route. */
+    data object ResetPassword  : Screen("reset_password")
 
     // ===== شاشات الـ BottomBar الرئيسية =====
     data object Home      : Screen("home")

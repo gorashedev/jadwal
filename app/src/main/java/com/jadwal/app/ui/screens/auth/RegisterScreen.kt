@@ -46,7 +46,9 @@ fun RegisterScreen(
     var passwordVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) onRegisterSuccess()
+        if (uiState.isSuccess && !uiState.emailAlreadyExists && !uiState.pendingEmailConfirmation) {
+            onRegisterSuccess()
+        }
     }
 
     JadwalBackground {
@@ -181,30 +183,53 @@ fun RegisterScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
 
-                    // رسالة الخطأ
+                    // رسالة الخطأ أو التأكيد
                     AnimatedVisibility(visible = uiState.error != null) {
                         uiState.error?.let { err ->
-                            Surface(
-                                color = MaterialTheme.colorScheme.errorContainer,
-                                shape = MaterialTheme.shapes.medium,
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Surface(
+                                    color = if (uiState.pendingEmailConfirmation) {
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.errorContainer
+                                    },
+                                    shape = MaterialTheme.shapes.medium,
+                                    modifier = Modifier.fillMaxWidth(),
                                 ) {
-                                    Icon(
-                                        Icons.Rounded.Error,
-                                        null,
-                                        tint = MaterialTheme.colorScheme.onErrorContainer,
-                                        modifier = Modifier.size(18.dp),
-                                    )
-                                    Text(
-                                        text = err,
-                                        color = MaterialTheme.colorScheme.onErrorContainer,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
+                                    Row(
+                                        modifier = Modifier.padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Icon(
+                                            if (uiState.pendingEmailConfirmation) Icons.Rounded.MarkEmailRead
+                                            else Icons.Rounded.Error,
+                                            null,
+                                            tint = if (uiState.pendingEmailConfirmation) {
+                                                MaterialTheme.colorScheme.onPrimaryContainer
+                                            } else {
+                                                MaterialTheme.colorScheme.onErrorContainer
+                                            },
+                                            modifier = Modifier.size(18.dp),
+                                        )
+                                        Text(
+                                            text = err,
+                                            color = if (uiState.pendingEmailConfirmation) {
+                                                MaterialTheme.colorScheme.onPrimaryContainer
+                                            } else {
+                                                MaterialTheme.colorScheme.onErrorContainer
+                                            },
+                                            style = MaterialTheme.typography.bodyMedium,
+                                        )
+                                    }
+                                }
+                                if (uiState.emailAlreadyExists) {
+                                    Button(
+                                        onClick = onNavigateBack,
+                                        modifier = Modifier.fillMaxWidth(),
+                                    ) {
+                                        Text(stringResource(R.string.go_to_login))
+                                    }
                                 }
                             }
                         }
@@ -217,6 +242,7 @@ fun RegisterScreen(
                             viewModel.register(name, email, password, confirmPassword)
                         },
                         enabled = !uiState.isLoading &&
+                                !uiState.emailAlreadyExists &&
                                 name.isNotBlank() &&
                                 email.isNotBlank() &&
                                 password.isNotBlank() &&

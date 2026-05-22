@@ -125,7 +125,8 @@ fun AISuggestionScreen(
                         onDeselectAll  = viewModel::deselectAll,
                         onSave         = viewModel::saveSelectedSlots,
                     )
-                    else -> {}
+                    is AISuggestionState.Idle -> IdleState(onGenerate = viewModel::generate)
+                    is AISuggestionState.Saved -> {}
                 }
             }
         }
@@ -213,6 +214,43 @@ private fun LoadingState() {
                 .clip(RoundedCornerShape(2.dp)),
             color = JadwalIndigo,
         )
+    }
+}
+
+// ─────────────────────────────────────────────
+// ===== الحالة الابتدائية (بدون استدعاء API تلقائي) =====
+// ─────────────────────────────────────────────
+@Composable
+private fun IdleState(onGenerate: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text("✨", fontSize = 56.sp)
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.ai_suggestion_title),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.schedule_empty_tip),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(24.dp))
+        Button(onClick = onGenerate, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Rounded.AutoAwesome, null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.generate_schedule_auto), fontWeight = FontWeight.Bold)
+        }
     }
 }
 

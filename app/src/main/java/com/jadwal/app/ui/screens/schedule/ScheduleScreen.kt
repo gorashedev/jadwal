@@ -25,6 +25,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jadwal.ui.components.GlassCard
 import com.jadwal.ui.components.JadwalBackground
@@ -41,6 +43,10 @@ fun ScheduleScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val todayIndex = remember { Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1 }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.refresh()
+    }
     
     val arabicDays = listOf(
         stringResource(R.string.day_sun), stringResource(R.string.day_mon),
@@ -145,33 +151,21 @@ fun ScheduleScreen(
                 )
             }
 
-            // ===== محتوى اليوم المختار =====
-            AnimatedContent(
-                targetState = uiState.selectedDayIndex,
-                transitionSpec = {
-                    if (targetState > initialState) {
-                        slideInHorizontally { it / 3 } + fadeIn() togetherWith
-                                slideOutHorizontally { -it / 3 } + fadeOut()
-                    } else {
-                        slideInHorizontally { -it / 3 } + fadeIn() togetherWith
-                                slideOutHorizontally { it / 3 } + fadeOut()
-                    }
-                },
-                label = "day_content",
-            ) { dayIndex ->
-                val items = uiState.weekItems[dayIndex] ?: emptyList()
-                when {
-                    uiState.isLoading || uiState.isGenerating -> ScheduleLoadingSkeleton()
-                    items.isEmpty() -> EmptyDayContent(dayName = arabicDays[dayIndex])
-                    else -> LazyColumn(
-                        contentPadding = PaddingValues(
-                            start = 16.dp, end = 16.dp, top = 4.dp, bottom = 100.dp,
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        items(items, key = { it.id }) { item ->
-                            ScheduleItemCard(item = item)
-                        }
+            // ===== محتوى اليوم المختار (بدون AnimatedContent لتجنب تجميد التمرير) =====
+            val dayIndex = uiState.selectedDayIndex
+            val items = uiState.weekItems[dayIndex] ?: emptyList()
+            when {
+                uiState.isLoading || uiState.isGenerating -> ScheduleLoadingSkeleton()
+                items.isEmpty() -> EmptyDayContent(dayName = arabicDays[dayIndex])
+                else -> LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(
+                        start = 16.dp, end = 16.dp, top = 4.dp, bottom = 100.dp,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    items(items, key = { it.id }) { item ->
+                        ScheduleItemCard(item = item)
                     }
                 }
             }
