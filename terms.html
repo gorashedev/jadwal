@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Terms of Service — Jadwal</title>
+  <meta name="description" content="Terms of Service for the Jadwal smart study planner app."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    @font-face {
+      font-family: 'Thmanyah Sans';
+      src: url('https://raw.githubusercontent.com/gorashedev/jadwal/gh-pages/Fonts/thmanyahsans-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Thmanyah Sans';
+      src: url('https://raw.githubusercontent.com/gorashedev/jadwal/gh-pages/Fonts/thmanyahsans-Bold.woff2') format('woff2');
+      font-weight: 700 800;
+      font-display: swap;
+    }
+    :root {
+      --indigo:       #5C6BC0;
+      --indigo-light: #8E99F3;
+      --violet:       #7E57C2;
+      --violet-light: #B085F5;
+      --bg:           #0B0D1A;
+      --bg2:          #111326;
+      --text:         #EEF0FF;
+      --muted:        #8B90C8;
+      --card:         rgba(92,107,192,0.08);
+      --border:       rgba(142,153,243,0.15);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh; overflow-x: hidden; line-height: 1.75;
+    }
+    body[dir="rtl"] { font-family: 'Thmanyah Sans', sans-serif; text-align: right; }
+
+    .orb { position: fixed; border-radius: 50%; filter: blur(100px); opacity: 0.2; pointer-events: none; z-index: 0; }
+    .orb1 { width: 500px; height: 500px; background: var(--violet); top: -150px; left: -120px; }
+    .orb2 { width: 400px; height: 400px; background: var(--indigo); bottom: 0; right: -100px; }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 6%;
+      background: rgba(11,13,26,0.8); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .nav-logo img { width: 36px; height: 36px; border-radius: 10px; }
+    .nav-logo span { font-weight: 800; font-size: 1.1rem; color: var(--text); }
+    body[dir="rtl"] .nav-logo { flex-direction: row-reverse; }
+    .nav-right { display: flex; gap: 16px; align-items: center; }
+    .nav-back { color: var(--muted); text-decoration: none; font-size: 0.88rem; font-weight: 600; transition: color .2s; }
+    .nav-back:hover { color: var(--text); }
+    .lang-btn {
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); padding: 7px 20px; border-radius: 30px;
+      cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      transition: all .2s; font-family: inherit;
+    }
+    .lang-btn:hover { background: var(--indigo); border-color: var(--indigo-light); }
+
+    .page-wrap {
+      position: relative; z-index: 1;
+      max-width: 780px; margin: 0 auto;
+      padding: 120px 6% 80px;
+    }
+
+    .page-header { margin-bottom: 48px; }
+    .page-tag {
+      display: inline-block;
+      background: rgba(126,87,194,0.15); border: 1px solid rgba(176,133,245,0.25);
+      color: var(--violet-light); padding: 5px 16px; border-radius: 30px;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+    .page-header h1 { font-size: clamp(1.8rem,5vw,2.8rem); font-weight: 800; letter-spacing: -1px; margin-bottom: 10px; }
+    body[dir="rtl"] .page-header h1 { letter-spacing: 0; }
+    .page-header .date { color: var(--muted); font-size: 0.88rem; }
+
+    .lang-tabs { display: flex; gap: 8px; margin-bottom: 44px; }
+    .lang-tab {
+      padding: 8px 22px; border-radius: 30px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); font-size: 0.88rem; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all .2s;
+    }
+    .lang-tab.active { background: var(--violet); border-color: var(--violet); color: white; }
+
+    .content-section { display: none; }
+    .content-section.active { display: block; }
+
+    .policy-block { margin-bottom: 40px; }
+    .policy-block h2 {
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--violet-light);
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .policy-block p  { color: var(--muted); font-size: 0.95rem; margin-bottom: 12px; line-height: 1.8; }
+    .policy-block ul { color: var(--muted); font-size: 0.95rem; padding-inline-start: 24px; }
+    .policy-block ul li { margin-bottom: 8px; line-height: 1.8; }
+    .policy-block strong { color: var(--text); }
+    .policy-block a { color: var(--indigo-light); text-decoration: none; }
+    .policy-block a:hover { text-decoration: underline; }
+
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 32px 6%;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 12px;
+    }
+    body[dir="rtl"] footer { flex-direction: row-reverse; }
+    .footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+    .footer-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; transition: color .2s; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy { color: var(--muted); font-size: 0.8rem; width: 100%; text-align: center; }
+  </style>
+</head>
+<body dir="ltr" lang="en" id="body">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <img src="https://raw.githubusercontent.com/gorashedev/jadwal/gh-pages/logo.png" alt="Jadwal"/>
+      <span>Jadwal</span>
+    </a>
+    <div class="nav-right">
+      <a href="index.html" class="nav-back" id="backLink">← Home</a>
+      <button class="lang-btn" onclick="toggleLang()" id="langBtn">عربي</button>
+    </div>
+  </nav>
+
+  <div class="page-wrap">
+    <div class="page-header">
+      <div class="page-tag">LEGAL</div>
+      <h1 id="pageTitle">Terms of Service</h1>
+      <p class="date" id="pageDate">Last Updated: May 2026</p>
+    </div>
+
+    <div class="lang-tabs">
+      <button class="lang-tab active" id="tabEn" onclick="showTab('en')">English</button>
+      <button class="lang-tab" id="tabAr" onclick="showTab('ar')">العربية</button>
+    </div>
+
+    <!-- English Content -->
+    <div class="content-section active" id="sec-en">
+      <div class="policy-block">
+        <p>Welcome to <strong>Jadwal</strong>. By using our app, you agree to comply with and be bound by the following terms:</p>
+      </div>
+      <div class="policy-block">
+        <h2>1. Use of the App</h2>
+        <p>Jadwal is designed to help you organize your academic time. You agree not to use the app for any illegal or harmful purposes.</p>
+      </div>
+      <div class="policy-block">
+        <h2>2. User Accounts</h2>
+        <ul>
+          <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
+          <li>You must notify us immediately of any unauthorized use of your account.</li>
+        </ul>
+      </div>
+      <div class="policy-block">
+        <h2>3. AI Assistant</h2>
+        <p>The AI Assistant provides study tips and guidance. These responses are generated automatically, and we do not guarantee their 100% accuracy or completeness. Reliance on this information is at your own risk.</p>
+      </div>
+      <div class="policy-block">
+        <h2>4. Intellectual Property</h2>
+        <p>All intellectual property rights related to the app's design, text, and software (excluding user-generated content) are owned by <strong>GriezTech</strong>.</p>
+      </div>
+      <div class="policy-block">
+        <h2>5. Disclaimer of Warranties</h2>
+        <p>The app is provided on an <strong>"as is"</strong> basis. We do not warrant that the app will be uninterrupted or error-free.</p>
+      </div>
+      <div class="policy-block">
+        <h2>6. Changes to Terms</h2>
+        <p>We reserve the right to modify these terms at any time. Your continued use of the app after any changes constitutes your acceptance of the new terms.</p>
+      </div>
+      <div class="policy-block">
+        <h2>7. Contact Us</h2>
+        <p>For any questions regarding these Terms of Service, please contact us at:<br/>
+        <a href="mailto:jadwal.app@outlook.com">jadwal.app@outlook.com</a></p>
+      </div>
+    </div>
+
+    <!-- Arabic Content -->
+    <div class="content-section" id="sec-ar" dir="rtl" lang="ar">
+      <div class="policy-block">
+        <p>مرحبًا بك في <strong>جدول</strong>. باستخدامك للتطبيق، فإنك توافق على الالتزام بالشروط التالية:</p>
+      </div>
+      <div class="policy-block">
+        <h2>1. استخدام التطبيق</h2>
+        <p>تطبيق "جدول" مصمم لمساعدتك في تنظيم وقتك الأكاديمي. يُمنع استخدام التطبيق لأي أغراض غير قانونية أو ضارة.</p>
+      </div>
+      <div class="policy-block">
+        <h2>2. الحسابات</h2>
+        <ul>
+          <li>أنت مسؤول عن الحفاظ على سرية معلومات حسابك وكلمة المرور.</li>
+          <li>يجب عليك إبلاغنا فورًا بأي استخدام غير مصرح به لحسابك.</li>
+        </ul>
+      </div>
+      <div class="policy-block">
+        <h2>3. المساعد الذكي (AI Assistant)</h2>
+        <p>يقدم المساعد الذكي في التطبيق نصائح وإرشادات دراسية. هذه الإجابات تم إنشاؤها آليًا، ونحن لا نضمن دقتها أو اكتمالها بنسبة 100%. الاعتماد على هذه المعلومات يكون على مسؤوليتك الشخصية.</p>
+      </div>
+      <div class="policy-block">
+        <h2>4. الملكية الفكرية</h2>
+        <p>جميع حقوق الملكية الفكرية المتعلقة بتصميم التطبيق والنصوص والبرمجيات (باستثناء المحتوى الذي ينشئه المستخدم) مملوكة لـ <strong>GriezTech</strong>.</p>
+      </div>
+      <div class="policy-block">
+        <h2>5. إخلاء المسؤولية</h2>
+        <p>يتم تقديم التطبيق <strong>"كما هو"</strong> (As is). نحن لا نضمن أن التطبيق سيعمل بدون انقطاع أو أخطاء.</p>
+      </div>
+      <div class="policy-block">
+        <h2>6. التعديلات على الشروط</h2>
+        <p>نحتفظ بالحق في تعديل هذه الشروط في أي وقت. استمرارك في استخدام التطبيق بعد التعديلات يُعد قبولًا منك بها.</p>
+      </div>
+      <div class="policy-block">
+        <h2>7. تواصل معنا</h2>
+        <p>لأي استفسارات بخصوص شروط الخدمة، راسلنا على:<br/>
+        <a href="mailto:jadwal.app@outlook.com">jadwal.app@outlook.com</a></p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="mailto:jadwal.app@outlook.com">Contact</a>
+    </div>
+    <p class="footer-copy">© 2026 GriezTech · Jadwal</p>
+  </footer>
+
+  <script>
+    let isAr = false;
+
+    function showTab(lang) {
+      document.getElementById('sec-en').classList.toggle('active', lang === 'en');
+      document.getElementById('sec-ar').classList.toggle('active', lang === 'ar');
+      document.getElementById('tabEn').classList.toggle('active', lang === 'en');
+      document.getElementById('tabAr').classList.toggle('active', lang === 'ar');
+    }
+
+    function toggleLang() {
+      isAr = !isAr;
+      const body      = document.getElementById('body');
+      const langBtn   = document.getElementById('langBtn');
+      const backLink  = document.getElementById('backLink');
+      const pageTitle = document.getElementById('pageTitle');
+      const pageDate  = document.getElementById('pageDate');
+
+      body.setAttribute('dir', isAr ? 'rtl' : 'ltr');
+      body.setAttribute('lang', isAr ? 'ar' : 'en');
+      langBtn.textContent   = isAr ? 'English' : 'عربي';
+      backLink.textContent  = isAr ? '→ الرئيسية' : '← Home';
+      pageTitle.textContent = isAr ? 'شروط الخدمة' : 'Terms of Service';
+      pageDate.textContent  = isAr ? 'آخر تحديث: مايو 2026' : 'Last Updated: May 2026';
+
+      showTab(isAr ? 'ar' : 'en');
+    }
+  </script>
+</body>
+</html>

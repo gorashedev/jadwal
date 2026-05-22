@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jadwal — Smart Study Planner</title>
+  <meta name="description" content="Jadwal is an AI-powered study planner that helps students organize exams, track progress, and study smarter."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    @font-face {
+      font-family: 'Thmanyah Sans';
+      src: url('https://raw.githubusercontent.com/gorashedev/jadwal/gh-pages/Fonts/thmanyahsans-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Thmanyah Sans';
+      src: url('https://raw.githubusercontent.com/gorashedev/jadwal/gh-pages/Fonts/thmanyahsans-Bold.woff2') format('woff2');
+      font-weight: 700 800;
+      font-display: swap;
+    }
+    :root {
+      --indigo:       #5C6BC0;
+      --indigo-light: #8E99F3;
+      --indigo-dark:  #26418F;
+      --violet:       #7E57C2;
+      --violet-light: #B085F5;
+      --violet-dark:  #4D2C91;
+      --success:      #4CAF50;
+      --warning:      #FF9800;
+      --info:         #29B6F6;
+      --bg:           #0B0D1A;
+      --bg2:          #111326;
+      --bg3:          #181B2E;
+      --text:         #EEF0FF;
+      --muted:        #8B90C8;
+      --card:         rgba(92,107,192,0.08);
+      --card-hover:   rgba(92,107,192,0.16);
+      --border:       rgba(142,153,243,0.15);
+      --border2:      rgba(142,153,243,0.25);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    body[dir="rtl"] {
+      font-family: 'Thmanyah Sans', sans-serif;
+      text-align: right;
+    }
+
+    /* ── Animated background orbs ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.28;
+      pointer-events: none;
+      z-index: 0;
+      animation: drift 14s ease-in-out infinite alternate;
+    }
+    .orb1 { width: 700px; height: 700px; background: var(--indigo);  top: -200px; right: -180px; }
+    .orb2 { width: 500px; height: 500px; background: var(--violet);  bottom: 10%; left: -150px; animation-duration: 18s; animation-direction: alternate-reverse; }
+    .orb3 { width: 300px; height: 300px; background: var(--info);    top: 45%;   right: 15%;  opacity: 0.12; animation-duration: 11s; }
+    @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,50px) scale(1.06); } }
+
+    /* ── Navigation ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 6%;
+      background: rgba(11,13,26,0.75);
+      backdrop-filter: blur(22px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .nav-logo img { width: 40px; height: 40px; border-radius: 12px; object-fit: cover; }
+    .nav-logo span { font-weight: 800; font-size: 1.25rem; color: var(--text); letter-spacing: -0.5px; }
+    body[dir="rtl"] .nav-logo { flex-direction: row-reverse; }
+
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+
+    .lang-btn {
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); padding: 7px 20px; border-radius: 30px;
+      cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      transition: all .2s; font-family: inherit;
+    }
+    .lang-btn:hover { background: var(--indigo); border-color: var(--indigo-light); }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 130px 6% 90px;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(92,107,192,0.15); border: 1px solid rgba(142,153,243,0.3);
+      color: var(--indigo-light); padding: 6px 18px; border-radius: 30px;
+      font-size: 0.82rem; font-weight: 600; margin-bottom: 28px;
+      animation: fadeUp .8s ease both;
+    }
+    .badge-dot {
+      width: 7px; height: 7px; background: var(--indigo-light);
+      border-radius: 50%; display: inline-block;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.5)} }
+
+    .hero h1 {
+      font-weight: 800;
+      font-size: clamp(2.2rem, 8vw, 5.5rem);
+      line-height: 1.08; letter-spacing: -2px;
+      animation: fadeUp .9s .1s ease both;
+    }
+    body[dir="rtl"] .hero h1 { letter-spacing: 0; }
+
+    .hero h1 .accent  { color: var(--indigo-light); }
+    .hero h1 .accent2 { color: var(--violet-light); }
+
+    .hero-sub {
+      max-width: 560px; margin: 22px auto 0;
+      color: var(--muted); font-size: 1.1rem; line-height: 1.75;
+      animation: fadeUp 1s .2s ease both;
+    }
+
+    .hero-cta {
+      margin-top: 44px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+      animation: fadeUp 1s .35s ease both;
+    }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, var(--indigo), var(--violet));
+      color: white; padding: 15px 36px; border-radius: 14px;
+      font-weight: 700; font-size: 1rem; text-decoration: none;
+      transition: all .25s;
+      box-shadow: 0 8px 32px rgba(92,107,192,0.4);
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 14px 44px rgba(92,107,192,0.55); }
+    .btn-primary svg  { width: 20px; fill: white; flex-shrink: 0; }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--card); border: 1px solid var(--border2);
+      color: var(--text); padding: 15px 32px; border-radius: 14px;
+      font-weight: 600; font-size: 1rem; text-decoration: none;
+      transition: all .25s;
+    }
+    .btn-secondary:hover { background: var(--card-hover); transform: translateY(-3px); }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(26px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── Stats strip ── */
+    .stats-strip {
+      position: relative; z-index: 1;
+      display: flex; justify-content: center; flex-wrap: wrap;
+      gap: 2px;
+      padding: 0 6% 80px;
+    }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px 36px;
+      text-align: center; flex: 1; min-width: 160px; max-width: 220px;
+      backdrop-filter: blur(12px);
+      animation: fadeUp 1s ease both;
+    }
+    .stat-card:nth-child(2) { animation-delay: .1s; }
+    .stat-card:nth-child(3) { animation-delay: .2s; }
+    .stat-num { font-size: 2rem; font-weight: 800; color: var(--indigo-light); letter-spacing: -1px; }
+    .stat-label { font-size: 0.85rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+
+    /* ── Section ── */
+    .section {
+      position: relative; z-index: 1;
+      padding: 80px 6%;
+      max-width: 1140px; margin: 0 auto;
+    }
+
+    .section-label { text-align: center; margin-bottom: 60px; }
+    .section-label .tag {
+      display: inline-block;
+      background: rgba(126,87,194,0.15); border: 1px solid rgba(176,133,245,0.25);
+      color: var(--violet-light); padding: 5px 16px; border-radius: 30px;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; margin-bottom: 14px;
+    }
+    .section-label h2 {
+      font-weight: 800; font-size: clamp(1.8rem, 4vw, 2.8rem); letter-spacing: -1px;
+    }
+    body[dir="rtl"] .section-label h2 { letter-spacing: 0; }
+    .section-label p { color: var(--muted); font-size: 1.05rem; margin-top: 12px; max-width: 520px; margin-inline: auto; }
+
+    /* ── Feature grid ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 28px;
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+      backdrop-filter: blur(12px);
+    }
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--border2);
+      box-shadow: 0 16px 48px rgba(92,107,192,0.18);
+    }
+
+    .feature-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 20px;
+    }
+    .icon-indigo  { background: rgba(92,107,192,0.2);  }
+    .icon-violet  { background: rgba(126,87,194,0.2);  }
+    .icon-success { background: rgba(76,175,80,0.2);   }
+    .icon-warning { background: rgba(255,152,0,0.2);   }
+    .icon-info    { background: rgba(41,182,246,0.2);  }
+    .icon-error   { background: rgba(244,67,54,0.2);   }
+
+    .feature-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; }
+    .feature-card p  { color: var(--muted); font-size: 0.92rem; line-height: 1.7; }
+
+    /* ── How it works ── */
+    .steps { display: flex; flex-direction: column; gap: 0; }
+    .step  {
+      display: flex; gap: 28px; align-items: flex-start;
+      padding: 36px 0;
+      border-bottom: 1px solid var(--border);
+      animation: fadeUp .8s ease both;
+    }
+    body[dir="rtl"] .step { flex-direction: row-reverse; }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      flex-shrink: 0;
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--indigo), var(--violet));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; font-weight: 800; color: white;
+      box-shadow: 0 6px 20px rgba(92,107,192,0.4);
+    }
+    .step-body h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+    .step-body p  { color: var(--muted); font-size: 0.92rem; line-height: 1.7; }
+
+    /* ── Tech pills ── */
+    .tech-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 36px; }
+    .tech-pill {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 30px; padding: 8px 20px;
+      font-size: 0.88rem; font-weight: 600; color: var(--text);
+      transition: border-color .2s;
+    }
+    .tech-pill:hover { border-color: var(--indigo-light); }
+    .tech-pill span { font-size: 1.1rem; }
+
+    /* ── Download CTA ── */
+    .cta-section {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 90px 6% 100px;
+    }
+    .cta-card {
+      max-width: 680px; margin: 0 auto;
+      background: linear-gradient(135deg, rgba(92,107,192,0.18), rgba(126,87,194,0.18));
+      border: 1px solid var(--border2);
+      border-radius: 28px;
+      padding: 60px 44px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 0 80px rgba(92,107,192,0.12);
+    }
+    .cta-card h2 { font-size: clamp(1.6rem,4vw,2.4rem); font-weight: 800; margin-bottom: 14px; letter-spacing: -1px; }
+    body[dir="rtl"] .cta-card h2 { letter-spacing: 0; }
+    .cta-card p  { color: var(--muted); margin-bottom: 34px; font-size: 1rem; line-height: 1.7; }
+    .cta-meta { margin-top: 20px; font-size: 0.82rem; color: var(--muted); }
+    .cta-meta a { color: var(--indigo-light); text-decoration: none; }
+    .cta-meta a:hover { text-decoration: underline; }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 40px 6%;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+    }
+    body[dir="rtl"] footer { flex-direction: row-reverse; }
+    .footer-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .footer-logo img { width: 32px; height: 32px; border-radius: 9px; }
+    .footer-logo span { font-weight: 700; color: var(--text); font-size: 0.95rem; }
+    .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+    .footer-links a { color: var(--muted); text-decoration: none; font-size: 0.88rem; transition: color .2s; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy { color: var(--muted); font-size: 0.82rem; width: 100%; text-align: center; margin-top: 8px; }
+
+    /* ── Divider gradient ── */
+    .gradient-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--indigo-light), transparent);
+      opacity: 0.3; margin: 0;
+    }
+
+    @media (max-width: 600px) {
+      .stat-card { padding: 22px 20px; }
+      .cta-card  { padding: 40px 24px; }
+      footer { flex-direction: column; text-align: center; }
+      body[dir="rtl"] footer { flex-direction: column; }
+    }
+  </style>
+</head>
+<body dir="ltr" id="body">
+
+  <!-- Orbs -->
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <!-- Navigation -->
+  <nav>
+    <a href="#" class="nav-logo">
+      <img src="https://raw.githubusercontent.com/gorashedev/jadwal/gh-pages/logo.png" alt="Jadwal"/>
+      <span data-en="Jadwal" data-ar="جدول">Jadwal</span>
+    </a>
+    <div class="nav-right">
+      <button class="lang-btn" onclick="toggleLang()" id="langBtn">عربي</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      <span data-en="Now Available · v1.0.0" data-ar="متاح الآن · الإصدار 1.0.0">Now Available · v1.0.0</span>
+    </div>
+
+    <h1>
+      <span data-en="Study" data-ar="درّس">Study</span>
+      <span class="accent"> <span data-en="Smarter" data-ar="بذكاء">Smarter</span></span><br/>
+      <span data-en="with" data-ar="مع">with</span>
+      <span class="accent2"> <span data-en="Jadwal" data-ar="جدول">Jadwal</span></span>
+    </h1>
+
+    <p class="hero-sub" data-en="Your AI-powered study planner. Organize exams, build personalized schedules, track study sessions, and chat with an AI assistant — all in one beautifully designed app."
+       data-ar="مخططك الدراسي المدعوم بالذكاء الاصطناعي. نظّم امتحاناتك، وأنشئ جداول مخصصة، وتتبّع جلسات الدراسة، وتحدّث مع المساعد الذكي — كل ذلك في تطبيق واحد رائع التصميم.">
+      Your AI-powered study planner. Organize exams, build personalized schedules, track study sessions, and chat with an AI assistant — all in one beautifully designed app.
+    </p>
+
+    <div class="hero-cta">
+      <a href="https://github.com/gorashedev/jadwal/releases/download/v1.0.0/jadwal.apk" class="btn-primary" id="downloadBtn">
+        <svg viewBox="0 0 24 24"><path d="M12 16l-5-5 1.4-1.4 2.6 2.6V4h2v8.2l2.6-2.6L17 11l-5 5zm-7 4v-2h14v2H5z"/></svg>
+        <span data-en="Download APK" data-ar="تنزيل التطبيق">Download APK</span>
+      </a>
+      <a href="https://github.com/gorashedev/jadwal" class="btn-secondary" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85.004 1.71.115 2.51.337 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+        <span data-en="GitHub" data-ar="جيتهاب">GitHub</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <div class="stats-strip" style="position:relative;z-index:1">
+    <div class="stat-card" style="animation-delay:.05s">
+      <div class="stat-num">5+</div>
+      <div class="stat-label" data-en="Core Screens" data-ar="شاشة رئيسية">Core Screens</div>
+    </div>
+    <div class="stat-card" style="animation-delay:.15s">
+      <div class="stat-num">AI</div>
+      <div class="stat-label" data-en="Powered Assistant" data-ar="مساعد ذكي">Powered Assistant</div>
+    </div>
+    <div class="stat-card" style="animation-delay:.25s">
+      <div class="stat-num">100%</div>
+      <div class="stat-label" data-en="Free & Open Source" data-ar="مجاني ومفتوح المصدر">Free & Open Source</div>
+    </div>
+    <div class="stat-card" style="animation-delay:.35s">
+      <div class="stat-num">AR/EN</div>
+      <div class="stat-label" data-en="Bilingual Support" data-ar="دعم عربي وإنجليزي">Bilingual Support</div>
+    </div>
+  </div>
+
+  <div class="gradient-line"></div>
+
+  <!-- Features -->
+  <section class="section">
+    <div class="section-label">
+      <div class="tag" data-en="FEATURES" data-ar="المزايا">FEATURES</div>
+      <h2 data-en="Everything you need to excel" data-ar="كل ما تحتاجه للتفوق">Everything you need to excel</h2>
+      <p data-en="Jadwal combines smart scheduling, AI guidance, and progress analytics into one seamless experience."
+         data-ar="يجمع جدول الجدولة الذكية وإرشادات الذكاء الاصطناعي وتحليلات التقدم في تجربة سلسة واحدة.">
+        Jadwal combines smart scheduling, AI guidance, and progress analytics into one seamless experience.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon icon-indigo">📅</div>
+        <h3 data-en="Smart Schedule Builder" data-ar="منشئ الجدول الذكي">Smart Schedule Builder</h3>
+        <p data-en="Automatically generate a personalized study plan based on your exams, subjects, and available time — powered by an intelligent algorithm."
+           data-ar="أنشئ تلقائيًا خطة دراسية مخصصة بناءً على امتحاناتك ومواد دراستك ووقتك المتاح — بالاعتماد على خوارزمية ذكية."></p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-violet">🤖</div>
+        <h3 data-en="AI Study Assistant" data-ar="المساعد الدراسي الذكي">AI Study Assistant</h3>
+        <p data-en="Chat with a Gemini-powered AI that understands your academic context and provides personalized study tips, explanations, and motivation."
+           data-ar="تحدّث مع ذكاء اصطناعي يعمل بـ Gemini يفهم سياقك الأكاديمي ويقدم نصائح دراسية مخصصة وشروحًا وتشجيعًا."></p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-success">⏱️</div>
+        <h3 data-en="Pomodoro Study Sessions" data-ar="جلسات بوموودورو">Pomodoro Study Sessions</h3>
+        <p data-en="Stay focused with built-in Pomodoro timers. Each session is logged automatically to help you visualize your study streaks."
+           data-ar="ابقَ مركّزًا مع مؤقتات بومودورو المدمجة. تُسجَّل كل جلسة تلقائيًا لمساعدتك على تصوّر تسلسل دراستك."></p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-warning">📊</div>
+        <h3 data-en="Progress Analytics" data-ar="تحليلات التقدم">Progress Analytics</h3>
+        <p data-en="Track hours studied, understanding levels per subject, and session history with beautiful charts and insights."
+           data-ar="تتبّع ساعات الدراسة ومستويات الفهم لكل مادة وتاريخ الجلسات بمخططات ورؤى رائعة."></p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-info">📷</div>
+        <h3 data-en="Exam Scanner (OCR)" data-ar="ماسح الامتحانات (OCR)">Exam Scanner (OCR)</h3>
+        <p data-en="Point your camera at an exam schedule and let Jadwal extract dates and subjects automatically using AI-powered OCR."
+           data-ar="وجّه كاميرتك نحو جدول الامتحانات ودع جدول يستخرج التواريخ والمواد تلقائيًا باستخدام تقنية التعرف الضوئي على الحروف."></p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-error">🔔</div>
+        <h3 data-en="Smart Notifications" data-ar="إشعارات ذكية">Smart Notifications</h3>
+        <p data-en="Get timely reminders for upcoming study sessions and exam alerts so you never miss an important deadline again."
+           data-ar="احصل على تذكيرات في الوقت المناسب لجلسات الدراسة القادمة وتنبيهات الامتحانات حتى لا تفوتك أي مهلة مهمة."></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="gradient-line"></div>
+
+  <!-- How it works -->
+  <section class="section">
+    <div class="section-label">
+      <div class="tag" data-en="HOW IT WORKS" data-ar="كيف يعمل">HOW IT WORKS</div>
+      <h2 data-en="Get started in minutes" data-ar="ابدأ خلال دقائق">Get started in minutes</h2>
+      <p data-en="Four simple steps from download to your first AI-generated study schedule."
+         data-ar="أربع خطوات بسيطة من التنزيل إلى أول جدول دراسي ينشئه الذكاء الاصطناعي."></p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3 data-en="Download & Create Account" data-ar="نزّل التطبيق وأنشئ حسابك">Download & Create Account</h3>
+          <p data-en="Install Jadwal, register with your email, and set up your profile in under 2 minutes."
+             data-ar="ثبّت جدول، سجّل بريدك الإلكتروني، وأنشئ ملفك الشخصي في أقل من دقيقتين."></p>
+        </div>
+      </div>
+      <div class="step" style="animation-delay:.1s">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3 data-en="Add Subjects & Exams" data-ar="أضف المواد والامتحانات">Add Subjects & Exams</h3>
+          <p data-en="Enter your subjects, exam dates, and difficulty levels — or scan your schedule with the built-in OCR camera."
+             data-ar="أدخل موادك وتواريخ امتحاناتك ومستويات صعوبتها — أو امسح جدولك بكاميرا التعرف الضوئي المدمجة."></p>
+        </div>
+      </div>
+      <div class="step" style="animation-delay:.2s">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3 data-en="Get Your AI Schedule" data-ar="احصل على جدولك الذكي">Get Your AI Schedule</h3>
+          <p data-en="Jadwal's algorithm distributes your study sessions optimally across your available time, prioritizing harder subjects."
+             data-ar="تقوم خوارزمية جدول بتوزيع جلسات دراستك بشكل مثالي على وقتك المتاح، مع إعطاء الأولوية للمواد الأصعب."></p>
+        </div>
+      </div>
+      <div class="step" style="animation-delay:.3s">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3 data-en="Study, Track & Improve" data-ar="ادرس وتتبّع وتحسّن">Study, Track & Improve</h3>
+          <p data-en="Start Pomodoro sessions, log your understanding after each session, and watch your analytics grow over time."
+             data-ar="ابدأ جلسات بومودورو، سجّل فهمك بعد كل جلسة، وشاهد تحليلاتك تنمو مع الوقت."></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="gradient-line"></div>
+
+  <!-- Tech stack -->
+  <section class="section" style="padding-bottom:30px">
+    <div class="section-label">
+      <div class="tag" data-en="BUILT WITH" data-ar="مبني بـ">BUILT WITH</div>
+      <h2 data-en="Modern technology stack" data-ar="حزمة تقنية حديثة">Modern technology stack</h2>
+      <p data-en="Jadwal is built with industry-leading Android and AI technologies for a fast, reliable experience."
+         data-ar="جدول مبني بأحدث تقنيات Android والذكاء الاصطناعي لتجربة سريعة وموثوقة."></p>
+    </div>
+    <div class="tech-row">
+      <div class="tech-pill"><span>🤖</span> Gemini AI</div>
+      <div class="tech-pill"><span>🎨</span> Jetpack Compose</div>
+      <div class="tech-pill"><span>🗄️</span> Supabase</div>
+      <div class="tech-pill"><span>💉</span> Hilt DI</div>
+      <div class="tech-pill"><span>🔄</span> Kotlin Coroutines</div>
+      <div class="tech-pill"><span>📦</span> Room Database</div>
+      <div class="tech-pill"><span>🔔</span> Firebase FCM</div>
+      <div class="tech-pill"><span>🏗️</span> MVVM + Clean Arch</div>
+    </div>
+  </section>
+
+  <!-- Download CTA -->
+  <section class="cta-section">
+    <div class="cta-card">
+      <h2 data-en="Ready to ace your exams?" data-ar="مستعد للتفوق في امتحاناتك؟">Ready to ace your exams?</h2>
+      <p data-en="Download Jadwal for free and start building smarter study habits today."
+         data-ar="حمّل جدول مجانًا وابدأ في بناء عادات دراسية أكثر ذكاءً اليوم."></p>
+      <a href="https://github.com/gorashedev/jadwal/releases/download/v1.0.0/jadwal.apk" class="btn-primary" style="display:inline-flex;margin:0 auto">
+        <svg viewBox="0 0 24 24"><path d="M12 16l-5-5 1.4-1.4 2.6 2.6V4h2v8.2l2.6-2.6L17 11l-5 5zm-7 4v-2h14v2H5z"/></svg>
+        <span data-en="Download Free APK" data-ar="تنزيل التطبيق مجانًا">Download Free APK</span>
+      </a>
+      <p class="cta-meta">
+        <span data-en="Android 8.0+ required · " data-ar="يتطلب Android 8.0+ · ">Android 8.0+ required · </span>
+        <a href="privacy.html" data-en="Privacy Policy" data-ar="سياسة الخصوصية">Privacy Policy</a>
+        <span> · </span>
+        <a href="terms.html" data-en="Terms of Service" data-ar="شروط الخدمة">Terms of Service</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <a href="#" class="footer-logo">
+      <img src="https://raw.githubusercontent.com/gorashedev/jadwal/gh-pages/logo.png" alt="Jadwal"/>
+      <span>Jadwal</span>
+    </a>
+    <div class="footer-links">
+      <a href="https://github.com/gorashedev/jadwal" target="_blank" rel="noopener">GitHub</a>
+      <a href="privacy.html" data-en="Privacy Policy" data-ar="سياسة الخصوصية">Privacy Policy</a>
+      <a href="terms.html"   data-en="Terms of Service" data-ar="شروط الخدمة">Terms of Service</a>
+      <a href="mailto:jadwal.app@outlook.com" data-en="Contact" data-ar="تواصل معنا">Contact</a>
+    </div>
+    <p class="footer-copy" data-en="© 2026 GriezTech · Made with ❤️ by Gorashe Mohamed"
+       data-ar="© 2026 GriezTech · صُنع بـ ❤️ بواسطة قرشي محمد">
+      © 2026 GriezTech · Made with ❤️ by Gorashe Mohamed
+    </p>
+  </footer>
+
+  <script>
+    let isAr = false;
+
+    function toggleLang() {
+      isAr = !isAr;
+      const body    = document.getElementById('body');
+      const langBtn = document.getElementById('langBtn');
+
+      body.setAttribute('dir', isAr ? 'rtl' : 'ltr');
+      body.setAttribute('lang', isAr ? 'ar' : 'en');
+      langBtn.textContent = isAr ? 'English' : 'عربي';
+
+      // Update all data-en / data-ar elements
+      document.querySelectorAll('[data-en]').forEach(el => {
+        const key = isAr ? 'ar' : 'en';
+        const val = el.getAttribute('data-' + key);
+        if (val) el.textContent = val;
+      });
+
+      // Sync placeholder text in elements that use it (p tags)
+      document.querySelectorAll('[data-en][data-ar]').forEach(el => {
+        const key = isAr ? 'ar' : 'en';
+        const val = el.getAttribute('data-' + key);
+        if (val && el.children.length === 0) el.textContent = val;
+      });
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+      });
+    });
+  </script>
+</body>
+</html>
