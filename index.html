@@ -558,31 +558,33 @@
   </footer>
 
   <script>
-    let isAr = false;
+    // ── Shared language key used by all pages ──────────────────────────────
+    const LANG_KEY = 'jadwal_lang';
 
-    function toggleLang() {
-      isAr = !isAr;
-      const body    = document.getElementById('body');
-      const langBtn = document.getElementById('langBtn');
+    function applyLang(lang) {
+      const isAr  = lang === 'ar';
+      const body  = document.getElementById('body');
+      const btn   = document.getElementById('langBtn');
 
-      body.setAttribute('dir', isAr ? 'rtl' : 'ltr');
-      body.setAttribute('lang', isAr ? 'ar' : 'en');
-      langBtn.textContent = isAr ? 'English' : 'عربي';
+      body.setAttribute('dir',  isAr ? 'rtl' : 'ltr');
+      body.setAttribute('lang', isAr ? 'ar'  : 'en');
+      btn.textContent = isAr ? 'English' : 'عربي';
 
-      // Update all data-en / data-ar elements
-      document.querySelectorAll('[data-en]').forEach(el => {
-        const key = isAr ? 'ar' : 'en';
-        const val = el.getAttribute('data-' + key);
-        if (val) el.textContent = val;
-      });
-
-      // Sync placeholder text in elements that use it (p tags)
-      document.querySelectorAll('[data-en][data-ar]').forEach(el => {
-        const key = isAr ? 'ar' : 'en';
-        const val = el.getAttribute('data-' + key);
+      document.querySelectorAll('[data-en],[data-ar]').forEach(el => {
+        const val = el.getAttribute('data-' + lang);
         if (val && el.children.length === 0) el.textContent = val;
       });
     }
+
+    function toggleLang() {
+      const current = localStorage.getItem(LANG_KEY) || 'en';
+      const next    = current === 'en' ? 'ar' : 'en';
+      localStorage.setItem(LANG_KEY, next);
+      applyLang(next);
+    }
+
+    // Apply saved preference immediately on load
+    applyLang(localStorage.getItem(LANG_KEY) || 'en');
 
     // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -594,4 +596,3 @@
   </script>
 </body>
 </html>
- 

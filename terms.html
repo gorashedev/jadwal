@@ -11,26 +11,25 @@
     @font-face {
       font-family: 'Thmanyah Sans';
       src: url('https://raw.githubusercontent.com/gorashedev/jadwal/gh-pages/Fonts/thmanyahsans-Regular.woff2') format('woff2');
-      font-weight: 400;
-      font-display: swap;
+      font-weight: 400; font-display: swap;
     }
     @font-face {
       font-family: 'Thmanyah Sans';
       src: url('https://raw.githubusercontent.com/gorashedev/jadwal/gh-pages/Fonts/thmanyahsans-Bold.woff2') format('woff2');
-      font-weight: 700 800;
-      font-display: swap;
+      font-weight: 700 800; font-display: swap;
     }
+
     :root {
       --indigo:       #5C6BC0;
       --indigo-light: #8E99F3;
       --violet:       #7E57C2;
       --violet-light: #B085F5;
       --bg:           #0B0D1A;
-      --bg2:          #111326;
       --text:         #EEF0FF;
       --muted:        #8B90C8;
       --card:         rgba(92,107,192,0.08);
       --border:       rgba(142,153,243,0.15);
+      --border2:      rgba(142,153,243,0.25);
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -53,11 +52,14 @@
       border-bottom: 1px solid var(--border);
     }
     .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-    .nav-logo img { width: 36px; height: 36px; border-radius: 10px; }
+    .nav-logo img { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; }
     .nav-logo span { font-weight: 800; font-size: 1.1rem; color: var(--text); }
     body[dir="rtl"] .nav-logo { flex-direction: row-reverse; }
     .nav-right { display: flex; gap: 16px; align-items: center; }
-    .nav-back { color: var(--muted); text-decoration: none; font-size: 0.88rem; font-weight: 600; transition: color .2s; }
+    .nav-back {
+      color: var(--muted); text-decoration: none; font-size: 0.88rem;
+      font-weight: 600; transition: color .2s;
+    }
     .nav-back:hover { color: var(--text); }
     .lang-btn {
       background: var(--card); border: 1px solid var(--border);
@@ -81,27 +83,18 @@
       font-size: 0.78rem; font-weight: 700; letter-spacing: 1px;
       text-transform: uppercase; margin-bottom: 16px;
     }
-    .page-header h1 { font-size: clamp(1.8rem,5vw,2.8rem); font-weight: 800; letter-spacing: -1px; margin-bottom: 10px; }
+    .page-header h1 {
+      font-size: clamp(1.8rem,5vw,2.8rem); font-weight: 800;
+      letter-spacing: -1px; margin-bottom: 10px;
+    }
     body[dir="rtl"] .page-header h1 { letter-spacing: 0; }
     .page-header .date { color: var(--muted); font-size: 0.88rem; }
-
-    .lang-tabs { display: flex; gap: 8px; margin-bottom: 44px; }
-    .lang-tab {
-      padding: 8px 22px; border-radius: 30px; border: 1px solid var(--border);
-      background: transparent; color: var(--muted); font-size: 0.88rem; font-weight: 600;
-      cursor: pointer; font-family: inherit; transition: all .2s;
-    }
-    .lang-tab.active { background: var(--violet); border-color: var(--violet); color: white; }
-
-    .content-section { display: none; }
-    .content-section.active { display: block; }
 
     .policy-block { margin-bottom: 40px; }
     .policy-block h2 {
       font-size: 1.1rem; font-weight: 700;
       color: var(--violet-light);
-      margin-bottom: 14px;
-      padding-bottom: 10px;
+      margin-bottom: 14px; padding-bottom: 10px;
       border-bottom: 1px solid var(--border);
     }
     .policy-block p  { color: var(--muted); font-size: 0.95rem; margin-bottom: 12px; line-height: 1.8; }
@@ -110,6 +103,9 @@
     .policy-block strong { color: var(--text); }
     .policy-block a { color: var(--indigo-light); text-decoration: none; }
     .policy-block a:hover { text-decoration: underline; }
+
+    .lang-section { display: none; }
+    .lang-section.active { display: block; }
 
     footer {
       position: relative; z-index: 1;
@@ -147,13 +143,8 @@
       <p class="date" id="pageDate">Last Updated: May 2026</p>
     </div>
 
-    <div class="lang-tabs">
-      <button class="lang-tab active" id="tabEn" onclick="showTab('en')">English</button>
-      <button class="lang-tab" id="tabAr" onclick="showTab('ar')">العربية</button>
-    </div>
-
-    <!-- English Content -->
-    <div class="content-section active" id="sec-en">
+    <!-- English -->
+    <div class="lang-section" id="sec-en">
       <div class="policy-block">
         <p>Welcome to <strong>Jadwal</strong>. By using our app, you agree to comply with and be bound by the following terms:</p>
       </div>
@@ -191,40 +182,40 @@
       </div>
     </div>
 
-    <!-- Arabic Content -->
-    <div class="content-section" id="sec-ar" dir="rtl" lang="ar">
+    <!-- Arabic -->
+    <div class="lang-section" id="sec-ar" dir="rtl" lang="ar">
       <div class="policy-block">
         <p>مرحبًا بك في <strong>جدول</strong>. باستخدامك للتطبيق، فإنك توافق على الالتزام بالشروط التالية:</p>
       </div>
       <div class="policy-block">
-        <h2>1. استخدام التطبيق</h2>
+        <h2>١. استخدام التطبيق</h2>
         <p>تطبيق "جدول" مصمم لمساعدتك في تنظيم وقتك الأكاديمي. يُمنع استخدام التطبيق لأي أغراض غير قانونية أو ضارة.</p>
       </div>
       <div class="policy-block">
-        <h2>2. الحسابات</h2>
+        <h2>٢. الحسابات</h2>
         <ul>
           <li>أنت مسؤول عن الحفاظ على سرية معلومات حسابك وكلمة المرور.</li>
           <li>يجب عليك إبلاغنا فورًا بأي استخدام غير مصرح به لحسابك.</li>
         </ul>
       </div>
       <div class="policy-block">
-        <h2>3. المساعد الذكي (AI Assistant)</h2>
+        <h2>٣. المساعد الذكي</h2>
         <p>يقدم المساعد الذكي في التطبيق نصائح وإرشادات دراسية. هذه الإجابات تم إنشاؤها آليًا، ونحن لا نضمن دقتها أو اكتمالها بنسبة 100%. الاعتماد على هذه المعلومات يكون على مسؤوليتك الشخصية.</p>
       </div>
       <div class="policy-block">
-        <h2>4. الملكية الفكرية</h2>
+        <h2>٤. الملكية الفكرية</h2>
         <p>جميع حقوق الملكية الفكرية المتعلقة بتصميم التطبيق والنصوص والبرمجيات (باستثناء المحتوى الذي ينشئه المستخدم) مملوكة لـ <strong>GriezTech</strong>.</p>
       </div>
       <div class="policy-block">
-        <h2>5. إخلاء المسؤولية</h2>
-        <p>يتم تقديم التطبيق <strong>"كما هو"</strong> (As is). نحن لا نضمن أن التطبيق سيعمل بدون انقطاع أو أخطاء.</p>
+        <h2>٥. إخلاء المسؤولية</h2>
+        <p>يتم تقديم التطبيق <strong>"كما هو"</strong>. نحن لا نضمن أن التطبيق سيعمل بدون انقطاع أو أخطاء.</p>
       </div>
       <div class="policy-block">
-        <h2>6. التعديلات على الشروط</h2>
+        <h2>٦. التعديلات على الشروط</h2>
         <p>نحتفظ بالحق في تعديل هذه الشروط في أي وقت. استمرارك في استخدام التطبيق بعد التعديلات يُعد قبولًا منك بها.</p>
       </div>
       <div class="policy-block">
-        <h2>7. تواصل معنا</h2>
+        <h2>٧. تواصل معنا</h2>
         <p>لأي استفسارات بخصوص شروط الخدمة، راسلنا على:<br/>
         <a href="mailto:jadwal.app@outlook.com">jadwal.app@outlook.com</a></p>
       </div>
@@ -233,40 +224,66 @@
 
   <footer>
     <div class="footer-links">
-      <a href="index.html">Home</a>
-      <a href="privacy.html">Privacy Policy</a>
-      <a href="mailto:jadwal.app@outlook.com">Contact</a>
+      <a href="index.html"  id="footerHome">Home</a>
+      <a href="privacy.html" id="footerPrivacy">Privacy Policy</a>
+      <a href="mailto:jadwal.app@outlook.com" id="footerContact">Contact</a>
     </div>
     <p class="footer-copy">© 2026 GriezTech · Jadwal</p>
   </footer>
 
   <script>
-    let isAr = false;
+    const LANG_KEY = 'jadwal_lang';
 
-    function showTab(lang) {
-      document.getElementById('sec-en').classList.toggle('active', lang === 'en');
-      document.getElementById('sec-ar').classList.toggle('active', lang === 'ar');
-      document.getElementById('tabEn').classList.toggle('active', lang === 'en');
-      document.getElementById('tabAr').classList.toggle('active', lang === 'ar');
+    const strings = {
+      en: {
+        title:   'Terms of Service',
+        date:    'Last Updated: May 2026',
+        back:    '← Home',
+        btn:     'عربي',
+        home:    'Home',
+        privacy: 'Privacy Policy',
+        contact: 'Contact',
+      },
+      ar: {
+        title:   'شروط الخدمة',
+        date:    'آخر تحديث: مايو 2026',
+        back:    '→ الرئيسية',
+        btn:     'English',
+        home:    'الرئيسية',
+        privacy: 'سياسة الخصوصية',
+        contact: 'تواصل معنا',
+      }
+    };
+
+    function applyLang(lang) {
+      const isAr = lang === 'ar';
+      const s    = strings[lang];
+      const body = document.getElementById('body');
+
+      body.setAttribute('dir',  isAr ? 'rtl' : 'ltr');
+      body.setAttribute('lang', lang);
+
+      document.getElementById('pageTitle').textContent     = s.title;
+      document.getElementById('pageDate').textContent      = s.date;
+      document.getElementById('backLink').textContent      = s.back;
+      document.getElementById('langBtn').textContent       = s.btn;
+      document.getElementById('footerHome').textContent    = s.home;
+      document.getElementById('footerPrivacy').textContent = s.privacy;
+      document.getElementById('footerContact').textContent = s.contact;
+
+      document.getElementById('sec-en').classList.toggle('active', !isAr);
+      document.getElementById('sec-ar').classList.toggle('active',  isAr);
     }
 
     function toggleLang() {
-      isAr = !isAr;
-      const body      = document.getElementById('body');
-      const langBtn   = document.getElementById('langBtn');
-      const backLink  = document.getElementById('backLink');
-      const pageTitle = document.getElementById('pageTitle');
-      const pageDate  = document.getElementById('pageDate');
-
-      body.setAttribute('dir', isAr ? 'rtl' : 'ltr');
-      body.setAttribute('lang', isAr ? 'ar' : 'en');
-      langBtn.textContent   = isAr ? 'English' : 'عربي';
-      backLink.textContent  = isAr ? '→ الرئيسية' : '← Home';
-      pageTitle.textContent = isAr ? 'شروط الخدمة' : 'Terms of Service';
-      pageDate.textContent  = isAr ? 'آخر تحديث: مايو 2026' : 'Last Updated: May 2026';
-
-      showTab(isAr ? 'ar' : 'en');
+      const current = localStorage.getItem(LANG_KEY) || 'en';
+      const next    = current === 'en' ? 'ar' : 'en';
+      localStorage.setItem(LANG_KEY, next);
+      applyLang(next);
     }
+
+    // Apply saved preference on load
+    applyLang(localStorage.getItem(LANG_KEY) || 'en');
   </script>
 </body>
 </html>
